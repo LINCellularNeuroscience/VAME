@@ -93,25 +93,19 @@ def init_new_project(project, videos, pose_files=False, working_directory=None, 
     cfg_file['project_path']=str(project_path)+'/'
     cfg_file['TestFraction']=0.2
     cfg_file['video_sets']=video_names
-    cfg_file['resnet']='50'
-    cfg_file['resnet_pretrained']=True
-    cfg_file['batch_size_spatial']=64
-    cfg_file['Epochs_spatial']=500 
-    cfg_file['ZDIMS_spatial']=25 
-    cfg_file['BETA_spatial']=1
     cfg_file['anneal_function']='linear'
     cfg_file['Learning_rate_spatial']=1e-4
-    cfg_file['batch_size_temporal']=128 
-    cfg_file['Epochs_temporal']=500 
-    cfg_file['rnn_model']='GRU'
-    cfg_file['BETA_temporal']=1
-    cfg_file['ZDIMS_temporal']=5
-    cfg_file['Learning_rate_temporal']=1e-4
-    cfg_file['temporal_window']=60
-    cfg_file['future_decoder']=0
-    cfg_file['future_steps']=10
+    cfg_file['batch_size_temporal']=256 
+    cfg_file['epochs']=500 
+    cfg_file['transition_function']='GRU'
+    cfg_file['beta']=1
+    cfg_file['zdims']=30
+    cfg_file['learning_rate']=5e-4
+    cfg_file['time_window']=60
+    cfg_file['prediction_decoder']=1
+    cfg_file['prediction_steps']=15
     cfg_file['model_convergence']=20
-    cfg_file['num_features']=25
+    cfg_file['num_features']=12
 
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file
