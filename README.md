@@ -6,4 +6,6 @@ VAME is a probabilistic machine learning framework for clustering of behavioral 
 
 # VAME in a nutshell
 
+# Installation of VAME
+
 # News
