@@ -13,7 +13,6 @@ from vame import VAME
 # These paths have to be set manually 
 working_directory = '/home/luxemk/Research/'
 project='VAME-Project'
-
 videos = ['/directory/to/your/video-1','/directory/to/your/video-2','...']
           
 # Initialize your project
