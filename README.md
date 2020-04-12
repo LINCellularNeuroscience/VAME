@@ -4,9 +4,11 @@ VAME is a probabilistic machine learning framework for clustering of behavioral 
 
 ![workflow](https://github.com/LINCellularNeuroscience/VAME/blob/master/Images/workflow.png)
 
-# VAME in a nutshell
+# VAME in a Nutshell
 VAME is a PyTorch based deep learning framework which leverages the power of recurrent neural networks (RNN) to model sequential data. 
 
 # Installation of VAME
+
+# Getting Started
 
 # News
