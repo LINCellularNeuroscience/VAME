@@ -20,7 +20,7 @@ videos = ['/directory/to/your/video-1','/directory/to/your/video-2','...']
 # Pose Estimation file has to be put manually into project folder "/VAME-Project/videos/pose-estimation/"
 # Make sure the pose estimation files have the same name as the videos with an additional PE at the end
 # example: video-1-PE.csv
-config = VAME.init_new_project(project=project, videos=videos, dlc_file=True, working_directory=working_directory)
+config = VAME.init_new_project(project=project, videos=videos, pose_files=True, working_directory=working_directory)
 
 config = '/home/luxemk/Research/VAME-Nov13-2019/config.yaml'
 config = '/home/luxemk/Research/treadmill-Feb27-2020/config.yaml'

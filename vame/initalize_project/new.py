@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import shutil
 
-def init_new_project(project, videos, dlc_file=False, working_directory=None,videotype='.mp4'):
+def init_new_project(project, videos, pose_files=False, working_directory=None, videotype='.mp4'):
     from datetime import datetime as dt
     from VAME.util import auxiliary
     date = dt.today()
@@ -79,8 +79,8 @@ def init_new_project(project, videos, dlc_file=False, working_directory=None,vid
         
     destinations = [video_path.joinpath(vp.name) for vp in videos]
     
-    if dlc_file == True:
-        os.mkdir(str(project_path)+'/'+'videos/dlc_files/')
+    if pose_files == True:
+        os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
            
     print("Copying the videos")
     for src, dst in zip(videos, destinations):
