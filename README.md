@@ -10,3 +10,11 @@ It is a PyTorch based deep learning framework which leverages the power of recur
 # Getting Started
 
 # News
+
+# Authors and Code Contributors
+VAME was developed by Kevin Luxem and Pavol Bauer
+
+# References
+If you use this code or data please cite
+
+# License
