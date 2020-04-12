@@ -12,38 +12,14 @@ from vame import VAME
 
 # These paths have to be set manually 
 working_directory = '/home/luxemk/Research/'
-project='treadmill'
+project='VAME-Project'
 
-#videos = ['/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-3-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-3-2.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-1-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-1-2.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-2-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-2-2.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-4-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-4-2.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/91/91-mouse-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/91/91-mouse-2.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/92/92-mouse-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/92/92-mouse-2.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/110/110-mouse-1-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/110/110-mouse-1-2.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/110/110-mouse-2-1.mp4',
-#          '/home/luxemk/Research/Data/VAME/OFA/test/110/110-mouse-2-2.mp4']
-
-videos = ['/home/luxemk/Research/Data/VAME/treadmill/GROUP4/tg210f_g4d6.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP4/tg218m_g4d6.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP4/tg219m_g4d6.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP5/tg96f_g5d6.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP5/wt94f_g5d6.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP6/tg93m_g6d6.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP6/tg94m_g6d4.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP6/wt82f_g6d6.mp4',
-          '/home/luxemk/Research/Data/VAME/treadmill/GROUP6/wt83f_g6d6.mp4']
-
+videos = ['/directory/to/your/video-1','/directory/to/your/video-2','...']
           
 # Initialize your project
-# DLC file has to be put manually
+# Pose Estimation file has to be put manually into project folder "/VAME-Project/videos/pose-estimation/"
+# Make sure the pose estimation files have the same name as the videos with an additional PE at the end
+# example: video-1-PE.csv
 config = VAME.init_new_project(project=project, videos=videos, dlc_file=True, working_directory=working_directory)
 
 config = '/home/luxemk/Research/VAME-Nov13-2019/config.yaml'
