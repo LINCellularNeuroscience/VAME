@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import shutil
 
-def init_new_project(project, videos, pose_files=False, working_directory=None, videotype='.mp4'):
+def init_new_project(project, videos, working_directory=None, pose_files=True, videotype='.mp4'):
     from datetime import datetime as dt
     from vame.util import auxiliary
     date = dt.today()
@@ -110,7 +110,7 @@ def init_new_project(project, videos, pose_files=False, working_directory=None, 
     # Write dictionary to yaml  config file
     auxiliary.write_config(projconfigfile,cfg_file)
     
-    print('A VAME project has been created. Please add your Pose file manually into \n'
+    print('A VAME project has been created. Please add your pose file manually into \n'
           '/VAME-Project/videos/pose-estimation/. \n'
           '\n'
           'Next use vame.align() to align and crop your video. \n'

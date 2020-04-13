@@ -25,15 +25,16 @@ def create_config_template():
     project_path:
     video_sets:
     \n
-# Temporal model:
+# Variational model:
     num_features:
     batch_size:
     epochs:
-    rnn_model:
+    anneal_function:
+    transition_function:
     beta:
     zdims:
     learning_rate:
-    temporal_window: 
+    time_window: 
     prediction_decoder:
     prediction_steps:
     \n
