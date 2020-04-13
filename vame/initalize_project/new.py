@@ -82,7 +82,7 @@ def init_new_project(project, videos, pose_files=False, working_directory=None, 
     if pose_files == True:
         os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
            
-    print("Copying the videos")
+    print("Copying the videos \n")
     for src, dst in zip(videos, destinations):
         shutil.copy(os.fspath(src),os.fspath(dst))
 
@@ -94,8 +94,7 @@ def init_new_project(project, videos, pose_files=False, working_directory=None, 
     cfg_file['TestFraction']=0.2
     cfg_file['video_sets']=video_names
     cfg_file['anneal_function']='linear'
-    cfg_file['Learning_rate_spatial']=1e-4
-    cfg_file['batch_size_temporal']=256 
+    cfg_file['batch_size']=256 
     cfg_file['epochs']=500 
     cfg_file['transition_function']='GRU'
     cfg_file['beta']=1
@@ -111,12 +110,12 @@ def init_new_project(project, videos, pose_files=False, working_directory=None, 
     # Write dictionary to yaml  config file
     auxiliary.write_config(projconfigfile,cfg_file)
     
-    print('A VAME project has been created. Please manually add your DLC file \n'
-          'for the video to the folder videos. This will be automatic in later version. \n'
+    print('A VAME project has been created. Please add your Pose file manually into \n'
+          '/VAME-Project/videos/pose-estimation/. \n'
           '\n'
-          'Next use vame.align() if you want to align and crop the animal frames. \n'
-          'Otherwise, if you working with a fixed animal, you can skip this and \n'
-          'use the vame.temporal() or vame.spatial() function.')
+          'Next use vame.align() to align and crop your video. \n'
+          'NOTE: This function is only applicable if your video and pose estimation is similar to our demo. \n'
+          'Use vame.train() to train a variational recurrent autoencoder on your data.')
     
     return projconfigfile
     

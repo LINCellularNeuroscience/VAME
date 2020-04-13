@@ -5,16 +5,11 @@ Created on Sat Nov  2 12:28:35 2019
 
 @author: luxemk
 """
-import os, pickle, yaml
-import pandas as pd
+import os, yaml
 from pathlib import Path
-import numpy as np
+import ruamel.yaml
 import networkx as nx
 
-import ruamel.yaml
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import cv2
 
 
 def create_config_template():
@@ -30,27 +25,17 @@ def create_config_template():
     project_path:
     video_sets:
     \n
-# Spatial model
-    resnet:
-    resnet_pretrained:
-    batch_size_spatial:  
-    Epochs_spatial:
-    ZDIMS_spatial:
-    BETA_spatial: 
-    Learning_rate_spatial:
-    anneal_function: 
-    \n
 # Temporal model:
     num_features:
-    batch_size_temporal:
-    Epochs_temporal:
+    batch_size:
+    epochs:
     rnn_model:
-    BETA_temporal:
-    ZDIMS_temporal:
-    Learning_rate_temporal:
+    beta:
+    zdims:
+    learning_rate:
     temporal_window: 
-    future_decoder:
-    future_steps:
+    prediction_decoder:
+    prediction_steps:
     \n
 # Util:
     TestFraction:
