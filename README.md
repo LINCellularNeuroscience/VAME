@@ -6,9 +6,9 @@ VAME is a framework to cluster behavioral signals obtained from pose-estimation 
 
 The workflow of VAME consists of 5 steps and we explain them in detail [here](https://github.com/LINCellularNeuroscience/VAME/wiki/VAME-workflow).
 
-## Installation of VAME
-
 ## Getting Started
+
+### Installation of VAME
 
 ## News
 
