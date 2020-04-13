@@ -105,7 +105,10 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     cfg_file['prediction_steps']=15
     cfg_file['model_convergence']=20
     cfg_file['num_features']=12
-
+    cfg_file['savgol_filter']=True
+    cfg_file['savgol_length']=5
+    cfg_file['savgol_order']=2
+    
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file
     auxiliary.write_config(projconfigfile,cfg_file)
@@ -118,9 +121,6 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
           'Use vame.train() to train a variational recurrent autoencoder on your data.')
     
     return projconfigfile
-    
-    
-    
     
     
     

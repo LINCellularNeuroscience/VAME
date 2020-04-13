@@ -38,6 +38,11 @@ def create_config_template():
     prediction_decoder:
     prediction_steps:
     \n
+# Creation of train set:
+    savgol_filter:
+    savgol_length:
+    savgol_order:
+    \n
 # Util:
     TestFraction:
     model_convergence:
