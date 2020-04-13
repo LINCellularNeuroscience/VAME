@@ -5,5 +5,7 @@ Created on Thu Oct 31 16:55:32 2019
 
 @author: luxemk
 """
+import sys
+sys.dont_write_bytecode = True
 
-from VAME.initalize_project.new import init_new_project
+from vame.initalize_project.new import init_new_project
