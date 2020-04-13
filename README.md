@@ -3,7 +3,7 @@
 
 # VAME in a Nutshell
 VAME is a probabilistic machine learning framework for clustering of behavioral signals obtained from pose-estimation tools.
-It is a PyTorch based deep learning framework which leverages the power of recurrent neural networks (RNN) to model sequential data. 
+It is a PyTorch based deep learning framework which leverages the power of recurrent neural networks (RNN) to model sequential data. The [workflow](https://github.com/LINCellularNeuroscience/VAME/wiki/VAME-workflow) of VAME consists of 5 steps.
 
 ## Installation of VAME
 
