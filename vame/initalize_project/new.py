@@ -12,7 +12,7 @@ import shutil
 
 def init_new_project(project, videos, pose_files=False, working_directory=None, videotype='.mp4'):
     from datetime import datetime as dt
-    from VAME.util import auxiliary
+    from vame.util import auxiliary
     date = dt.today()
     month = date.strftime("%B")
     day = date.day
