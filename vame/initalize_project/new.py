@@ -110,11 +110,11 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     cfg_file['savgol_order']=2
     cfg_file['hidden_size_layer_1']=256
     cfg_file['hidden_size_layer_2']=256
-    cfg_file['dropout_encoder']=0.2
+    cfg_file['dropout_encoder']=0
     cfg_file['hidden_size_rec']=256
-    cfg_file['dropout_rec']=0.2
+    cfg_file['dropout_rec']=0
     cfg_file['hidden_size_pred']=256
-    cfg_file['dropout_pred']=0.2
+    cfg_file['dropout_pred']=0
     cfg_file['kl_start']=3
     cfg_file['annealtime']=8
     cfg_file['mse_reconstruction_reduction']='sum'

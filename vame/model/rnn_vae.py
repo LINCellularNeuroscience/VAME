@@ -181,13 +181,13 @@ def future_reconstruction_loss(x, x_tilde, reduction):
     rec_loss = mse_loss(x_tilde,x)
     return rec_loss 
 
-def cluster_loss(H, kloss, lmbda):
-    batch_size = H.shape[0]
-    gram_matrix = H.T @ H 
+def cluster_loss(H, kloss, lmbda, batch_size):
+    batch_size = batch_size
+    gram_matrix = (H.T @ H) / batch_size 
     _ ,sv_2, _ = torch.svd(gram_matrix)
     sv = torch.sqrt(sv_2[:kloss])
     loss = torch.sum(sv)
-    return lmbda*loss / batch_size
+    return lmbda*loss 
     
 
 def kullback_leibler_loss(mu, logvar):
@@ -232,7 +232,7 @@ def gaussian(ins, is_training, seq_len, std_n=0.8):
 
 
 def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start, 
-          annealtime, seq_len, future_decoder, future_steps, scheduler, mse_red, mse_pred, kloss, klmbda):
+          annealtime, seq_len, future_decoder, future_steps, scheduler, mse_red, mse_pred, kloss, klmbda, bsize):
     model.train() # toggle model to train mode
     train_loss = 0.0
     mse_loss = 0.0
@@ -254,7 +254,7 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         
             rec_loss = reconstruction_loss(data, data_tilde, mse_red)
             fut_rec_loss = future_reconstruction_loss(fut, future, mse_pred)
-            kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
+            kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
             kl_loss = kullback_leibler_loss(mu, logvar)
             kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
             loss = rec_loss + fut_rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss 
@@ -265,7 +265,7 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         
             rec_loss = reconstruction_loss(data, data_tilde, mse_red)
             kl_loss = kullback_leibler_loss(mu, logvar)
-            kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
+            kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
             kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
             loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
         
@@ -286,16 +286,16 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
     scheduler.step()
     
     if future_decoder:    
-        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, MSE-Future-Loss {:.4f}, KL-Loss: {:.4f}, KL-weigt: {:.4f},  Kmeans-Loss: {:.4f}'.format(train_loss / idx,
-              mse_loss /idx, fut_loss/idx, BETA*kl_weight*kullback_loss/idx, kl_weight, kl_weight*kmeans_losses/idx))
+        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, MSE-Future-Loss {:.4f}, KL-Loss: {:.4f},  Kmeans-Loss: {:.4f}, weigt: {:.4f}'.format(train_loss / idx,
+              mse_loss /idx, fut_loss/idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx, kl_weight))
     else:
-        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, KL-Loss: {:.4f}, weight: {:.4f}, Kmeans-Loss: {:.4f}'.format(train_loss / idx,
-              mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight, kl_weight*kmeans_losses/idx))
+        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, KL-Loss: {:.4f}, Kmeans-Loss: {:.4f}, weight: {:.4f}'.format(train_loss / idx,
+              mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx, kl_weight))
     
     return kl_weight, train_loss/idx, kl_weight*kmeans_losses/idx, kullback_loss/idx, mse_loss/idx, fut_loss/idx
 
 
-def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red, kloss, klmbda, future_decoder):
+def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red, kloss, klmbda, future_decoder, bsize):
     model.eval() # toggle model to inference mode
     test_loss = 0.0
     mse_loss = 0.0
@@ -315,14 +315,14 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
                 recon_images, _, latent, mu, logvar = model(data)
                 rec_loss = reconstruction_loss(data, recon_images, mse_red)
                 kl_loss = kullback_leibler_loss(mu, logvar)
-                kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
+                kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
                 loss = rec_loss + BETA*kl_weight*kl_loss+ kl_weight*kmeans_loss
         
             else:
                 recon_images, latent, mu, logvar = model(data)
                 rec_loss = reconstruction_loss(data, recon_images, mse_red)
                 kl_loss = kullback_leibler_loss(mu, logvar)
-                kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
+                kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
                 loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
             
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
@@ -438,12 +438,13 @@ def rnn_model(config, model_name, pretrained_weights=False):
                                                                          anneal_function, BETA, KL_START, 
                                                                          ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
                                                                          FUTURE_STEPS, scheduler, MSE_REC_REDUCTION,
-                                                                         MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA)
+                                                                         MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA,
+                                                                         TRAIN_BATCH_SIZE)
         
         print('Test: ')
         current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer, 
                                                   BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
-                                                  KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER)
+                                                  KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
         
         for param_group in optimizer.param_groups:
             print('lr: {}'.format(param_group['lr']))
@@ -466,7 +467,7 @@ def rnn_model(config, model_name, pretrained_weights=False):
             convergence += 1
             
         if epoch % 50 == 0:
-            print("Saving model!\n")
+            print("Saving model snapshot!\n")
             torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+'best_model'+'/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl')
         
         if convergence > cfg['model_convergence']:
