@@ -64,13 +64,17 @@ def create_trainset(config):
     if not os.path.exists(cfg['project_path']+'data/train/'):
         os.mkdir(path_to_file+'train/')
     
-    files = []     
-    for file in cfg['video_sets']:
-        use_file = input("Do you want to train on " + file + "? yes/no: ")
-        if use_file == 'yes':
+    files = []
+    if cfg['all_data'] == 'No':
+        for file in cfg['video_sets']:
+            use_file = input("Do you want to train on " + file + "? yes/no: ")
+            if use_file == 'yes':
+                files.append(file)
+            if use_file == 'no':
+                continue
+    else:
+        for file in cfg['video_sets']:
             files.append(file)
-        if use_file == 'no':
-            continue
         
     print("Creating training dataset.")
     temporal_traindata(cfg, files, cfg['TestFraction'], cfg['num_features'], cfg['savgol_filter'])
