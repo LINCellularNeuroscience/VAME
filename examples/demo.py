@@ -24,8 +24,8 @@ videos = ['/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-3-1.mp4']
 # Step 1:
 config = vame.init_new_project(project=project, videos=videos, working_directory=working_directory)
 
-# After inital creation of your project you can always access the config.yaml file via specifying the path
-# to your project
+# After inital creation of your project you can always access the config.yaml file 
+# via specifying the path to your project
 config = '/home/luxemk/Research/Your-VAME-Project-Apr14-2020/config.yaml'
 
 # Align behavior video egocentrically and create training dataset:
@@ -38,7 +38,7 @@ vame.create_trainset(config)
 
 # Step 2:
 # Train rnn model:
-vame.rnn_model(config, model_name='VAME', pretrained_weights=False)
+vame.rnn_model(config, model_name='VAME', pretrained_weights=False, pretrained_model='pretrained')
 
 # Step 3:
 # Evaluate model
@@ -46,11 +46,10 @@ vame.evaluate_model(config, model_name='VAME')
 
 # Step 4:
 # Quantify Behavior
-vame.behavior_quantification(config, model='temporal', model_name='FULL_2D_reproduce_night', 
-                             cluster_method='kmeans', n_cluster=[30], spatial_features=False, file=None)
+vame.behavior_segmentation(config, model_name='VAME', cluster_method='kmeans', n_cluster=[30])
 
 # Step 5:
 # Get behavioral transition matrix, model usage and graph
-vame.analyze_behavior(config, model='temporal', cluster_method='kmeans', n_cluster=30)
+vame.behavior_quantification(config, model_name='VAME', cluster_method='kmeans', n_cluster=30)
 
 
