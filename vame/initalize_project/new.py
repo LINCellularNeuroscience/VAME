@@ -81,6 +81,8 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     
     if pose_files == True:
         os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
+        
+    os.mkdir(str(project_path)+'/model/pretrained_model')
            
     print("Copying the videos \n")
     for src, dst in zip(videos, destinations):

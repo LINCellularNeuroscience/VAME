@@ -338,7 +338,7 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
 
 
-def rnn_model(config, model_name, pretrained_weights=False):
+def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=None):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
         
@@ -414,9 +414,9 @@ def rnn_model(config, model_name, pretrained_weights=False):
                         dropout_rec, dropout_pred).cuda()
 
     if pretrained_weights:
-        if os.path.exists(cfg['project_path']+'/'+'model/'+'best_model/'+model_name+'_'+cfg['Project']+'.pkl'):
-            print("Load pretrained Model: %s" %model_name)
-            model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
+        if os.path.exists(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'):
+            print("Loading pretrained Model: %s" %pretrained_model)
+            model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'), strict=False)
             
     """ DATASET """
     trainset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
