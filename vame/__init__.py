@@ -11,3 +11,4 @@ sys.dont_write_bytecode = True
 from vame.initalize_project import init_new_project
 from vame.model import create_trainset
 from vame.model import rnn_model
+from vame.model import evaluate_model
