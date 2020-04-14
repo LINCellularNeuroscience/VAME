@@ -11,7 +11,6 @@ import torch
 import numpy as np
 from pathlib import Path
 from matplotlib import pyplot as plt
-from torchvision.utils import save_image
 import torch.utils.data as Data
 
 from vame.util.auxiliary import read_config
