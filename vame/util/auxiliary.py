@@ -35,6 +35,7 @@ def create_config_template():
     num_features:
     batch_size:
     epochs:
+    model_snapshot
     model_convergence:
     transition_function:
     beta:

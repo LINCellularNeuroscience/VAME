@@ -95,7 +95,7 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     cfg_file['video_sets']=video_names
     cfg_file['anneal_function']='linear'
     cfg_file['batch_size']=256 
-    cfg_file['epochs']=500 
+    cfg_file['max_epochs']=500 
     cfg_file['transition_function']='GRU'
     cfg_file['beta']=1
     cfg_file['zdims']=30
@@ -103,7 +103,8 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     cfg_file['time_window']=30
     cfg_file['prediction_decoder']=1
     cfg_file['prediction_steps']=15
-    cfg_file['model_convergence']=20
+    cfg_file['model_convergence']=50
+    cfg_file['model_snapshot']=50
     cfg_file['num_features']=12
     cfg_file['savgol_filter']=True
     cfg_file['savgol_length']=5
