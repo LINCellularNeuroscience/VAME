@@ -13,104 +13,18 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 from torchvision.utils import save_image
 import torch.utils.data as Data
-from torch.autograd import Variable
 
-from VAME.util.auxiliary import read_config
-from VAME.model.spatial.VAE import VAE
-from VAME.model.spatial.VAE import resnet
-from VAME.model.temporal.LSTM_VAE import RNN_VAE
-#from VAME.model.temporal.RNN_VAE_auxiliary import RNN_VAE
-#from VAME.model.temporal.RNN_Ablation import RNN_VAE
-from VAME.model.dataloader.spatial_dataloader import VIDEO_DATASET
-from VAME.model.dataloader.temporal_dataloader import SEQUENCE_DATASET 
-from VAME.model.dataloader.spatial_features_dataloader import SPATIAL_FEATURES
+from vame.util.auxiliary import read_config
+from vame.model.rnn_vae import RNN_VAE
+from vame.model.dataloader import SEQUENCE_DATASET
     
 
-def generate_reconstructions(model, test_loader, PROJECT, PROJECT_PATH):
-    model.eval()
-    x = test_loader.__iter__().next()
-    x = x[:24].type('torch.FloatTensor').cuda()
-    x_tilde, _, = model(x)
-
-    x_cat = torch.cat([x, x_tilde], 0)
-    images = (x_cat.cpu().data + 1) / 2
-    
-    fig, ax = plt.subplots()
-    ax.imshow(x[0,0,...].cpu().detach().numpy(),cmap='gist_gray')
-    ax.grid(False)
-    fig, ax = plt.subplots()
-    ax.imshow(x_tilde[0,0,...].cpu().detach().numpy(),cmap='gist_gray')
-    ax.grid(False)
-    
-    save_image(
-        images,
-        PROJECT_PATH+'/model/spatial_model/evaluate/'+'vae_reconstructions_{}.eps'.format(PROJECT),
-        nrow=10
-    )
-    
-    
-def plot_loss(model_name, train_loss, test_loss, kl_losses, weight_values, filepath, log_scale=False):
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    fig.suptitle('Train Loss vs. Test Loss and KL-Loss vs. KL-Weight')
-    ax1.set(xlabel='Epochs', ylabel='loss [%]')
-    ax1.plot(train_loss, 'b', label='train_loss')
-    if log_scale:
-        ax1.set_yscale("log")
-    ax1.plot(test_loss, 'r', label='test_loss')
-    ax2.plot(kl_losses, 'b', label='kl_loss')
-    if log_scale:
-        ax2.set_yscale("log")
-    ax2.set(xlabel='Epochs', ylabel='KL-Loss')
-    ax1.legend()
-    ax2.legend()
-    fig.savefig(filepath+'evaluate/'+'MSE-and-KL-Loss'+model_name+'.png')
-    
-    
-def eval_temporal(cfg, use_gpu, model_name):
-    
-    SEED = 19
-    ZDIMS = cfg['ZDIMS_temporal']
-    FUTURE_DECODER = cfg['future_decoder']
-    TEMPORAL_WINDOW = cfg['temporal_window']
-    FUTURE_STEPS = TEMPORAL_WINDOW - cfg['future_steps']
-    NUM_FEATURES = cfg['num_features']
-    TEST_BATCH_SIZE = 64
-    PROJECT_PATH = cfg['project_path']
-    FUTURE_DECODER = cfg['future_decoder']
-    
-    filepath = PROJECT_PATH+'model/temporal_model/'
-
-    seq_len_half = int(TEMPORAL_WINDOW/2)
-    if use_gpu:
-        torch.cuda.manual_seed(SEED)
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS).cuda()
-    else:
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS)
-        
-    model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/temporal_model/best_model/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_50.pkl'))
-    model.eval() #toggle evaluation mode
-    
-    testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/temporal/', data='sequence_test_full.npy', train=False, temporal_window=TEMPORAL_WINDOW)
-    test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
-    
-    train_loss = np.load(cfg['project_path']+'/'+'model/temporal_model/losses'+'/train_losses'+model_name+'.npy')
-    test_loss = np.load(cfg['project_path']+'/'+'model/temporal_model/losses'+'/test_losses'+model_name+'.npy')
-#    mse_loss = np.load(cfg['project_path']+'/'+'model/temporal_model/losses'+'/kmeans_losses'+model_name+'.npy')
-    kl_loss = np.load(cfg['project_path']+'/'+'model/temporal_model/losses'+'/kl_losses'+model_name+'.npy')
-    weight_values = np.load(cfg['project_path']+'/'+'model/temporal_model/losses'+'/weight_values'+model_name+'.npy')
-    
-    train_loss = train_loss / np.max(train_loss)
-    test_loss = test_loss / np.max(test_loss)
-    kl_losses = kl_loss #/ np.max(kl_loss)
-    weight_values = weight_values / np.max(weight_values)
-    
-#    mse_loss = mse_loss / train_loss
-    kl_loss = kl_losses / train_loss
-    
+def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, 
+                        FUTURE_DECODER, FUTURE_STEPS):
     x = test_loader.__iter__().next()
     x = x.permute(0,2,1)
     data = x[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
-    data_fut = x[:,seq_len_half:45,:].type('torch.FloatTensor').cuda()
+    data_fut = x[:,seq_len_half:seq_len_half+FUTURE_STEPS,:].type('torch.FloatTensor').cuda()
     if FUTURE_DECODER:
         x_tilde, future, latent, mu, logvar = model(data)
         
@@ -142,9 +56,77 @@ def eval_temporal(cfg, use_gpu, model_name):
         ax1.plot(data_orig[1,...], color='k', label='Sequence Data')
         ax1.plot(data_tilde[1,...], color='r', linestyle='dashed', label='Sequence Reconstruction') 
 
-        fig.savefig(filepath+'evaluate/'+'Reconstruction_'+model_name+'.png') 
+        fig.savefig(filepath+'evaluate/'+'Reconstruction_'+model_name+'.png')
+    
+    
+def plot_loss(cfg, filepath, model_name):
+    train_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/train_losses_'+model_name+'.npy')
+    test_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/test_losses_'+model_name+'.npy')
+    mse_loss_train = np.load(cfg['project_path']+'/'+'model/model_losses'+'/mse_train_losses_'+model_name+'.npy')
+    mse_loss_test = np.load(cfg['project_path']+'/'+'model/model_losses'+'/mse_test_losses_'+model_name+'.npy')
+    km_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/kmeans_losses_'+model_name+'.npy', allow_pickle=True)
+    kl_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/kl_losses_'+model_name+'.npy')
+    fut_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/fut_losses_'+model_name+'.npy')
+    
+    km_losses = []
+    for i in range(len(km_loss)):
+        km = km_loss[i].cpu().detach().numpy()
+        km_losses.append(km)
+    
+    fig, (ax1) = plt.subplots(1, 1)
+    fig.suptitle('Losses of our Model')
+    ax1.set(xlabel='Epochs', ylabel='loss [log-scale]')
+    ax1.set_yscale("log")
+    ax1.plot(train_loss, label='Train-Loss')
+    ax1.plot(test_loss, label='Test-Loss')
+    ax1.plot(mse_loss_train, label='MSE-Train-Loss')
+    ax1.plot(mse_loss_test, label='MSE-Test-Loss')
+    ax1.plot(km_losses, label='KMeans-Loss')
+    ax1.plot(kl_loss, label='KL-Loss')
+    ax1.plot(fut_loss, label='Prediction-Loss')
+    ax1.legend()
+    fig.savefig(filepath+'evaluate/'+'MSE-and-KL-Loss'+model_name+'.png')
+    
+    
+def eval_temporal(cfg, use_gpu, model_name):
+    
+    SEED = 19
+    ZDIMS = cfg['zdims']
+    FUTURE_DECODER = cfg['prediction_decoder']
+    TEMPORAL_WINDOW = cfg['time_window']*2
+    FUTURE_STEPS = cfg['prediction_steps']
+    NUM_FEATURES = cfg['num_features']
+    TEST_BATCH_SIZE = 64
+    PROJECT_PATH = cfg['project_path']
+    hidden_size_layer_1 = cfg['hidden_size_layer_1']
+    hidden_size_layer_2 = cfg['hidden_size_layer_2']
+    hidden_size_rec = cfg['hidden_size_rec']
+    hidden_size_pred = cfg['hidden_size_pred']
+    dropout_encoder = cfg['dropout_encoder']
+    dropout_rec = cfg['dropout_rec']
+    dropout_pred = cfg['dropout_pred']
+    
+    filepath = PROJECT_PATH+'model/'
+
+    seq_len_half = int(TEMPORAL_WINDOW/2)
+    if use_gpu:
+        torch.cuda.manual_seed(SEED)
+        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
+                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
+                        dropout_rec, dropout_pred).cuda()
+    else:
+        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS)
         
-    plot_loss(model_name, train_loss, test_loss, kl_losses, weight_values, filepath)
+        
+        filepath
+    model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
+    model.eval() #toggle evaluation mode
+    
+    testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
+    test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)    
+     
+    plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS)
+    plot_loss(cfg, filepath, model_name)
     
     return 
     
@@ -156,8 +138,8 @@ def evaluate_model(config, model_name):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     
-    if not os.path.exists(cfg['project_path']+'model/temporal_model/evaluate/'):
-        os.mkdir(cfg['project_path']+'/'+'model/temporal_model/evaluate/')
+    if not os.path.exists(cfg['project_path']+'model/evaluate/'):
+        os.mkdir(cfg['project_path']+'/'+'model/evaluate/')
             
     use_gpu = torch.cuda.is_available()
     if use_gpu:
