@@ -364,9 +364,10 @@ def rnn_model(config, model_name, pretrained_weights=False):
     SEED = 19
     TRAIN_BATCH_SIZE = cfg['batch_size']
     TEST_BATCH_SIZE = int(cfg['batch_size']/4)
-    EPOCHS = cfg['epochs']
+    EPOCHS = cfg['max_epochs']
     ZDIMS = cfg['zdims']
     BETA  = cfg['beta']
+    SNAPSHOT = cfg['model_snapshot']
     LEARNING_RATE = cfg['learning_rate']
     NUM_FEATURES = cfg['num_features']
     TEMPORAL_WINDOW = cfg['time_window']*2
@@ -466,7 +467,7 @@ def rnn_model(config, model_name, pretrained_weights=False):
         else:
             convergence += 1
             
-        if epoch % 50 == 0:
+        if epoch % SNAPSHOT == 0:
             print("Saving model snapshot!\n")
             torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+'best_model'+'/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl')
         
@@ -486,7 +487,8 @@ def rnn_model(config, model_name, pretrained_weights=False):
         np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/kmeans_losses_'+model_name, kmeans_losses)
         np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/kl_losses_'+model_name, kl_losses)
         np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/weight_values_'+model_name, weight_values)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/mse_losses_'+model_name, mse_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/mse_train_losses_'+model_name, mse_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/mse_test_losses_'+model_name, current_loss)
         np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/fut_losses_'+model_name, fut_losses)
 
 
