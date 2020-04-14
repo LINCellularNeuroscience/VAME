@@ -16,41 +16,30 @@ import os
 import numpy as np
 from pathlib import Path
 
-from VAME.util.auxiliary import read_config
-from VAME.model.dataloader.temporal_dataloader import SEQUENCE_DATASET
-from VAME.model.dataloader.spatial_features_dataloader import SPATIAL_FEATURES
+from vame.util.auxiliary import read_config
+from vame.model.dataloader import SEQUENCE_DATASET
+
 
 """ MODEL """
 class Encoder(nn.Module):
-    def __init__(self, NUM_FEATURES):
+    def __init__(self, NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder):
         super(Encoder, self).__init__()
         
         self.input_size = NUM_FEATURES
-        self.hidden_size = 256
-        self.hidden_size_2 = 256
+        self.hidden_size = hidden_size_layer_1
+        self.hidden_size_2 = hidden_size_layer_2
         self.n_layers  = 1
-        self.dropout   = 0.2
+        self.dropout   = dropout_encoder
         
-#        self.conv_layer = nn.Sequential(
-#                nn.Conv1d(12, 12, 1),
-##                nn.Dropout(p=0.2),
-#                nn.BatchNorm1d(12),
-#                nn.LeakyReLU(),
-#                nn.MaxPool1d(2,2)
-#                )
-        
-        self.lstm_1 = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.n_layers,
+        self.rnn_1 = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.n_layers,
                             bias=True, batch_first=True, dropout=self.dropout, bidirectional=True)
         
-        self.lstm_2 = nn.GRU(input_size=self.hidden_size*2, hidden_size=self.hidden_size_2, num_layers=self.n_layers,
+        self.rnn_2 = nn.GRU(input_size=self.hidden_size*2, hidden_size=self.hidden_size_2, num_layers=self.n_layers,
                             bias=True, batch_first=True, dropout=self.dropout, bidirectional=True)
         
     def forward(self, inputs):
-#        inputs = inputs.permute(0,2,1)
-#        conv_out = self.conv_layer(inputs)
-#        conv_out = conv_out.permute(0,2,1)
-        outputs_1, hidden_1 = self.lstm_1(inputs)
-        outputs_2, hidden_2 = self.lstm_2(outputs_1)
+        outputs_1, hidden_1 = self.rnn_1(inputs)
+        outputs_2, hidden_2 = self.rnn_2(outputs_1)
         
         h_n_1 = torch.cat((hidden_1[0,...], hidden_1[1,...]), 1)
         h_n_2 = torch.cat((hidden_2[0,...], hidden_2[1,...]), 1)
@@ -66,18 +55,15 @@ class Lambda(nn.Module):
     :param hidden_size: hidden size of the encoder
     :param latent_length: latent vector length
     """
-    def __init__(self,ZDIMS):
+    def __init__(self,ZDIMS, hidden_size_layer_1, hidden_size_layer_2):
         super(Lambda, self).__init__()
-
-        self.hid_dim = 1024
+        
+        self.hid_dim = hidden_size_layer_1*2 + hidden_size_layer_2*2
         self.latent_length = ZDIMS
         
         self.hidden_to_linear = nn.Linear(self.hid_dim, self.hid_dim)
         self.hidden_to_mean = nn.Linear(self.hid_dim, self.latent_length)
         self.hidden_to_logvar = nn.Linear(self.hid_dim, self.latent_length)
-
-#        nn.init.xavier_uniform_(self.hidden_to_mean.weight)
-#        nn.init.xavier_uniform_(self.hidden_to_logvar.weight)
         
         self.softplus = nn.Softplus()
 
@@ -104,67 +90,66 @@ class Lambda(nn.Module):
   
       
 class Decoder(nn.Module):
-    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES):
+    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES, hidden_size_rec, dropout_rec):
         super(Decoder,self).__init__()
         
         self.num_features = NUM_FEATURES
         self.sequence_length = TEMPORAL_WINDOW
-        self.batch_size = 64
-        self.hidden_size = 256
+        self.hidden_size = hidden_size_rec
         self.latent_length = ZDIMS
         self.n_layers  = 1
-        self.dropout   = 0.2
+        self.dropout   = dropout_rec
         
-        self.gru = nn.GRU(self.latent_length, hidden_size=self.hidden_size, num_layers=self.n_layers,
+        self.rnn_rec = nn.GRU(self.latent_length, hidden_size=self.hidden_size, num_layers=self.n_layers,
                             bias=True, batch_first=True, dropout=self.dropout, bidirectional=False)
 
         self.hidden_to_output = nn.Linear(self.hidden_size, self.num_features)
 
     def forward(self, inputs):
-        decoder_output, _ = self.gru(inputs)
+        decoder_output, _ = self.rnn_rec(inputs)
         prediction = self.hidden_to_output(decoder_output)
         
         return prediction
     
 class Decoder_Future(nn.Module):
-    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_STEPS):
+    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_STEPS, hidden_size_pred, dropout_pred):
         super(Decoder_Future,self).__init__()
         
         self.num_features = NUM_FEATURES
         self.future_steps = FUTURE_STEPS
         self.sequence_length = TEMPORAL_WINDOW
-        self.batch_size = 64
-        self.hidden_size = 256
+        self.hidden_size = hidden_size_pred
         self.latent_length = ZDIMS
         self.n_layers  = 1
-        self.dropout   = 0.2
+        self.dropout   = dropout_pred
         
-        self.gru = nn.GRU(self.latent_length, hidden_size=self.hidden_size, num_layers=self.n_layers,
+        self.rnn_pred = nn.GRU(self.latent_length, hidden_size=self.hidden_size, num_layers=self.n_layers,
                             bias=True, batch_first=True, dropout=self.dropout, bidirectional=True)
         
         self.hidden_to_output = nn.Linear(self.hidden_size*2, self.num_features)
         
     def forward(self, inputs):
-        inputs = inputs[:,:15,:]
-        decoder_output, _ = self.gru(inputs)
+        inputs = inputs[:,:self.future_steps,:]
+        decoder_output, _ = self.rnn_pred(inputs)
         prediction = self.hidden_to_output(decoder_output)
         
         return prediction
 
 
 class RNN_VAE(nn.Module):
-    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS):
+    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
+                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
+                        dropout_rec, dropout_pred):
         super(RNN_VAE,self).__init__()
         
-        self.n_cluster = 25
-        self.batch_size = 64
         self.FUTURE_DECODER = FUTURE_DECODER
         self.seq_len = int(TEMPORAL_WINDOW / 2)
-        self.encoder = Encoder(NUM_FEATURES)
-        self.lmbda = Lambda(ZDIMS)
-        self.decoder = Decoder(self.seq_len,ZDIMS,NUM_FEATURES)
+        self.encoder = Encoder(NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder)
+        self.lmbda = Lambda(ZDIMS, hidden_size_layer_1, hidden_size_layer_2)
+        self.decoder = Decoder(self.seq_len,ZDIMS,NUM_FEATURES, hidden_size_rec, dropout_rec)
         if FUTURE_DECODER:
-            self.decoder_future = Decoder_Future(self.seq_len,ZDIMS,NUM_FEATURES,FUTURE_STEPS)
+            self.decoder_future = Decoder_Future(self.seq_len,ZDIMS,NUM_FEATURES,FUTURE_STEPS, hidden_size_pred,
+                                                 dropout_pred)
         
     def forward(self,seq):
         
@@ -183,28 +168,24 @@ class RNN_VAE(nn.Module):
             future = self.decoder_future(z)
             return prediction, future, latent, mu, logvar
         else:
-            return prediction, latent, mu, logvar#, self.F
+            return prediction, latent, mu, logvar
 
 
-def reconstruction_loss(x, x_tilde):
-    batch_size = x.shape[0]
-    mse_loss = nn.MSELoss(reduction='sum')
-#    mse_loss = nn.SmoothL1Loss(reduction='sum') # 'mean'
+def reconstruction_loss(x, x_tilde, reduction):
+    mse_loss = nn.MSELoss(reduction=reduction)
     rec_loss = mse_loss(x_tilde,x)
-    return rec_loss #/ batch_size
+    return rec_loss 
 
-def future_reconstruction_loss(x, x_tilde):
-    batch_size = x.shape[0]
-    mse_loss = nn.MSELoss(reduction='sum')
-#    mse_loss = nn.SmoothL1Loss(reduction='sum') # 'mean'
+def future_reconstruction_loss(x, x_tilde, reduction):
+    mse_loss = nn.MSELoss(reduction=reduction)
     rec_loss = mse_loss(x_tilde,x)
-    return rec_loss #/ batch_size
+    return rec_loss 
 
-def cluster_loss(H, lmbda=1):
+def cluster_loss(H, kloss, lmbda):
     batch_size = H.shape[0]
     gram_matrix = H.T @ H 
     _ ,sv_2, _ = torch.svd(gram_matrix)
-    sv = torch.sqrt(sv_2[:30])
+    sv = torch.sqrt(sv_2[:kloss])
     loss = torch.sum(sv)
     return lmbda*loss / batch_size
     
@@ -216,12 +197,10 @@ def kullback_leibler_loss(mu, logvar):
         # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     # I'm using torch.mean() here as the sum() version depends on the size of the latent vector
     KLD = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-#    kl_divergence = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-#    KLD = kl_divergence.sum(1).mean(0, True)
     return KLD
 
 
-def kl_annealing(epoch, kl_start, annealtime, function='linear'):
+def kl_annealing(epoch, kl_start, annealtime, function):
     """
         Annealing of Kullback-Leibler loss to let the model learn first
         the reconstruction of the data before the KL loss term gets introduced.
@@ -253,43 +232,40 @@ def gaussian(ins, is_training, seq_len, std_n=0.8):
 
 
 def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start, 
-          annealtime, seq_len, future_decoder, future_steps, scheduler):
+          annealtime, seq_len, future_decoder, future_steps, scheduler, mse_red, mse_pred, kloss, klmbda):
     model.train() # toggle model to train mode
     train_loss = 0.0
     mse_loss = 0.0
     kullback_loss = 0.0
     kmeans_losses = 0.0
     fut_loss = 0.0
-    lmbda = 1
-    
+    loss = 0.0
     seq_len_half = int(seq_len / 2)
     
     for idx, data_item in enumerate(train_loader):             
         data_item = Variable(data_item)
         data_item = data_item.permute(0,2,1)
         data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
-        fut = data_item[:,seq_len_half:45,:].type('torch.FloatTensor').cuda()
-        data_gaussian = gaussian(data,True, seq_len_half)
-#        data_gaussian = data
+        fut = data_item[:,seq_len_half:seq_len_half+future_steps,:].type('torch.FloatTensor').cuda()
+        data_gaussian = gaussian(data,True,seq_len_half)
                                  
         if future_decoder:
             data_tilde, future, latent, mu, logvar = model(data_gaussian)
         
-            rec_loss = reconstruction_loss(data, data_tilde)
-            fut_rec_loss = future_reconstruction_loss(fut, future)
-            kmeans_loss = cluster_loss(latent.T)
-#            kmeans_loss=0
+            rec_loss = reconstruction_loss(data, data_tilde, mse_red)
+            fut_rec_loss = future_reconstruction_loss(fut, future, mse_pred)
+            kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
             kl_loss = kullback_leibler_loss(mu, logvar)
             kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
-            loss = rec_loss + lmbda*fut_rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
+            loss = rec_loss + fut_rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss 
+            fut_loss += fut_rec_loss.item()
             
-            fut_loss += lmbda*fut_rec_loss.item()
         else:
             data_tilde, latent, mu, logvar = model(data_gaussian)
         
-            rec_loss = reconstruction_loss(data, data_tilde)
+            rec_loss = reconstruction_loss(data, data_tilde, mse_red)
             kl_loss = kullback_leibler_loss(mu, logvar)
-            kmeans_loss = cluster_loss(latent.T)
+            kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
             kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
             loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
         
@@ -319,82 +295,58 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
     return kl_weight, train_loss/idx, kl_weight*kmeans_losses/idx, kullback_loss/idx, mse_loss/idx, fut_loss/idx
 
 
-def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, future_decoder, future_steps):
+def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red, kloss, klmbda, future_decoder):
     model.eval() # toggle model to inference mode
     test_loss = 0.0
     mse_loss = 0.0
-    fut_loss = 0.0
     kullback_loss = 0.0
     kmeans_losses = 0.0
+    loss = 0.0
     seq_len_half = int(seq_len / 2)
-    
-    lmbda = 1
     
     with torch.no_grad():
         for idx, data_item in enumerate(test_loader):
-            # we're only going to infer, so no autograd at all required: volatile=True
+            # we're only going to infer, so no autograd at all required
             data_item = Variable(data_item)
             data_item = data_item.permute(0,2,1)
             data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
-#            fut = data_item[:,seq_len_half:,:].type('torch.FloatTensor').cuda()
             
             if future_decoder:
-                recon_images, future, latent, mu, logvar = model(data)
-            
-                rec_loss = reconstruction_loss(data, recon_images)
-#                fut_rec_loss = future_reconstruction_loss(fut, future)
-                fut_rec_loss = 0
+                recon_images, _, latent, mu, logvar = model(data)
+                rec_loss = reconstruction_loss(data, recon_images, mse_red)
                 kl_loss = kullback_leibler_loss(mu, logvar)
-                kmeans_loss = cluster_loss(latent.T)
-                loss = rec_loss + lmbda*fut_rec_loss + BETA*kl_weight*kl_loss+ kl_weight*kmeans_loss
-                
-                fut_loss += lmbda*fut_rec_loss
-                
+                kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
+                loss = rec_loss + BETA*kl_weight*kl_loss+ kl_weight*kmeans_loss
+        
             else:
                 recon_images, latent, mu, logvar = model(data)
-            
-                rec_loss = reconstruction_loss(data, recon_images)
+                rec_loss = reconstruction_loss(data, recon_images, mse_red)
                 kl_loss = kullback_leibler_loss(mu, logvar)
-                kmeans_loss = cluster_loss(latent.T)
+                kmeans_loss = cluster_loss(latent.T, kloss, klmbda)
                 loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
             
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 10)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
             
             test_loss += loss.item()
             mse_loss += rec_loss.item()
             kullback_loss += kl_loss.item()
             kmeans_losses += kmeans_loss
 
-    if future_decoder:    
-        print('Average Test loss: {:.4f}, MSE-Loss: {:.4f}, MSE-Future-Loss {:.4f}, KL-Loss: {:.4f}, KL-weigt: {:.4f},  Kmeans-Loss: {:.4f}'.format(test_loss / idx,
-              mse_loss /idx, fut_loss/idx, BETA*kl_weight*kullback_loss/idx, kl_weight, kl_weight*kmeans_losses/idx))
-    else:
-        print('Average Test loss: {:.4f}, MSE-Loss: {:.4f}, KL-Loss: {:.4f}, Kmeans-Loss: {:.4f}'.format(test_loss / idx,
-              mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx))
+    print('Average Test loss: {:.4f}, MSE-Loss: {:.4f}, KL-Loss: {:.4f}, Kmeans-Loss: {:.4f}'.format(test_loss / idx,
+          mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx))
     
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
 
 
-def temporal_lstm(config, model_name, spatial_features=False, pretrained=False, debug=False):
+def rnn_model(config, model_name, pretrained_weights=False):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
-    
-    FUTURE_DECODER = cfg['future_decoder']
-    
-    if FUTURE_DECODER:
-        print("Train composite temporal model!")
-        folder='temporal_model'
-        if not os.path.exists(cfg['project_path']+'/'+'model/temporal_model/best_model'):
-            os.mkdir(cfg['project_path']+'/model/temporal_model')
-            os.mkdir(cfg['project_path']+'/model/'+'temporal_model/best_model')
-            os.mkdir(cfg['project_path']+'/model/'+'temporal_model/losses')
-    else:
-        print("Train temporal model!")
-        folder='temporal_model'
-        if not os.path.exists(cfg['project_path']+'/'+'model/temporal_model/best_model'):
-            os.mkdir(cfg['project_path']+'/'+'model/temporal_model')
-            os.mkdir(cfg['project_path']+'/model/'+'temporal_model/best_model')
-            os.mkdir(cfg['project_path']+'/model/'+'temporal_model/losses')
+        
+    print("Train RNN model!")
+    if not os.path.exists(cfg['project_path']+'/'+'model/best_model'):
+        os.mkdir(cfg['project_path']+'/model/'+'best_model')
+        os.mkdir(cfg['project_path']+'/model/'+'best_model/snapshots')
+        os.mkdir(cfg['project_path']+'/model/'+'model_losses')
             
     # make sure torch uses cuda for GPU computing
     use_gpu = torch.cuda.is_available()
@@ -404,21 +356,42 @@ def temporal_lstm(config, model_name, spatial_features=False, pretrained=False, 
         print('GPU used:',torch.cuda.get_device_name(0)) 
     else:
         print("CUDA is not working!")
+        raise NotImplementedError('GPU Computing is required!')
     
     """ HYPERPARAMTERS """
+    # General 
     CUDA = use_gpu
     SEED = 19
-    TRAIN_BATCH_SIZE = 256
-    TEST_BATCH_SIZE = 64
-    EPOCHS = cfg['Epochs_temporal']
-    ZDIMS = cfg['ZDIMS_temporal']
-    BETA  = 1
-    LEARNING_RATE = cfg['Learning_rate_temporal']
+    TRAIN_BATCH_SIZE = cfg['batch_size']
+    TEST_BATCH_SIZE = int(cfg['batch_size']/4)
+    EPOCHS = cfg['epochs']
+    ZDIMS = cfg['zdims']
+    BETA  = cfg['beta']
+    LEARNING_RATE = cfg['learning_rate']
     NUM_FEATURES = cfg['num_features']
-    TEMPORAL_WINDOW = cfg['temporal_window']
-    FUTURE_STEPS = TEMPORAL_WINDOW - cfg['future_steps']
-    KL_START = 3
-    ANNEALTIME = 8
+    TEMPORAL_WINDOW = cfg['time_window']*2
+    FUTURE_DECODER = cfg['prediction_decoder']
+    FUTURE_STEPS = cfg['prediction_steps']
+    
+    # RNN
+    hidden_size_layer_1 = cfg['hidden_size_layer_1']
+    hidden_size_layer_2 = cfg['hidden_size_layer_2']
+    hidden_size_rec = cfg['hidden_size_rec']
+    hidden_size_pred = cfg['hidden_size_pred']
+    dropout_encoder = cfg['dropout_encoder']
+    dropout_rec = cfg['dropout_rec']
+    dropout_pred = cfg['dropout_pred']
+    
+    # Loss
+    MSE_REC_REDUCTION = cfg['mse_reconstruction_reduction']
+    MSE_PRED_REDUCTION = cfg['mse_prediction_reduction']
+    KMEANS_LOSS = cfg['kmeans_loss']
+    KMEANS_LAMBDA = cfg['kmeans_lambda']
+    KL_START = cfg['kl_start']
+    ANNEALTIME = cfg['annealtime']
+    anneal_function = cfg['anneal_function']
+    optimizer_scheduler = cfg['scheduler']
+    
     BEST_LOSS = 999999
     convergence = 0
     print('Latent Dimensions: %d, Beta: %d, lr: %.4f' %(ZDIMS, BETA, LEARNING_RATE))
@@ -430,62 +403,51 @@ def temporal_lstm(config, model_name, spatial_features=False, pretrained=False, 
     kl_losses = []
     weight_values = []
     mse_losses = []
-    fut_losses = []
-    
-    anneal_function = cfg['anneal_function']
+    fut_losses = []    
     
     torch.manual_seed(SEED)
-    
     if CUDA:
         torch.cuda.manual_seed(SEED)
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS).cuda()
-    else:
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS)
-        
-    if pretrained:
-#        model.load_state_dict(torch.load('./model/temporal/pretrained/vae_resnet_state.pkl'))
-        if os.path.exists(cfg['project_path']+'/'+'model/'+folder+'/best_model/'+model_name+'_'+cfg['Project']+'.pkl'):
+        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
+                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
+                        dropout_rec, dropout_pred).cuda()
+
+    if pretrained_weights:
+        if os.path.exists(cfg['project_path']+'/'+'model/'+'best_model/'+model_name+'_'+cfg['Project']+'.pkl'):
             print("Load pretrained Model: %s" %model_name)
-            model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+folder+'/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
-            KL_START = 1
-            ANNEALTIME = 1
+            model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
             
     """ DATASET """
-    if spatial_features:
-        trainset = SPATIAL_FEATURES(cfg['project_path']+'data/train/temporal/', data='spatiotemporal_train_full.npy', train=True, temporal_window=TEMPORAL_WINDOW)
-        testset = SPATIAL_FEATURES(cfg['project_path']+'data/train/temporal/', data='spatiotemporal_test_full.npy', train=False, temporal_window=TEMPORAL_WINDOW)
-     
-    else:
-        trainset = SEQUENCE_DATASET(cfg['project_path']+'data/train/temporal/', data='sequence_train_full.npy', train=True, temporal_window=TEMPORAL_WINDOW)
-        testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/temporal/', data='sequence_test_full.npy', train=False, temporal_window=TEMPORAL_WINDOW)
+    trainset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
+    testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
         
     train_loader = Data.DataLoader(trainset, batch_size=TRAIN_BATCH_SIZE, shuffle=True, drop_last=True)
     test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
     
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, amsgrad=True)
     
-    scheduler = StepLR(optimizer, step_size=300, gamma=0.2, last_epoch=-1)
+    if optimizer_scheduler:
+        scheduler = StepLR(optimizer, step_size=100, gamma=0.2, last_epoch=-1)
+    else:
+        scheduler = StepLR(optimizer, step_size=100, gamma=0, last_epoch=-1)
 
     for epoch in range(1,EPOCHS):
         print('Epoch: %d' %epoch)
         print('Train: ')
-        weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, 
-                                                                         optimizer, anneal_function, 
-                                                                         BETA, KL_START, ANNEALTIME, 
-                                                                         TEMPORAL_WINDOW, 
-                                                                         FUTURE_DECODER, FUTURE_STEPS, 
-                                                                         scheduler)
+        weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer, 
+                                                                         anneal_function, BETA, KL_START, 
+                                                                         ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
+                                                                         FUTURE_STEPS, scheduler, MSE_REC_REDUCTION,
+                                                                         MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA)
         
         print('Test: ')
         current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer, 
-                                                  BETA, weight, TEMPORAL_WINDOW, FUTURE_DECODER, 
-                                                  FUTURE_STEPS)
+                                                  BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
+                                                  KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER)
         
         for param_group in optimizer.param_groups:
             print('lr: {}'.format(param_group['lr']))
         # logging losses
-#        train_iter_loss = train_iter_loss + train_list
-#        test_iter_loss = test_iter_loss + test_list
         train_losses.append(train_loss)
         test_losses.append(test_loss)
         kmeans_losses.append(km_loss)
@@ -493,21 +455,19 @@ def temporal_lstm(config, model_name, spatial_features=False, pretrained=False, 
         weight_values.append(weight)
         mse_losses.append(mse_loss)
         fut_losses.append(fut_loss)
-        
-        if epoch == 100 and debug == True:
-            convergence = 1000
             
-#        # save best model
-#        if weight > 0.99 and current_loss <= BEST_LOSS:
-#            BEST_LOSS = current_loss
-#            print("Saving model!\n")
-#            torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+folder+'/best_model'+'/'+model_name+'_'+cfg['Project']+'.pkl')
-#            convergence = 0
-#        else:
-#            convergence += 1
+        # save best model
+        if weight > 0.99 and current_loss <= BEST_LOSS:
+            BEST_LOSS = current_loss
+            print("Saving model!\n")
+            torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+'best_model'+'/'+model_name+'_'+cfg['Project']+'.pkl')
+            convergence = 0
+        else:
+            convergence += 1
+            
         if epoch % 50 == 0:
             print("Saving model!\n")
-            torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+folder+'/best_model'+'/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl')
+            torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+'best_model'+'/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl')
         
         if convergence > cfg['model_convergence']:
             print('Model converged. Please check your model with vame.evaluate_model(). \n'
@@ -519,17 +479,14 @@ def temporal_lstm(config, model_name, spatial_features=False, pretrained=False, 
             #return
             break
         
-        
         # save logged losses
-#        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/train_iter_losses'+model_name, train_iter_loss)
-#        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/test_iter_losses'+model_name, test_iter_loss)
-        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/train_losses'+model_name, train_losses)
-        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/test_losses'+model_name, test_losses)
-        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/kmeans_losses'+model_name, kmeans_losses)
-        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/kl_losses'+model_name, kl_losses)
-        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/weight_values'+model_name, weight_values)
-        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/mse_losses'+model_name, mse_losses)
-        np.save(cfg['project_path']+'/'+'model/'+folder+'/losses'+'/fut_losses'+model_name, fut_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/train_losses_'+model_name, train_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/test_losses_'+model_name, test_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/kmeans_losses_'+model_name, kmeans_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/kl_losses_'+model_name, kl_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/weight_values_'+model_name, weight_values)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/mse_losses_'+model_name, mse_losses)
+        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/fut_losses_'+model_name, fut_losses)
 
 
     if convergence < cfg['model_convergence']:
