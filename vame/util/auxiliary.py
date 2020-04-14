@@ -25,11 +25,17 @@ def create_config_template():
     project_path:
     video_sets:
     \n
-# Variational model:
+# Creation of train set:
+    savgol_filter:
+    savgol_length:
+    savgol_order:
+    test_fraction:
+    \n
+# RNN model general hyperparameter:
     num_features:
     batch_size:
     epochs:
-    anneal_function:
+    model_convergence:
     transition_function:
     beta:
     zdims:
@@ -38,14 +44,29 @@ def create_config_template():
     prediction_decoder:
     prediction_steps:
     \n
-# Creation of train set:
-    savgol_filter:
-    savgol_length:
-    savgol_order:
+# ONLY CHANGE ANYTHING BELOW IF YOU ARE FAMILIAR WITH RNN MODELS
+# RNN encoder hyperparamter:
+    hidden_size_layer_1:
+    hidden_size_layer_2:
+    dropout_encoder:
     \n
-# Util:
-    TestFraction:
-    model_convergence:
+# RNN reconstruction hyperparameter:
+    hidden_size_rec: 
+    dropout_rec:
+    \n
+# RNN prediction hyperparamter:
+    hidden_size_pred:
+    dropout_pred:
+    \n
+# RNN loss hyperparameter:
+    mse_reconstruction_reduction: 
+    mse_prediction_reduction:
+    kmeans_loss:
+    kmeans_lambda: 
+    anneal_function:
+    kl_start:
+    annealtime:
+    scheduler:
     """
     ruamelFile = ruamel.yaml.YAML()
     cfg_file = ruamelFile.load(yaml_str)

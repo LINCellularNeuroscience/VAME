@@ -91,7 +91,7 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     
     cfg_file['Project']=str(project)
     cfg_file['project_path']=str(project_path)+'/'
-    cfg_file['TestFraction']=0.2
+    cfg_file['test_fraction']=0.2
     cfg_file['video_sets']=video_names
     cfg_file['anneal_function']='linear'
     cfg_file['batch_size']=256 
@@ -100,7 +100,7 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     cfg_file['beta']=1
     cfg_file['zdims']=30
     cfg_file['learning_rate']=5e-4
-    cfg_file['time_window']=60
+    cfg_file['time_window']=30
     cfg_file['prediction_decoder']=1
     cfg_file['prediction_steps']=15
     cfg_file['model_convergence']=20
@@ -108,6 +108,20 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     cfg_file['savgol_filter']=True
     cfg_file['savgol_length']=5
     cfg_file['savgol_order']=2
+    cfg_file['hidden_size_layer_1']=256
+    cfg_file['hidden_size_layer_2']=256
+    cfg_file['dropout_encoder']=0.2
+    cfg_file['hidden_size_rec']=256
+    cfg_file['dropout_rec']=0.2
+    cfg_file['hidden_size_pred']=256
+    cfg_file['dropout_pred']=0.2
+    cfg_file['kl_start']=3
+    cfg_file['annealtime']=8
+    cfg_file['mse_reconstruction_reduction']='sum'
+    cfg_file['mse_prediction_reduction']='sum'
+    cfg_file['kmeans_loss']=cfg_file['zdims']
+    cfg_file['kmeans_lambda']=1
+    cfg_file['scheduler']=1
     
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file
