@@ -25,6 +25,15 @@ def create_config_template():
     project_path:
     video_sets:
     \n
+# Data
+    all_data:
+    \n
+# Segmantation:
+    load_data:
+    snapshot:
+    snapshot_epoch:
+    median_filter:
+    \n
 # Creation of train set:
     savgol_filter:
     savgol_length:
@@ -35,7 +44,7 @@ def create_config_template():
     num_features:
     batch_size:
     epochs:
-    model_snapshot
+    model_snapshot:
     model_convergence:
     transition_function:
     beta:

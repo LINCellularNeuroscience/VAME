@@ -95,6 +95,11 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
     cfg_file['project_path']=str(project_path)+'/'
     cfg_file['test_fraction']=0.2
     cfg_file['video_sets']=video_names
+    cfg_file['all_data']='yes'
+    cfg_file['load_data']='-PE-seq-clean'
+    cfg_file['snapshot']='no'
+    cfg_file['snapshot_epoch']=50
+    cfg_file['median_filter']=5
     cfg_file['anneal_function']='linear'
     cfg_file['batch_size']=256 
     cfg_file['max_epochs']=500 
