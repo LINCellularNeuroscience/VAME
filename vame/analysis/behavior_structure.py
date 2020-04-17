@@ -8,11 +8,8 @@ Created on Fri Dec  6 12:06:29 2019
 
 import os
 import numpy as np
-import networkx as nx
 
 from pathlib import Path
-import seaborn as sns
-from matplotlib import pyplot as plt
 import warnings
 import matplotlib.cbook
 warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
