@@ -182,7 +182,6 @@ def future_reconstruction_loss(x, x_tilde, reduction):
     return rec_loss 
 
 def cluster_loss(H, kloss, lmbda, batch_size):
-    batch_size = batch_size
     gram_matrix = (H.T @ H) / batch_size 
     _ ,sv_2, _ = torch.svd(gram_matrix)
     sv = torch.sqrt(sv_2[:kloss])
