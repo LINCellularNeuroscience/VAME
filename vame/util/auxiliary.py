@@ -26,12 +26,6 @@ def create_config_template():
 # Data
     all_data:
     \n
-# Segmantation:
-    load_data:
-    snapshot:
-    snapshot_epoch:
-    median_filter:
-    \n
 # Creation of train set:
     savgol_filter:
     savgol_length:
@@ -51,6 +45,12 @@ def create_config_template():
     time_window: 
     prediction_decoder:
     prediction_steps:
+    \n
+# Segmantation:
+    load_data:
+    snapshot:
+    snapshot_epoch:
+    median_filter:
     \n
 # ONLY CHANGE ANYTHING BELOW IF YOU ARE FAMILIAR WITH RNN MODELS
 # RNN encoder hyperparamter:
