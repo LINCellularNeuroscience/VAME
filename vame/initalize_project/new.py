@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import shutil
 
-def init_new_project(project, videos, working_directory=None, pose_files=True, videotype='.mp4'):
+def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     from datetime import datetime as dt
     from vame.util import auxiliary
     date = dt.today()
@@ -79,9 +79,7 @@ def init_new_project(project, videos, working_directory=None, pose_files=True, v
         
     destinations = [video_path.joinpath(vp.name) for vp in videos]
     
-    if pose_files == True:
-        os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
-        
+    os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
     os.mkdir(str(project_path)+'/model/pretrained_model')
            
     print("Copying the videos \n")
