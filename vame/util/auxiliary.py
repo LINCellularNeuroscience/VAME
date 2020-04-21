@@ -41,7 +41,7 @@ def create_config_template():
 # RNN model general hyperparameter:
     num_features:
     batch_size:
-    epochs:
+    max_epochs:
     model_snapshot:
     model_convergence:
     transition_function:
