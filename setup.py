@@ -15,7 +15,7 @@ setup(
     url="https://https://github.com/LINCellularNeuroscience/VAME/",
     install_requires=[
         "torch",
-        "shutil",
+        "pytest-shutil",
         "scipy<=1.2.1",
         "numpy",
         "matplotlib",
@@ -23,6 +23,5 @@ setup(
 		"pandas",
         "ruamel.yaml",
 		"sklearn",
-		"pytest-shutil",
     ],
 )
