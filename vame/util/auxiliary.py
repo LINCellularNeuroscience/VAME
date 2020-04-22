@@ -52,6 +52,9 @@ def create_config_template():
     snapshot_epoch:
     median_filter:
     \n
+# Video writer:
+    lenght_of_motif_video: 
+    
 # ONLY CHANGE ANYTHING BELOW IF YOU ARE FAMILIAR WITH RNN MODELS
 # RNN encoder hyperparamter:
     hidden_size_layer_1:

@@ -14,3 +14,4 @@ from vame.model import rnn_model
 from vame.model import evaluate_model
 from vame.analysis import behavior_segmentation
 from vame.analysis import behavior_quantification
+from vame.analysis import motif_videos

@@ -10,4 +10,5 @@ sys.dont_write_bytecode = True
 
 from vame.analysis.segment_behavior import behavior_segmentation
 from vame.analysis.behavior_structure import behavior_quantification
+from vame.analysis.videowriter import motif_videos
 
