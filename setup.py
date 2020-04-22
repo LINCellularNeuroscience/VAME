@@ -20,8 +20,8 @@ setup(
         "numpy",
         "matplotlib",
         "pathlib",
-		"pandas",
+	"pandas",
         "ruamel.yaml",
-		"sklearn",
+	"sklearn",
     ],
 )
