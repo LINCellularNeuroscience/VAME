@@ -23,4 +23,4 @@ VAME was developed by Kevin Luxem and Pavol Bauer
 If you use this code or data please cite
 
 ### License: GPLv3
-See the LICENCE file for the full statement.
+See the [LICENSE file](../blob/master/LICENSE) for the full statement.
