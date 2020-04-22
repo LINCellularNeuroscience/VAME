@@ -14,6 +14,7 @@ First, you should make sure that you have a GPU powerful enough to train deep le
 Next, you can install the setup.py file in your enviroment. 
 
 ## News
+04/22/20 Preprint coming soon
 
 ### Authors and Code Contributors
 VAME was developed by Kevin Luxem and Pavol Bauer
