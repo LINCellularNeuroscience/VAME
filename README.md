@@ -22,4 +22,5 @@ VAME was developed by Kevin Luxem and Pavol Bauer
 ### References
 If you use this code or data please cite
 
-### License
+### License: GPLv3
+See the LICENCE file for the full statement.
