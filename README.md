@@ -8,7 +8,7 @@ The workflow of VAME consists of 5 steps and we explain them in detail [here](ht
 
 ## Getting Started
 To get started we recommend using [Anaconda](https://www.anaconda.com/distribution/) with Python 3.6 or higher. 
-Here, you can create a [virtual enviroment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) to have store all the dependencies for VAME.
+Here, you can create a [virtual enviroment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) to store all the dependencies necessary for VAME.
 
 First, you should make sure that you have a GPU powerful enough to train deep learning networks. In our paper, we were using a single Nvidia GTX 1080 Ti to train our network. A hardware guide can be found [here](https://timdettmers.com/2018/12/16/deep-learning-hardware-guide/). Once you have your hardware ready, follow the [PyTorch](https://pytorch.org/get-started/locally/) installation guide to set up PyTorch for your virtual anaconda enviroment. 
 Next, you can install the setup.py file in your enviroment. 
