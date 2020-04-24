@@ -10,7 +10,7 @@ The workflow of VAME consists of 5 steps and we explain them in detail [here](ht
 To get started we recommend using [Anaconda](https://www.anaconda.com/distribution/) with Python 3.6 or higher. 
 Here, you can create a [virtual enviroment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) to store all the dependencies necessary for VAME.
 
-* Instlall the stable release using the OS-dependent instructions from the [Pytorch website](https://pytorch.org/get-started/locally/). The current release is tested using PyTorch 1.5.
+* Install the current stable Pytorch release using the OS-dependent instructions from the [Pytorch website](https://pytorch.org/get-started/locally/). Currently, VAME is tested on PyTorch 1.5.
 * Go to the locally cloned VAME directory and run `python setup.py install` in order to install VAME in your currently active Python environment.
 
 ## Getting Started
