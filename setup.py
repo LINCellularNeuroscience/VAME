@@ -14,7 +14,6 @@ setup(
     long_description_content_type="text/markdown",
     url="https://https://github.com/LINCellularNeuroscience/VAME/",
     install_requires=[
-        "torch",
         "pytest-shutil",
         "scipy<=1.2.1",
         "numpy",
