@@ -11,7 +11,7 @@ To get started we recommend using [Anaconda](https://www.anaconda.com/distributi
 Here, you can create a [virtual enviroment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) to store all the dependencies necessary for VAME.
 
 * Install the current stable Pytorch release using the OS-dependent instructions from the [Pytorch website](https://pytorch.org/get-started/locally/). Currently, VAME is tested on PyTorch 1.5.
-* Go to the locally cloned VAME directory and run `python setup.py install` in order to install VAME in your currently active Python environment.
+* Go to the locally cloned VAME directory and run `python setup.py install` in order to install VAME in your active Python environment.
 
 ## Getting Started
 First, you should make sure that you have a GPU powerful enough to train deep learning networks. In our paper, we were using a single Nvidia GTX 1080 Ti to train our network. A hardware guide can be found [here](https://timdettmers.com/2018/12/16/deep-learning-hardware-guide/). Once you have your hardware ready, follow the [PyTorch](https://pytorch.org/get-started/locally/) installation guide to set up PyTorch for your virtual anaconda enviroment. 
