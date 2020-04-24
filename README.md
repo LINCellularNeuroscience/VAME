@@ -14,8 +14,7 @@ Here, you can create a [virtual enviroment](https://docs.conda.io/projects/conda
 * Go to the locally cloned VAME directory and run `python setup.py install` in order to install VAME in your active Python environment.
 
 ## Getting Started
-First, you should make sure that you have a GPU powerful enough to train deep learning networks. In our paper, we were using a single Nvidia GTX 1080 Ti to train our network. A hardware guide can be found [here](https://timdettmers.com/2018/12/16/deep-learning-hardware-guide/). Once you have your hardware ready, follow the [PyTorch](https://pytorch.org/get-started/locally/) installation guide to set up PyTorch for your virtual anaconda enviroment. 
-Next, you can install the setup.py file in your enviroment. 
+First, you should make sure that you have a GPU powerful enough to train deep learning networks. In our paper, we were using a single Nvidia GTX 1080 Ti to train our network. A hardware guide can be found [here](https://timdettmers.com/2018/12/16/deep-learning-hardware-guide/). Once you have your hardware ready, try VAME following the [workflow guide](https://github.com/LINCellularNeuroscience/VAME/wiki/1.-VAME-Workflow).
 
 ## News
 * April 2020: Preprint coming soon
