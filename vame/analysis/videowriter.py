@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import cv2 as cv
 
-from VAME.util.auxiliary import read_config
+from vame.util.auxiliary import read_config
 
 
 def get_cluster_vid(cfg, path_to_file, file, n_cluster):
