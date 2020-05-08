@@ -6,9 +6,7 @@ Created on Thu Oct 31 16:50:23 2019
 @author: luxemk
 """
 
-import sys
-sys.path.append('./VAME')
-from VAME import vame
+import vame
 
 # These paths have to be set manually 
 working_directory = '/home/luxemk/Research/'
