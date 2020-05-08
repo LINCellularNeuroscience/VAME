@@ -77,5 +77,5 @@ def create_trainset(config):
             files.append(file)
         
     print("Creating training dataset.")
-    temporal_traindata(cfg, files, cfg['TestFraction'], cfg['num_features'], cfg['savgol_filter'])
+    temporal_traindata(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
 
