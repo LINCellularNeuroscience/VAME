@@ -33,7 +33,6 @@ config = '/home/luxemk/Research/Your-VAME-Project-Apr14-2020/config.yaml'
 # If this is not the case please make sure to align your data egocentrically and put them into the
 # data folder for every video. The name of this file is the video name + -PE-seq.npy: 
 # /Your-VAME-Project/data/video-1/video-1-PE-seq.npy
-vame.align(config)
 vame.create_trainset(config)
 
 # Step 2:
