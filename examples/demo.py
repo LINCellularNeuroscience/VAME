@@ -12,7 +12,6 @@ import vame
 working_directory = '/home/luxemk/Research/'
 project='Your-VAME-Project'
 videos = ['/directory/to/your/video-1','/directory/to/your/video-2','...']
-videos = ['/home/luxemk/Research/Data/VAME/OFA/control/7/mouse-3-1.mp4']
     
 # Initialize your project
 # Pose Estimation file has to be put manually into project folder "/VAME-Project/videos/pose-estimation/"
