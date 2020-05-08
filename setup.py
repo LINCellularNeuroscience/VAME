@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setup(
     name="vame",
     version='0.1',
-    packages=["vame"],
+    packages=find_packages(),
     entry_points={"console_scripts": "vame = vame:main"},
     author="K. Luxem & P. Bauer",
     description="Variational Animal Motion Embedding.",
