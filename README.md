@@ -1,4 +1,4 @@
-![VAME](https://github.com/LINCellularNeuroscience/VAME/blob/master/Images/VAME_Logo.png)
+![VAME](https://github.com/LINCellularNeuroscience/VAME/blob/master/Images/VAME_Logo-1.png)
 ![workflow](https://github.com/LINCellularNeuroscience/VAME/blob/master/Images/workflow.png)
 
 # VAME in a Nutshell
