@@ -26,7 +26,7 @@ VAME was developed by Kevin Luxem and Pavol Bauer.
 
 The development of VAME is heavily inspired by [DeepLabCut](https://github.com/AlexEMG/DeepLabCut/).
 As such, the VAME project management codebase has been adapted from the DeepLabCut codebase.
-The DeepLabCut 2.0 toolbox is © A. & M. Mathis Labs [www.deeplabcut.org](www.deeplabcut.org), released under LGPL v3.0
+The DeepLabCut 2.0 toolbox is © A. & M. Mathis Labs [www.deeplabcut.org](www.deeplabcut.org), released under LGPL v3.0.
 
 ### References
 VAME preprint: [Identifying Behavioral Structure from Deep Variational Embeddings of Animal Motion](https://www.biorxiv.org/content/10.1101/2020.05.14.095430v1)
