@@ -25,6 +25,8 @@ First, you should make sure that you have a GPU powerful enough to train deep le
 VAME was developed by Kevin Luxem and Pavol Bauer
 
 ### References
+VAME preprint: [Identifying Behavioral Structure from Deep Variational Embeddings of Animal Motion](https://www.biorxiv.org/content/10.1101/2020.05.14.095430v1)
+
 If you use this code or data please cite
 
 ### License: GPLv3
