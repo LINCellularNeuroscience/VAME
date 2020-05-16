@@ -4,7 +4,17 @@
 Created on Sat Nov  2 12:28:35 2019
 
 @author: luxemk
+
+The following code is adapted from:
+
+DeepLabCut2.0 Toolbox (deeplabcut.org)
+© A. & M. Mathis Labs
+https://github.com/AlexEMG/DeepLabCut
+Please see AUTHORS for contributors.
+https://github.com/AlexEMG/DeepLabCut/blob/master/AUTHORS
+Licensed under GNU Lesser General Public License v3.0
 """
+
 import os, yaml
 from pathlib import Path
 import ruamel.yaml
