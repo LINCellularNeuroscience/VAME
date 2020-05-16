@@ -22,7 +22,11 @@ First, you should make sure that you have a GPU powerful enough to train deep le
 * May 2020: Our preprint "Identifying Behavioral Structure from Deep Variational Embeddings of Animal Motion" is out! [Read it on Biorxiv!](https://www.biorxiv.org/content/10.1101/2020.05.14.095430v1)
 
 ### Authors and Code Contributors
-VAME was developed by Kevin Luxem and Pavol Bauer
+VAME was developed by Kevin Luxem and Pavol Bauer.
+
+The development of VAME is heavily inspired by [DeepLabCut](https://github.com/AlexEMG/DeepLabCut/).
+As such, the VAME project management codebase has been adapted from the DeepLabCut codebase.
+The DeepLabCut 2.0 toolbox is © A. & M. Mathis Labs [www.deeplabcut.org](www.deeplabcut.org), released under LGPL v3.0
 
 ### References
 VAME preprint: [Identifying Behavioral Structure from Deep Variational Embeddings of Animal Motion](https://www.biorxiv.org/content/10.1101/2020.05.14.095430v1)
