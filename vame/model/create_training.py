@@ -41,7 +41,7 @@ def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
     if savgol_filter:
         X_med = scipy.signal.savgol_filter(seq_inter, cfg['savgol_length'], cfg['savgol_order'])
     num_frames = len(X_med.T)
-    test = int(num_frames*cfg['TestFraction'])
+    test = int(num_frames*testfraction)
     
     z_test =X_med[:,:test]
     z_train = X_med[:,test:]    
