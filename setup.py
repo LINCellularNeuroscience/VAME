@@ -13,14 +13,19 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://https://github.com/LINCellularNeuroscience/VAME/",
+    setup_requires=[
+        "pytest",
+    ],	
     install_requires=[
         "pytest-shutil",
         "scipy<=1.2.1",
         "numpy",
         "matplotlib",
         "pathlib",
-	"pandas",
+		"pandas",
         "ruamel.yaml",
-	"sklearn",
+		"sklearn",
+        "pyyaml",
+        "opencv-python",
     ],
 )
