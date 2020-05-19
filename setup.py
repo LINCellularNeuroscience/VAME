@@ -18,7 +18,7 @@ setup(
     ],	
     install_requires=[
         "pytest-shutil",
-        "scipy<=1.2.1",
+        "scipy",
         "numpy",
         "matplotlib",
         "pathlib",
