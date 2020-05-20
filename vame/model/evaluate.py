@@ -151,9 +151,9 @@ def evaluate_model(config, model_name):
     print("\n\nEvaluation of %s model. \n" %model_name)   
     eval_temporal(cfg, use_gpu, model_name)
 
-    print("You can find the results of the evaluation in the '/model/temporal_model/evaluate/' folder \n"
+    print("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
           "OPTIONS:\n" 
-          "- vame.cluster_behavior() to identify behavioral motifs.\n"
+          "- vame.behavior_segmentation() to identify behavioral motifs.\n"
           "- re-run the model for further fine tuning. Check again with vame.evaluate_model()")
     
     

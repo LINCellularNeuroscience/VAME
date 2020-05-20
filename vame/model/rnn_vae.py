@@ -472,11 +472,11 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
         
         if convergence > cfg['model_convergence']:
             print('Model converged. Please check your model with vame.evaluate_model(). \n'
-                  'You can also re-run vame.temporal() to further improve your model. \n'
+                  'You can also re-run vame.rnn_model() to further improve your model. \n'
                   'Hint: Set "model_convergence" in your config.yaml to a higher value. \n'
                   '\n'
                   'Next: \n'
-                  'Use vame.segment_behavior() to identify behavioral motifs in your dataset!')
+                  'Use vame.behavior_segmentation() to identify behavioral motifs in your dataset!')
             #return
             break
         
@@ -493,9 +493,9 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
 
     if convergence < cfg['model_convergence']:
         print('Model seemed to have not reached convergence. You may want to check your model \n'
-              'with vame.evaluate(). If your satisfied you can continue with: \n\n'
-               '- Use vame.segment_behavior() to identify behavioral motifs in your dataset!\n\n'
-               'OPTIONAL: You can re-run vame.temporal().')
+              'with vame.evaluate_model(). If your satisfied you can continue with \n'
+              'Use vame.behavior_segmentation() to identify behavioral motifs!\n\n'
+              'OPTIONAL: You can re-run vame.rnn_model() to improve performance.')
 
 
 
