@@ -9,27 +9,21 @@ Created on Thu Oct 31 16:50:23 2019
 import vame
 
 # These paths have to be set manually 
-working_directory = '/home/luxemk/Research/'
+working_directory = '/YOUR/WORKING/DIRECTORY/'
 project='Your-VAME-Project'
 videos = ['/directory/to/your/video-1','/directory/to/your/video-2','...']
     
 # Initialize your project
-# Pose Estimation file has to be put manually into project folder "/VAME-Project/videos/pose-estimation/"
-# Make sure the pose estimation files have the same name as the videos with an additional PE at the end
-# example: video-1-PE.csv
-
 # Step 1:
 config = vame.init_new_project(project=project, videos=videos, working_directory=working_directory)
 
-# After inital creation of your project you can always access the config.yaml file 
+# After the inital creation of your project you can always access the config.yaml file 
 # via specifying the path to your project
-config = '/home/luxemk/Research/Your-VAME-Project-Apr14-2020/config.yaml'
+config = '/YOUR/WORKING/DIRECTORY/Your-VAME-Project-Apr14-2020/config.yaml'
 
-# Align behavior video egocentrically and create training dataset:
-# Note: vame.align() is currently only applicable if your data is similar to our demo data.
-# If this is not the case please make sure to align your data egocentrically and put them into the
-# data folder for every video. The name of this file is the video name + -PE-seq.npy: 
-# /Your-VAME-Project/data/video-1/video-1-PE-seq.npy
+# Align your behavior videos egocentric and create training dataset:
+# Make sure to put them into the data folder for every video. The name of this file is the video name + -PE-seq.npy: 
+# E.g.: /Your-VAME-Project/data/video-1/video-1-PE-seq.npy
 vame.create_trainset(config)
 
 # Step 2:
