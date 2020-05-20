@@ -34,7 +34,9 @@ def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
     seq_inter = np.zeros((X.shape[0],X.shape[1]))
     for s in range(num_features):
         seq_temp = X[s,:]
-        seq_pd = pd.Series(seq_temp)  
+        seq_pd = pd.Series(seq_temp)
+        if np.isnan(seq_pd[0]):
+            seq_pd[0] = next(x for x in seq_pd if not np.isnan(x))
         seq_pd_inter = seq_pd.interpolate(method="linear", order=None)
         seq_inter[s,:] = seq_pd_inter
     
