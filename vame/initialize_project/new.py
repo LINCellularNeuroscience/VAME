@@ -143,8 +143,7 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     # Write dictionary to yaml  config file
     auxiliary.write_config(projconfigfile,cfg_file)
     
-    print('A VAME project has been created. Please add your pose file manually into \n'
-          '/VAME-Project/videos/pose-estimation/. \n'
+    print('A VAME project has been created. \n'
           '\n'
           'Next use vame.create_trainset(config) to split your data into a train and test set. \n'
           'Afterwards you can use vame.rnn_model() to train the model on your data.')
