@@ -34,7 +34,7 @@ def get_cluster_vid(cfg, path_to_file, file, n_cluster):
         cluster_lbl = cluster_lbl[0]
     
         output = path_to_file+'/cluster_videos/'+file+'motif_%d.avi' %cluster
-        video = cv.VideoWriter(output, cv.VideoWriter_fourcc('M','J','P','G'), fps, (int(height), int(width)))
+        video = cv.VideoWriter(output, cv.VideoWriter_fourcc('M','J','P','G'), fps, (int(width), int(height)))
         
         if len(cluster_lbl) < cfg['lenght_of_motif_video']:
             vid_length = len(cluster_lbl)
@@ -80,7 +80,7 @@ def motif_videos(config, model_name, cluster_method="kmeans", n_cluster=[30]):
     for cluster in n_cluster:
         print("Cluster size %d " %cluster)
         for file in files:
-            path_to_file=cfg['project_path']+'results/'+file+'/'+model_name+'/'+cluster_method+'-'+str(n_cluster)
+            path_to_file=cfg['project_path']+'results/'+file+'/'+model_name+'/'+cluster_method+'-'+str(cluster)
             
             if not os.path.exists(path_to_file+'/cluster_videos/'):
                     os.mkdir(path_to_file+'/cluster_videos/')
