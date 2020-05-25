@@ -56,7 +56,7 @@ def create_config_template():
     prediction_decoder:
     prediction_steps:
     \n
-# Segmantation:
+# Segmentation:
     load_data:
     snapshot:
     snapshot_epoch:
