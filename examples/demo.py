@@ -42,4 +42,6 @@ vame.behavior_segmentation(config, model_name='VAME', cluster_method='kmeans', n
 # Get behavioral transition matrix, model usage and graph
 vame.behavior_quantification(config, model_name='VAME', cluster_method='kmeans', n_cluster=30)
 
+# Get motif videos:
+vame.motif_videos(config, model_name='VAME', cluster_method="kmeans", n_cluster=[30])
 
