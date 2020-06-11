@@ -149,7 +149,7 @@ def temporal_quant(cfg, model_name, files, use_gpu):
         z_list.append(z_temp)
     
     z_array= np.concatenate(z_list)
-    z_logger.append(len(z))
+    z_logger.append(len(z_array))
     
     return z_array, z_logger
     
@@ -173,22 +173,22 @@ def cluster_latent_space(cfg, files, z_data, z_logger, cluster_method, n_cluster
                 os.mkdir(cfg['project_path']+'results/'+file+'/'+model_name+'/'+cluster_method+'-'+str(cluster))
         
             save_data = cfg['project_path']+'results/'+file+'/'+model_name+'/'
-            z = z_data[z_logger[idx]:z_logger[idx+1],:]
-            labels = data_labels[z_logger[idx]:z_logger[idx+1]:]
+            z_latent = z_data[z_logger[idx]:z_logger[idx+1],:]
+            labels = data_labels[z_logger[idx]:z_logger[idx+1]]
 
                 
             if cluster_method == 'kmeans':
                 np.save(save_data+cluster_method+'-'+str(cluster)+'/'+str(cluster)+'_km_label_'+file, labels)
-                np.save(save_data+cluster_method+'-'+str(cluster)+'/'+'latent_vector_'+file, z)
+                np.save(save_data+cluster_method+'-'+str(cluster)+'/'+'latent_vector_'+file, z_latent)
                 
             if cluster_method == 'GMM':
                 np.save(save_data+cluster_method+'-'+str(cluster)+'/'+str(cluster)+'_gmm_label_'+file, labels)
-                np.save(save_data+cluster_method+'-'+str(cluster)+'/'+'latent_vector_'+file, z)
+                np.save(save_data+cluster_method+'-'+str(cluster)+'/'+'latent_vector_'+file, z_latent)
             
             if cluster_method == 'all':
                 np.save(save_data+cluster_method+'-'+str(cluster)+'/'+str(cluster)+'_km_label_'+file, labels)
                 np.save(save_data+cluster_method+'-'+str(cluster)+'/'+str(cluster)+'_gmm_label_'+file, labels)
-                np.save(save_data+cluster_method+'-'+str(cluster)+'/'+'latent_vector_'+file, z)
+                np.save(save_data+cluster_method+'-'+str(cluster)+'/'+'latent_vector_'+file, z_latent)
     
     
 
