@@ -116,8 +116,6 @@ def eval_temporal(cfg, use_gpu, model_name):
     else:
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS)
         
-        
-        filepath
     model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
     model.eval() #toggle evaluation mode
     
@@ -126,8 +124,7 @@ def eval_temporal(cfg, use_gpu, model_name):
      
     plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS)
     plot_loss(cfg, filepath, model_name)
-    
-    return 
+     
     
     
 def evaluate_model(config, model_name):

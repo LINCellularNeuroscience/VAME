@@ -135,7 +135,7 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['mse_reconstruction_reduction']='sum'
     cfg_file['mse_prediction_reduction']='sum'
     cfg_file['kmeans_loss']=cfg_file['zdims']
-    cfg_file['kmeans_lambda']=1
+    cfg_file['kmeans_lambda']=0.1
     cfg_file['scheduler']=1
     cfg_file['lenght_of_motif_video'] = 1000
     
