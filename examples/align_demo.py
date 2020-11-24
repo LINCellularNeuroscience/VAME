@@ -20,8 +20,7 @@ def crop_and_flip(rect, src, points, ref_index):
     center, size = tuple(map(int, center)), tuple(map(int, size))
     #Get rotation matrix 
     M = cv.getRotationMatrix2D(center, theta, 1)
-    
-    
+       
     #shift DLC points
     x_diff = center[0] - size[0]//2
     y_diff = center[1] - size[1]//2
@@ -35,8 +34,7 @@ def crop_and_flip(rect, src, points, ref_index):
         point[1] -= y_diff
         
         dlc_points_shifted.append(point)
-    
-    
+        
     # Perform rotation on src image
     dst = cv.warpAffine(src.astype('float32'), M, src.shape[:2])
     out = cv.getRectSubPix(dst, size, center)
@@ -44,8 +42,30 @@ def crop_and_flip(rect, src, points, ref_index):
     #check if flipped correctly, otherwise flip again
     if dlc_points_shifted[ref_index[1]][0] >= dlc_points_shifted[ref_index[0]][0]:
         rect = ((size[0]//2,size[0]//2),size,180)
-        out, dlc_points_shifted = crop_and_flip(rect, out, dlc_points_shifted,ref_index)
+        center, size, theta = rect
+        center, size = tuple(map(int, center)), tuple(map(int, size))
+        #Get rotation matrix 
+        M = cv.getRotationMatrix2D(center, theta, 1)
         
+        
+        #shift DLC points
+        x_diff = center[0] - size[0]//2
+        y_diff = center[1] - size[1]//2
+        
+        points = dlc_points_shifted
+        dlc_points_shifted = []
+        
+        for i in points:
+            point=cv.transform(np.array([[[i[0], i[1]]]]),M)[0][0]
+    
+            point[0] -= x_diff
+            point[1] -= y_diff
+            
+            dlc_points_shifted.append(point)
+    
+        # Perform rotation on src image
+        dst = cv.warpAffine(out.astype('float32'), M, out.shape[:2])
+        out = cv.getRectSubPix(dst, size, center)
         
     return out, dlc_points_shifted
 
