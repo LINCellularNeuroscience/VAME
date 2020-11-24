@@ -266,7 +266,7 @@ def align_demo(path_to_file, filename, file_format, crop_size, use_video=False, 
     if check_video:
         play_aligned_video(a, n, frame_count)
         
-    return egocentric_time_series
+    return time_series
 
 
 """ Happy aligning """
