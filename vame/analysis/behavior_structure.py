@@ -75,9 +75,19 @@ def get_network(path_to_file, file, cluster_method, n_cluster):
     motif_usage = np.unique(labels, return_counts=True)
     cons = consecutive(motif_usage[0])
     if len(cons) != 1:
+        used_motifs = list(motif_usage[0])
         usage_list = list(motif_usage[1])
-        index = cons[0][-1]+1
-        usage_list.insert(index,0)
+        
+        for i in range(n_cluster):
+            if i not in used_motifs:
+                used_motifs.insert(i, i)
+                usage_list.insert(i,0)
+        
+   #     for i in range(len(cons)):
+   #         index = cons[i][-1]+1
+   #         usage_list.insert(index,0)
+   #         if index != cons[i+1][-1]+1:
+   #             usage_list.insert(index+1,0)
     
         usage = np.array(usage_list)
     
