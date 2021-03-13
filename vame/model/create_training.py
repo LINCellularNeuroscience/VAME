@@ -25,7 +25,7 @@ def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
     pos_temp = 0
     pos.append(0)
     for file in files:
-        path_to_file=cfg['project_path']+'data/'+file+'/'+file+'-PE-seq.npy'
+        path_to_file=cfg['project_path']+'/data/'+file+'/'+file+'-PE-seq.npy' #TODo: clean these up...
         X = np.load(path_to_file)
         X_len = len(X.T)
         pos_temp += X_len
@@ -59,17 +59,16 @@ def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
 
     print('Lenght of train data: %d' %len(z_train.T))
     print('Lenght of test data: %d' %len(z_test.T))
-    
-    
+
+
 def create_trainset(config):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
 
     path_to_file = cfg['project_path']+'/data/'
-    print(path_to_file)
-    if not os.path.exists(cfg['project_path']+'data/train/'):
-        os.mkdir(path_to_file+'train/')
-    
+    if not os.path.exists(cfg['project_path']+'/data/train/'):
+        os.mkdir(path_to_file+'/train/')
+
     files = []
     if cfg['all_data'] == 'No':
         for file in cfg['video_sets']:
@@ -81,7 +80,6 @@ def create_trainset(config):
     else:
         for file in cfg['video_sets']:
             files.append(file)
-        
+
     print("Creating training dataset.")
     temporal_traindata(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
-
