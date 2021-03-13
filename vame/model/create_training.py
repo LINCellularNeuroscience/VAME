@@ -25,7 +25,8 @@ def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
     pos_temp = 0
     pos.append(0)
     for file in files:
-        path_to_file=cfg['project_path']+'/data/'+file+'/'+file+'-PE-seq.npy' #TODo: clean these up...
+        path_to_file= os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
+        print(path_to_file)
         X = np.load(path_to_file)
         X_len = len(X.T)
         pos_temp += X_len
@@ -51,14 +52,16 @@ def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
     z_test =X_med[:,:test]
     z_train = X_med[:,test:]
 
-    np.save(cfg['project_path']+'data/train/train_seq.npy', z_train)
-    np.save(cfg['project_path']+'data/train/test_seq.npy', z_test)
+    #save numpy arrays the the test/train info:
+    np.save(os.path.join(cfg['project_path'],"data", "train",'train_seq.npy'), z_train)
+    np.save(os.path.join(cfg['project_path'],"data", "train", 'test_seq.npy'), z_test)
+
 
     for i, file in enumerate(files):
-        np.save(cfg['project_path']+'data/'+file+'/'+file+'-PE-seq-clean.npy', X_med[:,pos[i]:pos[i+1]])
+        np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
 
-    print('Lenght of train data: %d' %len(z_train.T))
-    print('Lenght of test data: %d' %len(z_test.T))
+    print('Length of train data: %d' %len(z_train.T))
+    print('Length of test data: %d' %len(z_test.T))
 
 
 def create_trainset(config):
@@ -81,5 +84,5 @@ def create_trainset(config):
         for file in cfg['video_sets']:
             files.append(file)
 
-    print("Creating training dataset.")
+    print("Creating training dataset...")
     temporal_traindata(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
