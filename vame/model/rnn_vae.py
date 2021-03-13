@@ -22,6 +22,16 @@ from pathlib import Path
 from vame.util.auxiliary import read_config
 from vame.model.dataloader import SEQUENCE_DATASET
 
+# make sure torch uses cuda for GPU computing
+use_gpu = torch.cuda.is_available()
+if use_gpu:
+    print("Using CUDA")
+    print('GPU active:',torch.cuda.is_available())
+    print('GPU used:',torch.cuda.get_device_name(0))
+else:
+    torch.device("cpu")
+
+
 
 """ MODEL """
 class Encoder(nn.Module):
@@ -247,8 +257,13 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
     for idx, data_item in enumerate(train_loader):
         data_item = Variable(data_item)
         data_item = data_item.permute(0,2,1)
-        data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
-        fut = data_item[:,seq_len_half:seq_len_half+future_steps,:].type('torch.FloatTensor').cuda()
+
+        if use_gpu:
+            data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
+            fut = data_item[:,seq_len_half:seq_len_half+future_steps,:].type('torch.FloatTensor').cuda()
+        else:
+            data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').to()
+            fut = data_item[:,seq_len_half:seq_len_half+future_steps,:].type('torch.FloatTensor').to()
         data_gaussian = gaussian(data,True,seq_len_half)
 
         if future_decoder:
@@ -285,7 +300,7 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         if idx % 1000 == 0:
             print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
 
-    scheduler.step()
+        scheduler.step() #be sure scheduler is called before optimizer in >1.1 pytorch
 
     if future_decoder:
         print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, MSE-Future-Loss {:.4f}, KL-Loss: {:.4f},  Kmeans-Loss: {:.4f}, weigt: {:.4f}'.format(train_loss / idx,
@@ -311,7 +326,10 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
             # we're only going to infer, so no autograd at all required
             data_item = Variable(data_item)
             data_item = data_item.permute(0,2,1)
-            data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
+            if use_gpu:
+                data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
+            else:
+                data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').to()
 
             if future_decoder:
                 recon_images, _, latent, mu, logvar = model(data)
@@ -415,6 +433,11 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
                         dropout_rec, dropout_pred).cuda()
+    else: #cpu support ...
+        torch.cuda.manual_seed(SEED)
+        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
+                        dropout_rec, dropout_pred).to()
 
     if pretrained_weights:
         if os.path.exists(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'): #TODO, fix this path seeking....
