@@ -1,0 +1,26 @@
+# VAME.yaml
+#
+# install: conda env create -f VAME.yaml
+# update:  conda env update -f VAME.yaml
+name: VAME
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.7
+  - pip
+  - torchvision
+  - jupyter
+  - nb_conda
+  - pip:
+    - pytest-shutil
+    - scipy
+    - numpy
+    - matplotlib
+    - pathlib
+    - pandas
+    - ruamel.yaml
+    - sklearn
+    - pyyaml
+    - opencv-python-headless
+    - h5py
