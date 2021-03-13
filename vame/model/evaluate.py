@@ -128,7 +128,7 @@ def eval_temporal(cfg, use_gpu, model_name):
     else:
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS)
 
-    model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
+    model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model", "best_model",++model_name+'_'+cfg['Project']+'.pkl'))
     model.eval() #toggle evaluation mode
 
     #testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
