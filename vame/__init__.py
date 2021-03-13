@@ -19,3 +19,4 @@ from vame.analysis import behavior_segmentation
 from vame.analysis import behavior_quantification
 from vame.analysis import motif_videos
 from vame.util.csv_to_npy import csv_to_numpy
+from vame.util import auxiliary
