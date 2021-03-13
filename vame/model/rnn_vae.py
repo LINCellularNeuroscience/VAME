@@ -417,13 +417,13 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
                         dropout_rec, dropout_pred).cuda()
 
     if pretrained_weights:
-        if os.path.exists(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'):
+        if os.path.exists(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'): #TODO, fix this path seeking....
             print("Loading pretrained Model: %s" %pretrained_model)
             model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'), strict=False)
 
     """ DATASET """
-    trainset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
-    testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
+    trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
+    testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
 
     train_loader = Data.DataLoader(trainset, batch_size=TRAIN_BATCH_SIZE, shuffle=True, drop_last=True)
     test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
