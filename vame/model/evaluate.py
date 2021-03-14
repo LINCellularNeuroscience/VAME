@@ -157,8 +157,8 @@ def evaluate_model(config, model_name):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
 
-    if not os.path.exists(cfg['project_path']+"/model/evaluate"):
-        os.mkdir(cfg['project_path']+"model/evaluate")
+    if not os.path.exists(os.path.join(cfg['project_path'],"model","evaluate")):
+        os.mkdir(os.path.join(cfg['project_path'],"model","evaluate"))
 
     use_gpu = torch.cuda.is_available()
     if use_gpu:
