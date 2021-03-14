@@ -74,12 +74,12 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
 def plot_loss(cfg, filepath, model_name):
     basepath = os.path.join(cfg['project_path'],"model","model_losses")
     train_loss = np.load(os.path.join(basepath,"train_losses_",model_name+'.npy'))
-    test_loss = np.load(os.path.join(basepath,"test_losses_",model_name+'.npy')
-    mse_loss_train = np.load(os.path.join(basepath,"mse_train_losses_",model_name+'.npy')
-    mse_loss_test = np.load(os.path.join(basepath,"mse_test_losses_",model_name+'.npy')
-    km_loss = np.load(os.path.join(basepath,"kmeans_losses_",model_name+'.npy', allow_pickle=True)
-    kl_loss = np.load(os.path.join(basepath,"kl_losses_'",model_name+'.npy')
-    fut_loss = np.load(oos.path.join(basepath,"fut_losses_",model_name+'.npy')
+    test_loss = np.load(os.path.join(basepath,"test_losses_",model_name+'.npy'))
+    mse_loss_train = np.load(os.path.join(basepath,"mse_train_losses_",model_name+'.npy'))
+    mse_loss_test = np.load(os.path.join(basepath,"mse_test_losses_",model_name+'.npy'))
+    km_loss = np.load(os.path.join(basepath,"kmeans_losses_",model_name+'.npy', allow_pickle=True))
+    kl_loss = np.load(os.path.join(basepath,"kl_losses_'",model_name+'.npy'))
+    fut_loss = np.load(oos.path.join(basepath,"fut_losses_",model_name+'.npy'))
 
     km_losses = []
     for i in range(len(km_loss)):
