@@ -132,5 +132,6 @@ def behavior_quantification(config, model_name, cluster_method='kmeans', n_clust
 
         if not os.path.exists(os.path.join(path_to_file,"behavior_quantification")):
             os.mkdir(os.path.join(path_to_file,"behavior_quantification"))
-        
+
         get_network(path_to_file, file, cluster_method, n_cluster)
+    print("data saved! You can proceed to running vame.motif_videos...")
