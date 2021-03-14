@@ -72,13 +72,14 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
 
 
 def plot_loss(cfg, filepath, model_name):
-    train_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/train_losses_'+model_name+'.npy')
-    test_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/test_losses_'+model_name+'.npy')
-    mse_loss_train = np.load(cfg['project_path']+'/'+'model/model_losses'+'/mse_train_losses_'+model_name+'.npy')
-    mse_loss_test = np.load(cfg['project_path']+'/'+'model/model_losses'+'/mse_test_losses_'+model_name+'.npy')
-    km_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/kmeans_losses_'+model_name+'.npy', allow_pickle=True)
-    kl_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/kl_losses_'+model_name+'.npy')
-    fut_loss = np.load(cfg['project_path']+'/'+'model/model_losses'+'/fut_losses_'+model_name+'.npy')
+    basepath = os.path.join(cfg['project_path'],"model","model_losses")
+    train_loss = np.load(os.path.join(basepath,"train_losses_",model_name+'.npy'))
+    test_loss = np.load(os.path.join(basepath,"test_losses_",model_name+'.npy')
+    mse_loss_train = np.load(os.path.join(basepath,"mse_train_losses_",model_name+'.npy')
+    mse_loss_test = np.load(os.path.join(basepath,"mse_test_losses_",model_name+'.npy')
+    km_loss = np.load(os.path.join(basepath,"kmeans_losses_",model_name+'.npy', allow_pickle=True)
+    kl_loss = np.load(os.path.join(basepath,"kl_losses_'",model_name+'.npy')
+    fut_loss = np.load(oos.path.join(basepath,"fut_losses_",model_name+'.npy')
 
     km_losses = []
     for i in range(len(km_loss)):
@@ -97,7 +98,8 @@ def plot_loss(cfg, filepath, model_name):
     ax1.plot(kl_loss, label='KL-Loss')
     ax1.plot(fut_loss, label='Prediction-Loss')
     ax1.legend()
-    fig.savefig(filepath+'evaluate/'+'MSE-and-KL-Loss'+model_name+'.png')
+    #fig.savefig(filepath+'evaluate/'+'MSE-and-KL-Loss'+model_name+'.png')
+    fig.savefig(os.path.join(filepath,"evaluate",MSE-and-KL-Loss,model_name+'.png'))
 
 
 def eval_temporal(cfg, use_gpu, model_name):
