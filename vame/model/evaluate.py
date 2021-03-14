@@ -22,9 +22,7 @@ from vame.model.dataloader import SEQUENCE_DATASET
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:
-    print("Using CUDA")
-    print('GPU active:',torch.cuda.is_available())
-    print('GPU used:',torch.cuda.get_device_name(0))
+    pass
 else:
     torch.device("cpu")
 
@@ -33,8 +31,12 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
                         FUTURE_DECODER, FUTURE_STEPS):
     x = test_loader.__iter__().next()
     x = x.permute(0,2,1)
-    data = x[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
-    data_fut = x[:,seq_len_half:seq_len_half+FUTURE_STEPS,:].type('torch.FloatTensor').cuda()
+    if use_gpu:
+        data = x[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
+        data_fut = x[:,seq_len_half:seq_len_half+FUTURE_STEPS,:].type('torch.FloatTensor').cuda()
+    else:
+        data = x[:,:seq_len_half,:].type('torch.FloatTensor').to()
+        data_fut = x[:,seq_len_half:seq_len_half+FUTURE_STEPS,:].type('torch.FloatTensor').to()
     if FUTURE_DECODER:
         x_tilde, future, latent, mu, logvar = model(data)
 
@@ -58,7 +60,7 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
         ax1.plot(data_tilde[1,...], color='r', linestyle='dashed', label='Sequence Reconstruction')
         ax2.plot(fut_orig[1,...], color='k')
         ax2.plot(fut[1,...], color='r', linestyle='dashed')
-        fig.savefig(filepath+'evaluate/'+'Future_Reconstruction.png')
+        fig.savefig(os.path.join(filepath,"evaluate",'Future_Reconstruction.png'))
 
     else:
         fig, ax1 = plt.subplots(1, 1)
@@ -125,14 +127,16 @@ def eval_temporal(cfg, use_gpu, model_name):
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
                         dropout_rec, dropout_pred).cuda()
+        model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
     else:
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS)
+        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
+                        dropout_rec, dropout_pred).to()
 
-    model.load_state_dict(torch.load(os.path.join(cfg['project_path'],+"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
-    #model.load_state_dict(torch.load(cfg['project_path']+"/model/best_model/"+model_name+'_'+cfg['Project']+'.pkl')) <<< working
+        model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl'), map_location=torch.device('cpu')))
+
     model.eval() #toggle evaluation mode
 
-    #testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
     testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
     test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
 
