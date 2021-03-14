@@ -485,7 +485,7 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
         fut_losses.append(fut_loss)
 
         # save best model
-        if weight > 0.09 and current_loss <= BEST_LOSS: #. changed from 99 to just save someting for testing!
+        if weight > 0.99 and current_loss <= BEST_LOSS:
             BEST_LOSS = current_loss
             print("Saving model!\n")
 
