@@ -117,16 +117,14 @@ def temporal_quant(cfg, model_name, files, use_gpu):
     if cfg['snapshot'] == 'yes':
         if use_gpu:
             model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model","snapshots",model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl')))
-            #model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
         else:
             model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model","snapshots",model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl'),map_location=torch.device('cpu')))
-            #model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl'))
     else:
         if use_gpu:
             model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
         else:
             model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl'),map_location=torch.device('cpu')))
-            #model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
+
     model.eval()
 
     z_list = []
@@ -190,10 +188,10 @@ def cluster_latent_space(cfg, files, z_data, z_logger, cluster_method, n_cluster
 
         for idx, file in enumerate(files):
             print("Segmentation for file %s..." %file )
-            if not os.path.exists(cfg['project_path']+'results/'+file+'/'+model_name+'/'+cluster_method+'-'+str(cluster)):
-                os.mkdir(cfg['project_path']+'results/'+file+'/'+model_name+'/'+cluster_method+'-'+str(cluster))
+            if not os.path.exists(os.path.join(cfg['project_path'],"results",file,"",model_name,"",cluster_method+'-'+str(cluster))):
+                os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,"",cluster_method+'-'+str(cluster)))
 
-            save_data = cfg['project_path']+'results/'+file+'/'+model_name+'/'
+            save_data = os.path.join(cfg['project_path'],"results",file,"",model_name,"")
             z_latent = z_data[z_logger[idx]:z_logger[idx+1],:]
             labels = data_labels[z_logger[idx]:z_logger[idx+1]]
 
