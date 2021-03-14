@@ -128,11 +128,12 @@ def eval_temporal(cfg, use_gpu, model_name):
     else:
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS)
 
-    model.load_state_dict(torch.load(cfg['project_path']+"/model/best_model/"+model_name+'_'+cfg['Project']+'.pkl'))
+    model.load_state_dict(torch.load(os.path.join(cfg['project_path'],+"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
+    #model.load_state_dict(torch.load(cfg['project_path']+"/model/best_model/"+model_name+'_'+cfg['Project']+'.pkl')) <<< working
     model.eval() #toggle evaluation mode
 
     #testset = SEQUENCE_DATASET(cfg['project_path']+'data/train/', data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
-    testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train"), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
+    testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
     test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
 
     plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS)
