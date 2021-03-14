@@ -123,7 +123,7 @@ def temporal_quant(cfg, model_name, files, use_gpu):
             #model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl'))
     else:
         if use_gpu:
-            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model","snapshots",model_name+'_'+cfg['Project']+'.pkl')))
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
         else:
             model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl'),map_location=torch.device('cpu')))
             #model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))

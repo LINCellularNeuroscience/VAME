@@ -77,7 +77,7 @@ def plot_loss(cfg, filepath, model_name):
     test_loss = np.load(os.path.join(basepath,'test_losses_'+model_name+'.npy'))
     mse_loss_train = np.load(os.path.join(basepath,'mse_train_losses_'+model_name+'.npy'))
     mse_loss_test = np.load(os.path.join(basepath,'mse_test_losses_'+model_name+'.npy'))
-    km_loss = np.load(os.path.join(basepath,'kmeans_losses_'+model_name+'.npy', allow_pickle=True))
+    km_loss = np.load(os.path.join(basepath,'kmeans_losses_'+model_name+'.npy'), allow_pickle=True)
     kl_loss = np.load(os.path.join(basepath,'kl_losses_'+model_name+'.npy'))
     fut_loss = np.load(oos.path.join(basepath,'fut_losses_'+model_name+'.npy'))
 
