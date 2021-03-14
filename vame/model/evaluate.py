@@ -141,7 +141,10 @@ def eval_temporal(cfg, use_gpu, model_name):
     test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
 
     plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS)
-    plot_loss(cfg, filepath, model_name)
+    if use_gpu:
+        plot_loss(cfg, filepath, model_name)
+    else:
+        pass #note, loading of losses needs to be adapted for CPU use #TODO
 
 
 
