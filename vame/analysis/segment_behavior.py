@@ -23,8 +23,7 @@ from vame.model.rnn_vae import RNN_VAE
 
 
 def load_data(PROJECT_PATH, file, data):
-    #X = np.load(PROJECT_PATH+'data/'+file+'/'+file+data+'.npy')
-    X = np.load(os.path.join(PROJECT_PATH,"data",+file+'/'+file+data+'.npy'))
+    X = np.load(os.path.join(PROJECT_PATH,"data",file,"",file+data+'.npy'))
     mean = np.load(os.path.join(PROJECT_PATH,"data","train",'seq_mean.npy'))
     std = np.load(os.path.join(PROJECT_PATH,"data","train",'seq_std.npy'))
     X = (X-mean)/std
@@ -79,7 +78,8 @@ def behavior_segmentation(config, model_name=None, cluster_method='kmeans', n_cl
         print('GPU active:',torch.cuda.is_available())
         print('GPU used:',torch.cuda.get_device_name(0))
     else:
-        print("CUDA is not working!")
+        print("CUDA is not working! Attempting to use the CPU...")
+        torch.device("cpu")
 
     z, z_logger = temporal_quant(cfg, model_name, files, use_gpu)
     cluster_latent_space(cfg, files, z, z_logger, cluster_method, n_cluster, model_name)
@@ -108,11 +108,25 @@ def temporal_quant(cfg, model_name, files, use_gpu):
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
                         dropout_rec, dropout_pred).cuda()
+    else:
+        torch.cuda.manual_seed(SEED)
+        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
+                        dropout_rec, dropout_pred).to()
 
     if cfg['snapshot'] == 'yes':
-        model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl'))
+        if use_gpu:
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model","snapshots",model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl')))
+            #model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
+        else:
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model","snapshots",model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl'),map_location=torch.device('cpu')))
+            #model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+cfg['snapshot_epoch']+'.pkl'))
     else:
-        model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
+        if use_gpu:
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model","snapshots",model_name+'_'+cfg['Project']+'.pkl')))
+        else:
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl'),map_location=torch.device('cpu')))
+            #model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
     model.eval()
 
     z_list = []
@@ -140,7 +154,10 @@ def temporal_quant(cfg, model_name, files, use_gpu):
                     break
                 data = X[:,idx-window_start:idx+window_start]
                 data = np.reshape(data, (1,temp_win,NUM_FEATURES))
-                dataTorch = torch.from_numpy(data).type(torch.FloatTensor).cuda()
+                if use_gpu:
+                    dataTorch = torch.from_numpy(data).type(torch.FloatTensor).cuda()
+                else:
+                    dataTorch = torch.from_numpy(data).type(torch.FloatTensor).to()
                 h_n = model.encoder(dataTorch)
                 latent, _, _ = model.lmbda(h_n)
                 z = latent.cpu().data.numpy()
