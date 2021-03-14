@@ -485,10 +485,18 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
         fut_losses.append(fut_loss)
 
         # save best model
-        if weight > 0.99 and current_loss <= BEST_LOSS:
+        if weight > 0.09 and current_loss <= BEST_LOSS: #. changed from 99 to just save someting for testing!
             BEST_LOSS = current_loss
             print("Saving model!\n")
-            torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+'best_model'+'/'+model_name+'_'+cfg['Project']+'.pkl')
+
+            # WIP!!!
+            if use_gpu:
+                torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",+model_name+'_'+cfg['Project']+'.pkl'))
+
+            else:
+                torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",+model_name+'_'+cfg['Project']+'.pkl'))
+                                    #  File "/Users/mwmathis/Documents/VAME/vame/model/rnn_vae.py", line 513, in rnn_model
+                                    #RuntimeError: Can't call numpy() on Tensor that requires grad. Use tensor.detach().numpy() instead.
             convergence = 0
         else:
             convergence += 1
