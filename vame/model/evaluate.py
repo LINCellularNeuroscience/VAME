@@ -99,7 +99,7 @@ def plot_loss(cfg, filepath, model_name):
     ax1.plot(fut_loss, label='Prediction-Loss')
     ax1.legend()
     #fig.savefig(filepath+'evaluate/'+'MSE-and-KL-Loss'+model_name+'.png')
-    fig.savefig(os.path.join(filepath,"evaluate","MSE-and-KL-Loss",model_name+'.png'))
+    fig.savefig(os.path.join(filepath,"evaluate",'MSE-and-KL-Loss'+model_name+'.png'))
 
 
 def eval_temporal(cfg, use_gpu, model_name):
