@@ -55,7 +55,7 @@ def create_config_template():
     beta:
     zdims:
     learning_rate:
-    time_window: 
+    time_window:
     prediction_decoder:
     prediction_steps:
     \n
@@ -66,8 +66,8 @@ def create_config_template():
     median_filter:
     \n
 # Video writer:
-    lenght_of_motif_video: 
-    
+    lenght_of_motif_video:
+
 # ONLY CHANGE ANYTHING BELOW IF YOU ARE FAMILIAR WITH RNN MODELS
 # RNN encoder hyperparamter:
     hidden_size_layer_1:
@@ -75,7 +75,7 @@ def create_config_template():
     dropout_encoder:
     \n
 # RNN reconstruction hyperparameter:
-    hidden_size_rec: 
+    hidden_size_rec:
     dropout_rec:
     \n
 # RNN prediction hyperparamter:
@@ -83,10 +83,10 @@ def create_config_template():
     dropout_pred:
     \n
 # RNN loss hyperparameter:
-    mse_reconstruction_reduction: 
+    mse_reconstruction_reduction:
     mse_prediction_reduction:
     kmeans_loss:
-    kmeans_lambda: 
+    kmeans_lambda:
     anneal_function:
     kl_start:
     annealtime:
@@ -99,24 +99,36 @@ def create_config_template():
 
 def read_config(configname):
     """
-    Reads structured config file
+    Reads structured config file defining a project.
     """
     ruamelFile = ruamel.yaml.YAML()
     path = Path(configname)
     if os.path.exists(path):
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 cfg = ruamelFile.load(f)
+                curr_dir = os.path.dirname(configname)
+                if cfg["project_path"] != curr_dir:
+                    cfg["project_path"] = curr_dir
+                    write_config(configname, cfg)
         except Exception as err:
-            if err.args[2] == "could not determine a constructor for the tag '!!python/tuple'":
-                with open(path, 'r') as ymlfile:
-                  cfg = yaml.load(ymlfile,Loader=yaml.SafeLoader)
-                  write_config(configname,cfg)
+            if len(err.args) > 2:
+                if (
+                    err.args[2]
+                    == "could not determine a constructor for the tag '!!python/tuple'"
+                ):
+                    with open(path, "r") as ymlfile:
+                        cfg = yaml.load(ymlfile, Loader=yaml.SafeLoader)
+                        write_config(configname, cfg)
+                else:
+                    raise
+
     else:
-        raise FileNotFoundError ("Config file is not found. Please make sure that the file exists and/or there are no unnecessary spaces in the path of the config file!")
-    return(cfg)
-    
-    
+        raise FileNotFoundError(
+            "Config file is not found. Please make sure that the file exists and/or that you passed the path of the config file correctly!"
+        )
+    return cfg
+
 def write_config(configname,cfg):
     """
     Write structured config file.
@@ -127,11 +139,4 @@ def write_config(configname,cfg):
         for key in cfg.keys():
             cfg_file[key]=cfg[key]
 
-        ruamelFile.dump(cfg_file, cf)        
-        
-        
-        
-        
-        
-        
-        
+        ruamelFile.dump(cfg_file, cf)
