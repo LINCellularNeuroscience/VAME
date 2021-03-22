@@ -218,6 +218,7 @@ def pose_segmentation(config):
                 print("Individual k-Means parameterization of latent vectors for %d cluster" %n_cluster)
                 labels, cluster_center, motif_usages = individual_parameterization(cfg, files, latent_vectors, n_cluster)
             
+            print(files)
             for idx, file in enumerate(files):
                 print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
                 if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):                    
@@ -227,10 +228,10 @@ def pose_segmentation(config):
                         print(error)                    
                     
                 save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
-                np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file, labels[idx]))
-                np.save(os.path.join(save_data,'cluster_center_'+file, cluster_center[idx]))
-                np.save(os.path.join(save_data,'latent_vector_'+file, latent_vectors[idx]))
-                np.save(os.path.join(save_data,'motif_usage_'+file, motif_usages[idx]))
+                np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file), labels[idx])
+                np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
+                np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
+                np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
             
         else:
             print('\n'
@@ -267,10 +268,10 @@ def pose_segmentation(config):
                             print(error)   
                         
                     save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
-                    np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file, labels[idx]))
-                    np.save(os.path.join(save_data,'cluster_center_'+file, cluster_center[idx]))
-                    np.save(os.path.join(save_data,'latent_vector_'+file, latent_vectors[idx]))
-                    np.save(os.path.join(save_data,'motif_usage_'+file, motif_usages[idx]))
+                    np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file), labels[idx])
+                    np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
+                    np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
+                    np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
             else:
                 print('No new parameterization has been calculated.')
             

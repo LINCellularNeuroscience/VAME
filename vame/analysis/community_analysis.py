@@ -103,11 +103,11 @@ def create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster
                     while flag_2 == 'no':
                         add = input('Extend list or add in the end? (ext/end)')
                         if add == "ext":
-                            motif_idx = input('Which motif number? ')
-                            list_idx = input('At which position in the list? (pythonic indexing starts at 0) ')
+                            motif_idx = int(input('Which motif number? '))
+                            list_idx = int(input('At which position in the list? (pythonic indexing starts at 0) '))
                             community_bag[list_idx].append(motif_idx)
                         if add == "end":
-                            motif_idx = input('Which motif number? ')
+                            motif_idx = int(input('Which motif number? '))
                             community_bag.append([motif_idx])
                         print(community_bag)
                         flag_2 = input('\nAre all motifs in the list? (yes/no)')
@@ -214,7 +214,7 @@ def community(config, show_umap=False, cut_tree=None):
         np.save(os.path.join(path_to_file,"community","transition_matrix_"+file+'.npy'),transition_matrices[idx])
         np.save(os.path.join(path_to_file,"community","community_label_"+file+'.npy'), community_labels_all[idx])
         
-        with open(os.path.join(path_to_file,"community","hierarchy"+file+".txt"), "wb") as fp:   #Pickling
+        with open(os.path.join(path_to_file,"community","hierarchy"+file+".pkl"), "wb") as fp:   #Pickling
             pickle.dump(communities_all[idx], fp)
     
         if show_umap == True:

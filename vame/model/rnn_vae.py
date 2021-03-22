@@ -376,14 +376,14 @@ def train_model(config):
             break
 
         # save logged losses
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','train_losses_'+model_name, train_losses))
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','test_losses_'+model_name, test_losses))
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','kmeans_losses_'+model_name, kmeans_losses))
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','kl_losses_'+model_name, kl_losses))
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','weight_values_'+model_name, weight_values))
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_train_losses_'+model_name, mse_losses))
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_test_losses_'+model_name, current_loss))
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','fut_losses_'+model_name, fut_losses))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','train_losses_'+model_name), train_losses)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','test_losses_'+model_name), test_losses)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','kmeans_losses_'+model_name), kmeans_losses)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','kl_losses_'+model_name), kl_losses)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','weight_values_'+model_name), weight_values)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_train_losses_'+model_name), mse_losses)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_test_losses_'+model_name), current_loss)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','fut_losses_'+model_name), fut_losses)
 
 
     if convergence < cfg['model_convergence']:
