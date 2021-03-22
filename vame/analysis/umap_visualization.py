@@ -20,25 +20,25 @@ from mpl_toolkits.mplot3d import Axes3D
 from vame.util.auxiliary import read_config
 
 
-def umap_vis(file, embed):        
+def umap_vis(file, embed, num_points):        
     fig = plt.figure(1)
-    plt.scatter(embed[:,0], embed[:,1], s=2, alpha=.5)
+    plt.scatter(embed[:num_points,0], embed[:num_points,1], s=2, alpha=.5)
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
     
 
-def umap_label_vis(file, embed, label, n_cluster):
+def umap_label_vis(file, embed, label, n_cluster, num_points):
     fig = plt.figure(1)
-    plt.scatter(embed[:,0], embed[:,1],  c=label[:30000], cmap='Spectral', s=2, alpha=.7)
+    plt.scatter(embed[:num_points,0], embed[:num_points,1],  c=label[:num_points], cmap='Spectral', s=2, alpha=.7)
     plt.colorbar(boundaries=np.arange(n_cluster+1)-0.5).set_ticks(np.arange(n_cluster))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
 
 
-def umap_vis_comm(file, embed, community_label):
+def umap_vis_comm(file, embed, community_label, num_points):
     num = np.unique(community_label).shape[0]
     fig = plt.figure(1)
-    plt.scatter(embed[:,0], embed[:,1],  c=community_label[:30000], cmap='Spectral', s=2, alpha=.7)
+    plt.scatter(embed[:num_points,0], embed[:num_points,1],  c=community_label[:num_points], cmap='Spectral', s=2, alpha=.7)
     plt.colorbar(boundaries=np.arange(num+1)-0.5).set_ticks(np.arange(num))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
@@ -94,17 +94,18 @@ def visualization(config, label=None):
             
             embed = reducer.fit_transform(latent_vector[:num_points,:])
             np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
-            
+        
+        print("Visualizing %d data points.. " %num_points)
         if label == None:                    
-            umap_vis(file, embed)
+            umap_vis(file, embed, num_points)
             
         if label == 'motif':
             label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
-            umap_label_vis(file, embed, label, n_cluster)
+            umap_label_vis(file, embed, label, n_cluster, num_points)
 
         if label == "community":
             community_label = np.load(os.path.join(path_to_file,"","community","","community_label_"+file+".npy"))
-            umap_vis_comm(file, embed, community_label)                                    
+            umap_vis_comm(file, embed, community_label, num_points)                                    
 
 
 
