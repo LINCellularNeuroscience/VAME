@@ -21,7 +21,7 @@ from vame.util.auxiliary import read_config
 from vame.util.gif_pose_helper import get_animal_frames
 
 
-def create_video(path_to_file, file, embed, clabel, frames, start, length): 
+def create_video(path_to_file, file, embed, clabel, frames, start, length, max_lag): 
     # set matplotlib colormap
     cmap = matplotlib.cm.gray
     cmap_reversed = matplotlib.cm.get_cmap('gray_r')
@@ -36,8 +36,8 @@ def create_video(path_to_file, file, embed, clabel, frames, start, length):
     ax2.grid(False)
     lag = 0
     for i in tqdm.tqdm(range(length)):
-        if i > 30:
-            lag = i - 30
+        if i > max_lag:
+            lag = i - max_lag
         ax1.cla()
         ax1.axis('off')
         ax1.grid(False)
@@ -52,7 +52,7 @@ def create_video(path_to_file, file, embed, clabel, frames, start, length):
         fig.savefig(os.path.join(path_to_file,"gif_frames",file+'gif_%d.png') %i) 
 
 
-def gif(config, pose_ref_index, start=None, length=500, file_format='.mp4', crop_size=(300,300)):
+def gif(config, pose_ref_index, subtract_background=True, start=None, length=500, max_lag=30, file_format='.mp4', crop_size=(300,300)):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     model_name = cfg['model_name']
@@ -94,8 +94,8 @@ def gif(config, pose_ref_index, start=None, length=500, file_format='.mp4', crop
         else:
             start = start
         
-        frames = get_animal_frames(cfg, file, pose_ref_index, start, length, file_format, crop_size)
-        create_video(path_to_file, file, embed, community_label, frames, start, length)
+        frames = get_animal_frames(cfg, file, pose_ref_index, start, length, subtract_background, file_format, crop_size)
+        create_video(path_to_file, file, embed, community_label, frames, start, length, max_lag)
                    
         
 

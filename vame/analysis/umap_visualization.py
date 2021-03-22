@@ -83,7 +83,14 @@ def visualization(config, label=None):
                     random_state=cfg['random_state']) 
             
             latent_vector = np.load(os.path.join(path_to_file,"",'latent_vector_'+file+'.npy'))
-            embed = reducer.fit_transform(latent_vector[:30000,:])
+            
+            num_points = cfg['num_points']
+            if num_points > latent_vector.shape[0]:
+                num_points = latent_vector.shape[0]
+            print("Embedding %d data points.." %num_points)
+            
+            embed = reducer.fit_transform(latent_vector[:num_points,:])
+            np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
             
         if label == None:                    
             umap_vis(file, embed)

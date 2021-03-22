@@ -51,7 +51,7 @@ def load_model(cfg, model_name, legacy):
                                 hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
                                 dropout_rec, dropout_pred).cuda()
     
-    model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
+    model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',model_name+'_'+cfg['Project']+'.pkl')))
     model.eval()
     
     return model
@@ -140,8 +140,8 @@ def pose_segmentation(config):
         ind_param = cfg['individual_parameterization']
         
         for folders in cfg['video_sets']:
-            if not os.path.exists(os.path.join(cfg['project_path'],"results",folders,"",model_name)):
-                os.mkdir(os.path.join(cfg['project_path'],"results",folders,"",model_name))
+            if not os.path.exists(os.path.join(cfg['project_path'],"results",folders,model_name,"")):
+                os.mkdir(os.path.join(cfg['project_path'],"results",folders,model_name,""))
     
         files = []
         if cfg['all_data'] == 'No':
@@ -173,25 +173,28 @@ def pose_segmentation(config):
             print("CUDA is not working! Attempting to use the CPU...")
             torch.device("cpu")
         
-        folder = os.path.dirname(os.path.join(cfg['project_path'],"results",file,"",model_name,""))
+        folder = os.path.dirname(os.path.join(cfg['project_path'],"results",file,model_name,""))
         if not os.listdir(folder):
-            print(os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster)))
+            print(os.path.join(cfg['project_path'],"results",file,model_name,""))
             model = load_model(cfg, model_name, legacy)
             latent_vectors = embedd_latent_vectors(cfg, files, model, legacy)
 
             if ind_param == False:
                 print("For all animals the same k-Means parameterization of latent vectors is applied for %d cluster" %n_cluster)
                 labels, cluster_center = same_parameterization(cfg, files, latent_vectors, n_cluster)
-            
-            if ind_param == True:
+            else:
                 print("Individual k-Means parameterization of latent vectors for %d cluster" %n_cluster)
                 labels, cluster_center = individual_parameterization(cfg, files, latent_vectors, n_cluster)
             
             for idx, file in enumerate(files):
-                if not os.path.exists(os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))):
-                    os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster)))
+                print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
+                if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):                    
+                    try:
+                        os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
+                    except OSError as error:
+                        print(error)                    
                     
-                save_data = os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+                save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
                 np.save(save_data+'/'+str(n_cluster)+'_km_label_'+file, labels[idx])
                 np.save(save_data+'/cluster_center_'+file, cluster_center[idx])
                 np.save(save_data+'/'+'latent_vector_'+file, latent_vectors[idx])
@@ -201,9 +204,9 @@ def pose_segmentation(config):
                   'For model %s a latent vector embedding already exists. \n' 
                   'Parameterization of latent vector with %d k-Means cluster \n' %(model_name, n_cluster))
             
-            if os.path.exists(os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))):
+            if os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):
                 flag = input('WARNING: A parameterization for the chosen cluster size of the model already exists! \n'
-                             'Do you want to continue? The motif numbers will change! (yes/no) ')
+                             'Do you want to continue? A new k-Means assignment will be computed! (yes/no) ')
             else:
                 flag = 'yes'
             
@@ -211,23 +214,26 @@ def pose_segmentation(config):
                 path_to_latent_vector = os.listdir(folder)[0]
                 latent_vectors = []
                 for file in files:
-                    latent_vector = np.load(os.path.join(cfg['project_path'],"results",file,"",model_name,"",path_to_latent_vector,"",'latent_vector_'+file+'.npy'))
+                    latent_vector = np.load(os.path.join(cfg['project_path'],"results",file,model_name,path_to_latent_vector,'latent_vector_'+file+'.npy'))
                     latent_vectors.append(latent_vector)
                     
                 if ind_param == False:
                     print("For all animals the same k-Means parameterization of latent vectors is applied for %d cluster" %n_cluster)
                     labels, cluster_center = same_parameterization(cfg, files, latent_vectors, n_cluster)
-                
-                if ind_param == True:
+                else:
                     print("Individual k-Means parameterization of latent vectors for %d cluster" %n_cluster)
                     labels, cluster_center = individual_parameterization(cfg, files, latent_vectors, n_cluster)
                 
                 
                 for idx, file in enumerate(files):
-                    if not os.path.exists(os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))):
-                        os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster)))
+                    print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
+                    if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):                    
+                        try:
+                            os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
+                        except OSError as error:
+                            print(error)   
                         
-                    save_data = os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+                    save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster))
                     np.save(save_data+'/'+str(n_cluster)+'_km_label_'+file, labels[idx])
                     np.save(save_data+'/cluster_center_'+file, cluster_center[idx])
                     np.save(save_data+'/'+'latent_vector_'+file, latent_vectors[idx])

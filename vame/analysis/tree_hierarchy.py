@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jun 19 11:23:43 2020
+Variational Animal Motion Embedding 1.0-alpha Toolbox
+© K. Luxem & P. Bauer, Department of Cellular Neuroscience
+Leibniz Institute for Neurobiology, Magdeburg, Germany
 
-@author: luxemk
+https://github.com/LINCellularNeuroscience/VAME
+Licensed under GNU General Public License v3.0
 """
+
 
 import numpy as np
 import networkx as nx

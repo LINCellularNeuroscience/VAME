@@ -209,7 +209,8 @@ def align_mouse(path_to_file,filename,video_format,crop_size, pose_list, pose_re
         images.append(out)
         points.append(shifted_points)
         
-    capture.release()
+    if use_video:
+        capture.release()
     
     time_series = np.zeros((len(pose_list)*2,frame_count))
     for i in range(frame_count):
@@ -252,7 +253,7 @@ def play_aligned_video(a, n, frame_count):
 def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, use_video=False, check_video=False):
     
     #read out data
-    data = pd.read_csv(path_to_file+'/videos/pose_estimation/'+filename+'-DC.csv', skiprows = 2)
+    data = pd.read_csv(path_to_file+'/videos/pose_estimation/'+filename+'.csv', skiprows = 2)
     data_mat = pd.DataFrame.to_numpy(data)
     data_mat = data_mat[:,1:] 
     
@@ -311,6 +312,7 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
         egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size, 
                                            use_video=use_video, check_video=check_video)
         np.save(path_to_file+'/data/'+file+'/'+file+'-PE-seq.npy', egocentric_time_series)
+#        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
         
 
 

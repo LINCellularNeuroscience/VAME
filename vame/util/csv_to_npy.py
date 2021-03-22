@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed May 20 13:52:04 2020
+Variational Animal Motion Embedding 1.0-alpha Toolbox
+© K. Luxem & P. Bauer, Department of Cellular Neuroscience
+Leibniz Institute for Neurobiology, Magdeburg, Germany
 
-@author: luxemk
+https://github.com/LINCellularNeuroscience/VAME
+Licensed under GNU General Public License v3.0
 """
+
 
 import numpy as np
 import pandas as pd
@@ -30,7 +34,7 @@ def csv_to_numpy(config, datapath):
     
     for file in filename:
         # Read in your .csv file, skip the first two rows and create a numpy array
-        data = pd.read_csv(datapath+file+'-DC.csv', skiprows = 2)
+        data = pd.read_csv(datapath+file+'.csv', skiprows = 2)
         data_mat = pd.DataFrame.to_numpy(data)
         data_mat = data_mat[:,1:]
     

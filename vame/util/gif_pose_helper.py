@@ -149,10 +149,10 @@ def interpol(arr):
     return arr
 
 
-def get_animal_frames(cfg, filename, pose_ref_index, start, length, file_format='.mp4', crop_size=(300, 300)):
+def get_animal_frames(cfg, filename, pose_ref_index, start, length, subtract_background, file_format='.mp4', crop_size=(300, 300)):
     path_to_file = cfg['project_path']
     #read out data
-    data = pd.read_csv(os.path.join(path_to_file,"videos","pose_estimation",filename+'-DC.csv'), skiprows = 2)
+    data = pd.read_csv(os.path.join(path_to_file,"videos","pose_estimation",filename+'.csv'), skiprows = 2)
     data_mat = pd.DataFrame.to_numpy(data)
     data_mat = data_mat[:,1:] 
     
@@ -172,12 +172,13 @@ def get_animal_frames(cfg, filename, pose_ref_index, start, length, file_format=
     pose_flip_ref = pose_ref_index
     
     # compute background
-    try:
-        print("Loading background image ...")
-        bg = np.load(os.path.join(path_to_file,"videos",filename+'-background.npy'))
-    except:
-        print("Can't find background image... Calculate background image...")
-        bg = background(path_to_file,filename)
+    if subtract_background == True:
+        try:
+            print("Loading background image ...")
+            bg = np.load(os.path.join(path_to_file,"videos",filename+'-background.npy'))
+        except:
+            print("Can't find background image... Calculate background image...")
+            bg = background(path_to_file,filename)
     
     images = []
     points = [] 
@@ -194,16 +195,15 @@ def get_animal_frames(cfg, filename, pose_ref_index, start, length, file_format=
     capture = cv.VideoCapture(os.path.join(path_to_file,"videos",filename+file_format))
     if not capture.isOpened():
         raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,"videos",filename++file_format)))
-        
-    frame_count = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
     
     for idx in tqdm.tqdm(range(length), disable=not True, desc='Align frames'):
         try:
             capture.set(1,idx+start)
             ret, frame = capture.read()
             frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-            frame = frame - bg
-            frame[frame <= 0] = 0
+            if subtract_background == True:
+                frame = frame - bg
+                frame[frame <= 0] = 0
         except:
             print("Couldn't find a frame in capture.read(). #Frame: %d" %idx+start)
             continue

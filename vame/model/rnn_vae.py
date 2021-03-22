@@ -147,7 +147,7 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         train_loss += loss.item()
         mse_loss += rec_loss.item()
         kullback_loss += kl_loss.item()
-        kmeans_losses += kmeans_loss
+        kmeans_losses += kmeans_loss.item()
 
         if idx % 1000 == 0:
             print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
@@ -219,10 +219,10 @@ def train_model(config):
     pretrained_model = cfg['pretrained_model']
     
     print("Train Variational Autoencoder - Model name: %s \n" %model_name)
-    if not os.path.exists(cfg['project_path']+'/'+'model/best_model'):
-        os.mkdir(cfg['project_path']+'/model/'+'best_model')
-        os.mkdir(cfg['project_path']+'/model/'+'best_model/snapshots')
-        os.mkdir(cfg['project_path']+'/model/'+'model_losses')
+    if not os.path.exists(os.path.join(cfg['project_path'],'model','best_model',"")):
+        os.mkdir(os.path.join(cfg['project_path'],'model','best_model',""))
+        os.mkdir(os.path.join(cfg['project_path'],'model','best_model','snapshots',""))
+        os.mkdir(os.path.join(cfg['project_path'],'model','model_losses',""))
 
     # make sure torch uses cuda for GPU computing
     use_gpu = torch.cuda.is_available()
@@ -305,9 +305,9 @@ def train_model(config):
                         dropout_rec, dropout_pred).to()
 
     if pretrained_weights:
-        if os.path.exists(cfg['project_path']+'/'+'model/'+'best_model/'+pretrained_model+'_'+cfg['Project']+'.pkl'): #TODO, fix this path seeking....
+        if os.path.exists(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')): #TODO, fix this path seeking....
             print("Loading pretrained Model: %s\n" %pretrained_model)
-            model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'best_model/'+pretrained_model+'_'+cfg['Project']+'.pkl'), strict=False)
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'), strict=False))
     """ DATASET """
     trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
     testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
@@ -363,7 +363,7 @@ def train_model(config):
 
         if epoch % SNAPSHOT == 0:
             print("Saving model snapshot!\n")
-            torch.save(model.state_dict(), cfg['project_path']+'/'+'model/'+'best_model'+'/snapshots/'+model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl')
+            torch.save(model.state_dict(), os.path.join(cfg['project_path'],'model','best_model','snapshots',model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl'))
 
         if convergence > cfg['model_convergence']:
             print('Model converged. Please check your model with vame.evaluate_model(). \n'
@@ -376,14 +376,14 @@ def train_model(config):
             break
 
         # save logged losses
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/train_losses_'+model_name, train_losses)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/test_losses_'+model_name, test_losses)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/kmeans_losses_'+model_name, kmeans_losses)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/kl_losses_'+model_name, kl_losses)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/weight_values_'+model_name, weight_values)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/mse_train_losses_'+model_name, mse_losses)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/mse_test_losses_'+model_name, current_loss)
-        np.save(cfg['project_path']+'/'+'model/'+'model_losses'+'/fut_losses_'+model_name, fut_losses)
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','train_losses_'+model_name, train_losses))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','test_losses_'+model_name, test_losses))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','kmeans_losses_'+model_name, kmeans_losses))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','kl_losses_'+model_name, kl_losses))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','weight_values_'+model_name, weight_values))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_train_losses_'+model_name, mse_losses))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_test_losses_'+model_name, current_loss))
+        np.save(os.path.join(cfg['project_path'],'model','model_losses','fut_losses_'+model_name, fut_losses))
 
 
     if convergence < cfg['model_convergence']:

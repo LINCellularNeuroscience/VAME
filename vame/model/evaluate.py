@@ -78,14 +78,15 @@ def plot_loss(cfg, filepath, model_name):
     test_loss = np.load(os.path.join(basepath,'test_losses_'+model_name+'.npy'))
     mse_loss_train = np.load(os.path.join(basepath,'mse_train_losses_'+model_name+'.npy'))
     mse_loss_test = np.load(os.path.join(basepath,'mse_test_losses_'+model_name+'.npy'))
-    km_loss = np.load(os.path.join(basepath,'kmeans_losses_'+model_name+'.npy'), allow_pickle=True)
+#    km_loss = np.load(os.path.join(basepath,'kmeans_losses_'+model_name+'.npy'), allow_pickle=True)
+    km_losses = np.load(os.path.join(basepath,'kmeans_losses_'+model_name+'.npy'))
     kl_loss = np.load(os.path.join(basepath,'kl_losses_'+model_name+'.npy'))
     fut_loss = np.load(os.path.join(basepath,'fut_losses_'+model_name+'.npy'))
 
-    km_losses = []
-    for i in range(len(km_loss)):
-        km = km_loss[i].cpu().detach().numpy()
-        km_losses.append(km)
+#    km_losses = []
+#    for i in range(len(km_loss)):
+#        km = km_loss[i].cpu().detach().numpy()
+#        km_losses.append(km)
 
     fig, (ax1) = plt.subplots(1, 1)
     fig.suptitle('Losses of our Model')

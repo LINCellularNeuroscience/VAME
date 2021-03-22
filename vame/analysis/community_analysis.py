@@ -64,7 +64,7 @@ def get_transition_matrix(adjacency_matrix, threshold = 0.0):
 def get_labels(cfg, files, model_name, n_cluster):
     labels = []
     for file in files:
-        path_to_file = os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        path_to_file = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
         label = np.load(path_to_file+'/'+str(n_cluster)+'_km_label_'+file+'.npy')
         labels.append(label)
     return labels
@@ -89,6 +89,7 @@ def create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster
         if cut_tree != None:
             community_bag =  traverse_tree_cutline(T,cutline=cut_tree)
             communities_all.append(community_bag)
+            draw_tree(T)
         else:
             draw_tree(T)
             plt.pause(0.5)
@@ -138,34 +139,41 @@ def get_community_labels(files, labels, communities_all):
     return community_labels_all
 
 
-def umap_embedding(cfg, files, model_name, n_cluster):
-    embeds = []
+def umap_embedding(cfg, file, model_name, n_cluster):
     reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'], 
                         random_state=cfg['random_state']) 
     
-    for i, file in enumerate(files):
-        print("UMAP calculation for file %s" %file)
-        folder = os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
-        latent_vector = np.load(os.path.join(folder,"",'latent_vector_'+file+'.npy'))
-        embed = reducer.fit_transform(latent_vector[:30000,:])
-        embeds.append(embed)
+    print("UMAP calculation for file %s" %file)
     
-    return embeds
+    folder = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+    latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
+    
+    num_points = cfg['num_points']
+    if num_points > latent_vector.shape[0]:
+        num_points = latent_vector.shape[0]
+    print("Embedding %d data points.." %num_points)
+    
+    embed = reducer.fit_transform(latent_vector[:num_points,:])
+    
+    return embed
 
 
-def umap_vis(files, embeds, community_labels_all):
-    window_slice = slice(0, 500)
-    for idx, animal in enumerate(files):
-        num = np.unique(community_labels_all[idx]).shape[0]
-        fig = plt.figure(1)
-        plt.scatter(embeds[idx][:,0], embeds[idx][:,1],  c=community_labels_all[idx][:30000], cmap='Spectral', s=2, alpha=1)
-        plt.plot(embeds[idx][window_slice,0], embeds[idx][window_slice,1], 'k', alpha=.7)
-        plt.colorbar(boundaries=np.arange(num+1)-0.5).set_ticks(np.arange(num))
-        plt.gca().set_aspect('equal', 'datalim')
-        plt.grid(False)
+def umap_vis(cfg, file, embed, community_labels_all):
+    num_points = cfg['num_points']
+    if num_points > community_labels_all.shape[0]:
+        num_points = community_labels_all.shape[0]
+    print("Embedding %d data points.." %num_points)
+    
+    num = np.unique(community_labels_all)
+    
+    fig = plt.figure(1)
+    plt.scatter(embed[:,0], embed[:,1],  c=community_labels_all[:num_points], cmap='Spectral', s=2, alpha=1)
+    plt.colorbar(boundaries=np.arange(np.max(num)+2)-0.5).set_ticks(np.arange(np.max(num)+1))
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.grid(False)
 
 
-def community(config, umap_vis=False, cut_tree=None):
+def community(config, show_umap=False, cut_tree=None):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     model_name = cfg['model_name']
@@ -197,22 +205,21 @@ def community(config, umap_vis=False, cut_tree=None):
     transition_matrices = compute_transition_matrices(files, labels, n_cluster)
     communities_all, trees = create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster)
     community_labels_all = get_community_labels(files, labels, communities_all)    
-    embeds = umap_embedding(cfg, files, model_name, n_cluster)
     
     for idx, file in enumerate(files):
-        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"community")):
             os.mkdir(os.path.join(path_to_file,"community"))
         
-        np.save(os.path.join(path_to_file,"community","","transition_matrix_"+file+'.npy'),transition_matrices[idx])
-        np.save(os.path.join(path_to_file,"community","","community_label_"+file+'.npy'), community_labels_all[idx])
-        np.save(os.path.join(path_to_file,"community","","umap_embedding_"+file+'.npy'), embeds[idx])
+        np.save(os.path.join(path_to_file,"community","transition_matrix_"+file+'.npy'),transition_matrices[idx])
+        np.save(os.path.join(path_to_file,"community","community_label_"+file+'.npy'), community_labels_all[idx])
         
-        with open(os.path.join(path_to_file,"community","","hierarchy"+file+".txt"), "wb") as fp:   #Pickling
+        with open(os.path.join(path_to_file,"community","hierarchy"+file+".txt"), "wb") as fp:   #Pickling
             pickle.dump(communities_all[idx], fp)
     
-    if umap_vis == True:
-        umap_vis(files, embeds, community_labels_all)
+        if show_umap == True:
+            embed = umap_embedding(cfg, file, model_name, n_cluster)
+            umap_vis(cfg, files, embed, community_labels_all[idx])
     
 
 

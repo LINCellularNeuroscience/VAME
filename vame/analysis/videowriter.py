@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import numpy as np
 import cv2 as cv
+import tqdm
 
 from vame.util.auxiliary import read_config
 
@@ -20,10 +21,10 @@ from vame.util.auxiliary import read_config
 def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
     if flag == "motif":
         print("Motif videos getting created for "+file+" ...")
-        labels = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
+        labels = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))
     if flag == "community":
         print("Community videos getting created for "+file+" ...")
-        labels = np.load(os.path.join(path_to_file,"","community","",'community_label_'+file+'.npy'))
+        labels = np.load(os.path.join(path_to_file,"community",'community_label_'+file+'.npy'))
     capture = cv.VideoCapture(os.path.join(cfg['project_path'],"videos",file+videoType))
 
     if capture.isOpened():
@@ -41,18 +42,18 @@ def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
         cluster_lbl = cluster_lbl[0]
         
         if flag == "motif":
-            output = os.path.join(path_to_file,"cluster_videos",file+'motif_%d.avi' %cluster)
+            output = os.path.join(path_to_file,"cluster_videos",file+'-motif_%d.avi' %cluster)
         if flag == "community":
-            output = os.path.join(path_to_file,"community_videos",file+'motif_%d.avi' %cluster)
+            output = os.path.join(path_to_file,"community_videos",file+'-community_%d.avi' %cluster)
             
         video = cv.VideoWriter(output, cv.VideoWriter_fourcc('M','J','P','G'), fps, (int(width), int(height)))
 
-        if len(cluster_lbl) < cfg['lenght_of_motif_video']:
+        if len(cluster_lbl) < cfg['length_of_motif_video']:
             vid_length = len(cluster_lbl)
         else:
-            vid_length = cfg['lenght_of_motif_video']
+            vid_length = cfg['length_of_motif_video']
 
-        for num in range(vid_length):
+        for num in tqdm.tqdm(range(vid_length)):
             idx = cluster_lbl[num]
             capture.set(1,idx+cluster_start)
             ret, frame = capture.read()
@@ -93,7 +94,7 @@ def motif_videos(config, videoType='.mp4'):
 
     print("Cluster size is: %d " %n_cluster)
     for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
             os.mkdir(os.path.join(path_to_file,"cluster_videos"))
 
@@ -133,7 +134,7 @@ def community_videos(config, videoType='.mp4'):
 
     print("Cluster size is: %d " %n_cluster)
     for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"community_videos")):
             os.mkdir(os.path.join(path_to_file,"community_videos"))
 

@@ -75,9 +75,10 @@ def create_config_template():
     n_init_kmeans:
     \n
 # Video writer:
-    lenght_of_motif_video:
+    length_of_motif_video:
+    \n
 # UMAP parameter:
-    mind_dist:
+    min_dist:
     n_neighbors: 
     random_state: 
     num_points:
