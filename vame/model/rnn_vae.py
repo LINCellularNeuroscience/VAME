@@ -67,7 +67,7 @@ def kl_annealing(epoch, kl_start, annealtime, function):
     """
     if epoch > kl_start:
         if function == 'linear':
-            new_weight = min(1, epoch/annealtime)
+            new_weight = min(1, (epoch-kl_start)/(annealtime))
 
         elif function == 'sigmoid':
             new_weight = float(1/(1+np.exp(-0.9*(epoch-annealtime))))
@@ -155,10 +155,10 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
     scheduler.step() #be sure scheduler is called before optimizer in >1.1 pytorch
 
     if future_decoder:
-        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, MSE-Future-Loss {:.4f}, KL-Loss: {:.4f},  Kmeans-Loss: {:.4f}, weight: {:.4f}'.format(train_loss / idx,
+        print('Train loss: {:.3f}, MSE-Loss: {:.3f}, MSE-Future-Loss {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(train_loss / idx,
               mse_loss /idx, fut_loss/idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx, kl_weight))
     else:
-        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, KL-Loss: {:.4f}, Kmeans-Loss: {:.4f}, weight: {:.4f}'.format(train_loss / idx,
+        print('Train loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(train_loss / idx,
               mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx, kl_weight))
 
     return kl_weight, train_loss/idx, kl_weight*kmeans_losses/idx, kullback_loss/idx, mse_loss/idx, fut_loss/idx
@@ -204,7 +204,7 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
             kullback_loss += kl_loss.item()
             kmeans_losses += kmeans_loss
 
-    print('Average Test loss: {:.4f}, MSE-Loss: {:.4f}, KL-Loss: {:.4f}, Kmeans-Loss: {:.4f}'.format(test_loss / idx,
+    print('Test loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}\n'.format(test_loss / idx,
           mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx))
 
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
@@ -218,7 +218,7 @@ def train_model(config):
     pretrained_weights = cfg['pretrained_weights']
     pretrained_model = cfg['pretrained_model']
     
-    print("Train RNN model!")
+    print("Train Variational Autoencoder - Model name: %s \n" %model_name)
     if not os.path.exists(cfg['project_path']+'/'+'model/best_model'):
         os.mkdir(cfg['project_path']+'/model/'+'best_model')
         os.mkdir(cfg['project_path']+'/model/'+'best_model/snapshots')
@@ -229,12 +229,12 @@ def train_model(config):
     if use_gpu:
         print("Using CUDA")
         print('GPU active:',torch.cuda.is_available())
-        print('GPU used:',torch.cuda.get_device_name(0))
+        print('GPU used: ',torch.cuda.get_device_name(0))
     else:
         torch.device("cpu")
-        print("warning, a GPU was not found... proceeding with CPU (slow!)")
+        print("warning, a GPU was not found... proceeding with CPU (slow!) \n")
         #raise NotImplementedError('GPU Computing is required!')
-
+        
     """ HYPERPARAMTERS """
     # General
     CUDA = use_gpu
@@ -276,8 +276,8 @@ def train_model(config):
 
     BEST_LOSS = 999999
     convergence = 0
-    print('Latent Dimensions: %d, Beta: %d, lr: %.4f' %(ZDIMS, BETA, LEARNING_RATE))
-
+    print('Latent Dimensions: %d, Time window: %d, Beta: %d, lr: %.4f\n' %(ZDIMS, cfg['time_window'], BETA, LEARNING_RATE))
+    
     # simple logging of diverse losses
     train_losses = []
     test_losses = []
@@ -305,11 +305,9 @@ def train_model(config):
                         dropout_rec, dropout_pred).to()
 
     if pretrained_weights:
-        
-        if os.path.exists(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'): #TODO, fix this path seeking....
-            print("Loading pretrained Model: %s" %pretrained_model)
-            model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'), strict=False)
-
+        if os.path.exists(cfg['project_path']+'/'+'model/'+'best_model/'+pretrained_model+'_'+cfg['Project']+'.pkl'): #TODO, fix this path seeking....
+            print("Loading pretrained Model: %s\n" %pretrained_model)
+            model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'best_model/'+pretrained_model+'_'+cfg['Project']+'.pkl'), strict=False)
     """ DATASET """
     trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
     testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
@@ -320,14 +318,12 @@ def train_model(config):
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, amsgrad=True)
 
     if optimizer_scheduler:
-        print('Scheduler step size: %d' %scheduler_step_size)
-        scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=0.2, last_epoch=-1)
+        print('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
+        scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=cfg['scheduler_gamma'], last_epoch=-1)
     else:
         scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
 
     for epoch in range(1,EPOCHS):
-        print('Epoch: %d' %epoch)
-        print('Train: ')
         weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
                                                                          anneal_function, BETA, KL_START,
                                                                          ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
@@ -335,7 +331,6 @@ def train_model(config):
                                                                          MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA,
                                                                          TRAIN_BATCH_SIZE, noise)
 
-        print('Test: ')
         current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer,
                                                   BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
                                                   KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)

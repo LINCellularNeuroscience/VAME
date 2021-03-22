@@ -103,7 +103,7 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     
     cfg_file['Project']=str(project)
     cfg_file['project_path']=str(project_path)+'/'
-    cfg_file['test_fraction']=0.2
+    cfg_file['test_fraction']=0.1
     cfg_file['video_sets']=video_names
     cfg_file['all_data']='yes'
     cfg_file['load_data']='-PE-seq-clean'
@@ -154,6 +154,8 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['mind_dist'] = 0.1
     cfg_file['n_neighbors'] = 200
     cfg_file['random_state'] = 42
+    cfg_file['num_points'] = 30000
+    cfg_file['scheduler_gamma'] = 0.2
     
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file

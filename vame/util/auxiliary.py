@@ -64,7 +64,9 @@ def create_config_template():
     prediction_decoder:
     prediction_steps:
     noise: 
+    scheduler:
     scheduler_step_size:
+    scheduler_gamma:
     \n
 # Segmentation:
     load_data:
@@ -81,6 +83,7 @@ def create_config_template():
     mind_dist:
     n_neighbors: 
     random_state: 
+    num_points:
     \n
 # ONLY CHANGE ANYTHING BELOW IF YOU ARE FAMILIAR WITH RNN MODELS
 # RNN encoder hyperparamter:
@@ -104,7 +107,6 @@ def create_config_template():
     anneal_function:
     kl_start:
     annealtime:
-    scheduler:
     \n
 # Legacy mode
     legacy: 
