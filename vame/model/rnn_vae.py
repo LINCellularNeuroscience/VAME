@@ -21,6 +21,7 @@ from pathlib import Path
 
 from vame.util.auxiliary import read_config
 from vame.model.dataloader import SEQUENCE_DATASET
+from vame.model.rnn_model import RNN_VAE, RNN_VAE_LEGACY
 
 # make sure torch uses cuda for GPU computing
 use_gpu = torch.cuda.is_available()
@@ -30,159 +31,6 @@ if use_gpu:
     print('GPU used:',torch.cuda.get_device_name(0))
 else:
     torch.device("cpu")
-
-
-
-""" MODEL """
-class Encoder(nn.Module):
-    def __init__(self, NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder):
-        super(Encoder, self).__init__()
-
-        self.input_size = NUM_FEATURES
-        self.hidden_size = hidden_size_layer_1
-        self.hidden_size_2 = hidden_size_layer_2
-        self.n_layers  = 1
-        self.dropout   = dropout_encoder
-
-        self.rnn_1 = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.n_layers,
-                            bias=True, batch_first=True, dropout=self.dropout, bidirectional=True)
-
-        self.rnn_2 = nn.GRU(input_size=self.hidden_size*2, hidden_size=self.hidden_size_2, num_layers=self.n_layers,
-                            bias=True, batch_first=True, dropout=self.dropout, bidirectional=True)
-
-    def forward(self, inputs):
-        outputs_1, hidden_1 = self.rnn_1(inputs)
-        outputs_2, hidden_2 = self.rnn_2(outputs_1)
-
-        h_n_1 = torch.cat((hidden_1[0,...], hidden_1[1,...]), 1)
-        h_n_2 = torch.cat((hidden_2[0,...], hidden_2[1,...]), 1)
-
-        h_n = torch.cat((h_n_1, h_n_2), 1)
-
-        return h_n
-
-
-class Lambda(nn.Module):
-    """Lambda module converts output of encoder to latent vector
-
-    :param hidden_size: hidden size of the encoder
-    :param latent_length: latent vector length
-    """
-    def __init__(self,ZDIMS, hidden_size_layer_1, hidden_size_layer_2):
-        super(Lambda, self).__init__()
-
-        self.hid_dim = hidden_size_layer_1*2 + hidden_size_layer_2*2
-        self.latent_length = ZDIMS
-
-        self.hidden_to_linear = nn.Linear(self.hid_dim, self.hid_dim)
-        self.hidden_to_mean = nn.Linear(self.hid_dim, self.latent_length)
-        self.hidden_to_logvar = nn.Linear(self.hid_dim, self.latent_length)
-
-        self.softplus = nn.Softplus()
-
-    def forward(self, cell_output):
-        """Given last hidden state of encoder, passes through a linear layer, and finds the mean and variance
-
-        :param cell_output: last hidden state of encoder
-        :return: latent vector
-        """
-
-        self.latent_mean = self.hidden_to_mean(cell_output)
-
-        # based on Pereira et al 2019:
-        # "The SoftPlus function ensures that the variance is parameterized as non-negative and activated
-        # by a smooth function
-        self.latent_logvar = self.softplus(self.hidden_to_logvar(cell_output))
-
-        if self.training:
-            std = self.latent_logvar.mul(0.5).exp_()
-            eps = Variable(std.data.new(std.size()).normal_())
-            return eps.mul(std).add_(self.latent_mean), self.latent_mean, self.latent_logvar
-        else:
-            return self.latent_mean, self.latent_mean, self.latent_logvar
-
-
-class Decoder(nn.Module):
-    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES, hidden_size_rec, dropout_rec):
-        super(Decoder,self).__init__()
-
-        self.num_features = NUM_FEATURES
-        self.sequence_length = TEMPORAL_WINDOW
-        self.hidden_size = hidden_size_rec
-        self.latent_length = ZDIMS
-        self.n_layers  = 1
-        self.dropout   = dropout_rec
-
-        self.rnn_rec = nn.GRU(self.latent_length, hidden_size=self.hidden_size, num_layers=self.n_layers,
-                            bias=True, batch_first=True, dropout=self.dropout, bidirectional=False)
-
-        self.hidden_to_output = nn.Linear(self.hidden_size, self.num_features)
-
-    def forward(self, inputs):
-        decoder_output, _ = self.rnn_rec(inputs)
-        prediction = self.hidden_to_output(decoder_output)
-
-        return prediction
-
-class Decoder_Future(nn.Module):
-    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_STEPS, hidden_size_pred, dropout_pred):
-        super(Decoder_Future,self).__init__()
-
-        self.num_features = NUM_FEATURES
-        self.future_steps = FUTURE_STEPS
-        self.sequence_length = TEMPORAL_WINDOW
-        self.hidden_size = hidden_size_pred
-        self.latent_length = ZDIMS
-        self.n_layers  = 1
-        self.dropout   = dropout_pred
-
-        self.rnn_pred = nn.GRU(self.latent_length, hidden_size=self.hidden_size, num_layers=self.n_layers,
-                            bias=True, batch_first=True, dropout=self.dropout, bidirectional=True)
-
-        self.hidden_to_output = nn.Linear(self.hidden_size*2, self.num_features)
-
-    def forward(self, inputs):
-        inputs = inputs[:,:self.future_steps,:]
-        decoder_output, _ = self.rnn_pred(inputs)
-        prediction = self.hidden_to_output(decoder_output)
-
-        return prediction
-
-
-class RNN_VAE(nn.Module):
-    def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
-                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred):
-        super(RNN_VAE,self).__init__()
-
-        self.FUTURE_DECODER = FUTURE_DECODER
-        self.seq_len = int(TEMPORAL_WINDOW / 2)
-        self.encoder = Encoder(NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder)
-        self.lmbda = Lambda(ZDIMS, hidden_size_layer_1, hidden_size_layer_2)
-        self.decoder = Decoder(self.seq_len,ZDIMS,NUM_FEATURES, hidden_size_rec, dropout_rec)
-        if FUTURE_DECODER:
-            self.decoder_future = Decoder_Future(self.seq_len,ZDIMS,NUM_FEATURES,FUTURE_STEPS, hidden_size_pred,
-                                                 dropout_pred)
-
-    def forward(self,seq):
-
-        """ Encode input sequence """
-        h_n = self.encoder(seq)
-
-        """ Compute the latent state via reparametrization trick """
-        latent, mu, logvar = self.lmbda(h_n)
-        z = latent.unsqueeze(2).repeat(1, 1, self.seq_len)
-        z = z.permute(0,2,1)
-
-        """ Predict the future of the sequence from the latent state"""
-        prediction = self.decoder(z)
-
-        if self.FUTURE_DECODER:
-            future = self.decoder_future(z)
-            return prediction, future, latent, mu, logvar
-        else:
-            return prediction, latent, mu, logvar
-
 
 def reconstruction_loss(x, x_tilde, reduction):
     mse_loss = nn.MSELoss(reduction=reduction)
@@ -244,7 +92,8 @@ def gaussian(ins, is_training, seq_len, std_n=0.8):
 
 
 def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start,
-          annealtime, seq_len, future_decoder, future_steps, scheduler, mse_red, mse_pred, kloss, klmbda, bsize):
+          annealtime, seq_len, future_decoder, future_steps, scheduler, mse_red, 
+          mse_pred, kloss, klmbda, bsize, noise):
     model.train() # toggle model to train mode
     train_loss = 0.0
     mse_loss = 0.0
@@ -264,7 +113,10 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         else:
             data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').to()
             fut = data_item[:,seq_len_half:seq_len_half+future_steps,:].type('torch.FloatTensor').to()
-        data_gaussian = gaussian(data,True,seq_len_half)
+        if noise == True:
+            data_gaussian = gaussian(data,True,seq_len_half)
+        else:
+            data_gaussian = data
 
         if future_decoder:
             data_tilde, future, latent, mu, logvar = model(data_gaussian)
@@ -285,12 +137,12 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
             kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
             kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
             loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
-
+        
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
+        
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
 
         train_loss += loss.item()
         mse_loss += rec_loss.item()
@@ -299,11 +151,11 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
 
         if idx % 1000 == 0:
             print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
-
-        scheduler.step() #be sure scheduler is called before optimizer in >1.1 pytorch
+   
+    scheduler.step() #be sure scheduler is called before optimizer in >1.1 pytorch
 
     if future_decoder:
-        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, MSE-Future-Loss {:.4f}, KL-Loss: {:.4f},  Kmeans-Loss: {:.4f}, weigt: {:.4f}'.format(train_loss / idx,
+        print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, MSE-Future-Loss {:.4f}, KL-Loss: {:.4f},  Kmeans-Loss: {:.4f}, weight: {:.4f}'.format(train_loss / idx,
               mse_loss /idx, fut_loss/idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx, kl_weight))
     else:
         print('Average Train loss: {:.4f}, MSE-Loss: {:.4f}, KL-Loss: {:.4f}, Kmeans-Loss: {:.4f}, weight: {:.4f}'.format(train_loss / idx,
@@ -345,7 +197,7 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
                 kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
                 loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
 
             test_loss += loss.item()
             mse_loss += rec_loss.item()
@@ -358,10 +210,14 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
 
 
-def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=None):
+def train_model(config):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
-
+    legacy = cfg['legacy']
+    model_name = cfg['model_name']
+    pretrained_weights = cfg['pretrained_weights']
+    pretrained_model = cfg['pretrained_model']
+    
     print("Train RNN model!")
     if not os.path.exists(cfg['project_path']+'/'+'model/best_model'):
         os.mkdir(cfg['project_path']+'/model/'+'best_model')
@@ -391,6 +247,8 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
     SNAPSHOT = cfg['model_snapshot']
     LEARNING_RATE = cfg['learning_rate']
     NUM_FEATURES = cfg['num_features']
+    if legacy == False:
+        NUM_FEATURES = NUM_FEATURES - 2
     TEMPORAL_WINDOW = cfg['time_window']*2
     FUTURE_DECODER = cfg['prediction_decoder']
     FUTURE_STEPS = cfg['prediction_steps']
@@ -403,6 +261,8 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
     dropout_encoder = cfg['dropout_encoder']
     dropout_rec = cfg['dropout_rec']
     dropout_pred = cfg['dropout_pred']
+    noise = cfg['noise']
+    scheduler_step_size = cfg['scheduler_step_size']
 
     # Loss
     MSE_REC_REDUCTION = cfg['mse_reconstruction_reduction']
@@ -428,18 +288,24 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
     fut_losses = []
 
     torch.manual_seed(SEED)
+    
+    if legacy == False:
+        RNN = RNN_VAE
+    else:
+        RNN = RNN_VAE_LEGACY
     if CUDA:
         torch.cuda.manual_seed(SEED)
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+        model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
                         dropout_rec, dropout_pred).cuda()
     else: #cpu support ...
         torch.cuda.manual_seed(SEED)
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+        model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
                         dropout_rec, dropout_pred).to()
 
     if pretrained_weights:
+        
         if os.path.exists(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'): #TODO, fix this path seeking....
             print("Loading pretrained Model: %s" %pretrained_model)
             model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/'+'pretrained_model/'+pretrained_model+'.pkl'), strict=False)
@@ -454,9 +320,10 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, amsgrad=True)
 
     if optimizer_scheduler:
-        scheduler = StepLR(optimizer, step_size=100, gamma=0.2, last_epoch=-1)
+        print('Scheduler step size: %d' %scheduler_step_size)
+        scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=0.2, last_epoch=-1)
     else:
-        scheduler = StepLR(optimizer, step_size=100, gamma=0, last_epoch=-1)
+        scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
 
     for epoch in range(1,EPOCHS):
         print('Epoch: %d' %epoch)
@@ -466,7 +333,7 @@ def rnn_model(config, model_name, pretrained_weights=False, pretrained_model=Non
                                                                          ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
                                                                          FUTURE_STEPS, scheduler, MSE_REC_REDUCTION,
                                                                          MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA,
-                                                                         TRAIN_BATCH_SIZE)
+                                                                         TRAIN_BATCH_SIZE, noise)
 
         print('Test: ')
         current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer,

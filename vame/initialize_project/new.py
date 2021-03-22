@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Variational Animal Motion Embedding 0.1 Toolbox
+Variational Animal Motion Embedding 1.0-alpha Toolbox
 © K. Luxem & P. Bauer, Department of Cellular Neuroscience
 Leibniz Institute for Neurobiology, Magdeburg, Germany
 
@@ -141,6 +141,19 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['kmeans_lambda']=0.1
     cfg_file['scheduler']=1
     cfg_file['lenght_of_motif_video'] = 1000
+    cfg_file['noise'] = False
+    cfg_file['scheduler_step_size'] = 100
+    cfg_file['legacy'] = False
+    cfg_file['individual_parameterization'] = False
+    cfg_file['random_state_kmeans'] = 42
+    cfg_file['n_init_kmeans'] = 15
+    cfg_file['model_name '] = 'VAME'
+    cfg_file['n_cluster'] = 15
+    cfg_file['pretrained_weights'] = False
+    cfg_file['pretrained_model'] = None
+    cfg_file['mind_dist'] = 0.1
+    cfg_file['n_neighbors'] = 200
+    cfg_file['random_state'] = 42
     
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file

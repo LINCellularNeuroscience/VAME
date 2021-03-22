@@ -54,12 +54,13 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
     data_tilde = data_tilde.detach().numpy()
 
     if FUTURE_DECODER:
-        fig, (ax1, ax2) = plt.subplots(1, 2)
-        fig.suptitle('Reconstruction and future prediction of input sequence')
-        ax1.plot(data_orig[1,...], color='k', label='Sequence Data')
-        ax1.plot(data_tilde[1,...], color='r', linestyle='dashed', label='Sequence Reconstruction')
-        ax2.plot(fut_orig[1,...], color='k')
-        ax2.plot(fut[1,...], color='r', linestyle='dashed')
+        fig, axs = plt.subplots(2, 5)
+        fig.suptitle('Reconstruction [top] and future prediction [bottom] of input sequence')
+        for i in range(5):
+            axs[0,i].plot(data_orig[i,...], color='k', label='Sequence Data')
+            axs[0,i].plot(data_tilde[i,...], color='r', linestyle='dashed', label='Sequence Reconstruction')
+            axs[1,i].plot(fut_orig[i,...], color='k')
+            axs[1,i].plot(fut[i,...], color='r', linestyle='dashed')
         fig.savefig(os.path.join(filepath,"evaluate",'Future_Reconstruction.png'))
 
     else:
@@ -102,7 +103,7 @@ def plot_loss(cfg, filepath, model_name):
     fig.savefig(os.path.join(filepath,"evaluate",'MSE-and-KL-Loss'+model_name+'.png'))
 
 
-def eval_temporal(cfg, use_gpu, model_name):
+def eval_temporal(cfg, use_gpu, model_name, legacy):
 
     SEED = 19
     ZDIMS = cfg['zdims']
@@ -110,6 +111,8 @@ def eval_temporal(cfg, use_gpu, model_name):
     TEMPORAL_WINDOW = cfg['time_window']*2
     FUTURE_STEPS = cfg['prediction_steps']
     NUM_FEATURES = cfg['num_features']
+    if legacy == False:
+        NUM_FEATURES = NUM_FEATURES - 2
     TEST_BATCH_SIZE = 64
     PROJECT_PATH = cfg['project_path']
     hidden_size_layer_1 = cfg['hidden_size_layer_1']
@@ -150,12 +153,14 @@ def eval_temporal(cfg, use_gpu, model_name):
 
 
 
-def evaluate_model(config, model_name):
+def evaluate_model(config):
     """
         Evaluation of testset
     """
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
+    legacy = cfg['legacy']
+    model_name = cfg['model_name']
 
     if not os.path.exists(os.path.join(cfg['project_path'],"model","evaluate")):
         os.mkdir(os.path.join(cfg['project_path'],"model","evaluate"))
@@ -170,7 +175,7 @@ def evaluate_model(config, model_name):
         print("CUDA is not working, or a GPU is not found; using CPU!")
 
     print("\n\nEvaluation of %s model. \n" %model_name)
-    eval_temporal(cfg, use_gpu, model_name)
+    eval_temporal(cfg, use_gpu, model_name, legacy)
 
     print("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
           "OPTIONS:\n"

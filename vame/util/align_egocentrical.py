@@ -7,13 +7,13 @@ https://github.com/LINCellularNeuroscience/VAME
 Licensed under GNU General Public License v3.0
 """
 
-
+import os
 import cv2 as cv
 import numpy as np
 import pandas as pd
 import tqdm    
-
 import matplotlib.pyplot as plt
+
 from pathlib import Path
 from vame.util.auxiliary import read_config  
 
@@ -98,10 +98,10 @@ def background(path_to_file,filename,video_format='.mp4',num_frames=1000):
     Compute background image from fixed camera 
     """
     import scipy.ndimage
-    capture = cv.VideoCapture(path_to_file+'videos/'+filename+video_format)
+    capture = cv.VideoCapture(path_to_file+'/videos/'+filename+video_format)
     
     if not capture.isOpened():
-        raise Exception("Unable to open video file: {0}".format(path_to_file+filename))
+        raise Exception("Unable to open video file: {0}".format(path_to_file+'/videos/'+filename+video_format))
         
     frame_count = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
     ret, frame = capture.read()
@@ -156,12 +156,11 @@ def align_mouse(path_to_file,filename,video_format,crop_size, pose_list, pose_re
         i = interpol(i)
     
     if use_video:
-        capture = cv.VideoCapture(path_to_file+'videos/'+filename+video_format)
+        capture = cv.VideoCapture(path_to_file+'/videos/'+filename+video_format)
 
         if not capture.isOpened():
-            raise Exception("Unable to open video file: {0}".format(path_to_file+'videos/'+filename))
-            
-    
+            raise Exception("Unable to open video file: {0}".format(path_to_file+'/videos/'+filename))
+          
     for idx in tqdm.tqdm(range(frame_count), disable=not True, desc='Align frames'):
         
         if use_video:
@@ -203,13 +202,14 @@ def align_mouse(path_to_file,filename,video_format,crop_size, pose_list, pose_re
         rect = tuple(lst)
         
         center, size, theta = rect
-    
         
         #crop image
-        out,shifted_points = crop_and_flip(rect, img,pose_list_bordered,pose_flip_ref)
+        out, shifted_points = crop_and_flip(rect, img,pose_list_bordered,pose_flip_ref)
         
         images.append(out)
         points.append(shifted_points)
+        
+    capture.release()
     
     time_series = np.zeros((len(pose_list)*2,frame_count))
     for i in range(frame_count):
@@ -249,10 +249,10 @@ def play_aligned_video(a, n, frame_count):
     cv.destroyAllWindows()
 
 
-def alignment(path_to_file, filename, video_format, crop_size, use_video=False, check_video=False):
+def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, use_video=False, check_video=False):
     
     #read out data
-    data = pd.read_csv(path_to_file+'videos/pose_estimation/'+filename+'-DC.csv', skiprows = 2)
+    data = pd.read_csv(path_to_file+'/videos/pose_estimation/'+filename+'-DC.csv', skiprows = 2)
     data_mat = pd.DataFrame.to_numpy(data)
     data_mat = data_mat[:,1:] 
     
@@ -266,34 +266,35 @@ def alignment(path_to_file, filename, video_format, crop_size, use_video=False, 
     #0: snout, 1: forehand_left, 2: forehand_right, 
     #3: hindleft, 4: hindright, 5: tail    
     
-    pose_ref_index = [0,5]
+    pose_ref_index = pose_ref_index
     
     #list of 2 reference coordinate indices for avoiding flipping
-    pose_flip_ref = [0,5]
+    pose_flip_ref = pose_ref_index
         
     if use_video:
         #compute background
         bg = background(path_to_file,filename)
-        capture = cv.VideoCapture(path_to_file+'videos/'+filename+video_format)
+        capture = cv.VideoCapture(path_to_file+'/videos/'+filename+video_format)
         if not capture.isOpened():
-            raise Exception("Unable to open video file: {0}".format(path_to_file+'videos/'+filename))
+            raise Exception("Unable to open video file: {0}".format(path_to_file+'/videos/'+filename))
             
         frame_count = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
+        capture.release()
     else:
         bg = 0
         frame_count = len(data) # Change this to an abitrary number if you first want to test the code
     
     
-    a,n, time_series = align_mouse(path_to_file, filename, video_format, crop_size, pose_list, pose_ref_index,
+    frames, n, time_series = align_mouse(path_to_file, filename, video_format, crop_size, pose_list, pose_ref_index,
                       pose_flip_ref, bg, frame_count, use_video)
     
     if check_video:
-        play_aligned_video(a, n, frame_count)
+        play_aligned_video(frames, n, frame_count)
         
-    return time_series
+    return time_series, frames
 
 
-def egocentric_alignment(config, video_format='.mp4', crop_size=(300,300), use_video=False, check_video=False):
+def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_video=False, video_format='.mp4', check_video=False):
     """ Happy aligning """
     #config parameters
     config_file = Path(config).resolve()
@@ -307,11 +308,9 @@ def egocentric_alignment(config, video_format='.mp4', crop_size=(300,300), use_v
     # call function and save into your VAME data folder
     for file in filename:
         print("Egocentric alignment for file %s" %file)
-        egocentric_time_series = alignment(path_to_file, file, video_format, crop_size, 
+        egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size, 
                                            use_video=use_video, check_video=check_video)
-        np.save(path_to_file+'data/'+file+'/'+file+'-PE-seq.npy', egocentric_time_series)
+        np.save(path_to_file+'/data/'+file+'/'+file+'-PE-seq.npy', egocentric_time_series)
         
-    # test plot    
-    plt.plot(egocentric_time_series.T)
 
 

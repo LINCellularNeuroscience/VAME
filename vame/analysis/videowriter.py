@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Variational Animal Motion Embedding 0.1 Toolbox
+Variational Animal Motion Embedding 1.0-alpha Toolbox
 © K. Luxem & P. Bauer, Department of Cellular Neuroscience
 Leibniz Institute for Neurobiology, Magdeburg, Germany
 
@@ -17,9 +17,13 @@ import cv2 as cv
 from vame.util.auxiliary import read_config
 
 
-def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType):
-    print("Videos getting created for "+file+" ...")
-    labels = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
+def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
+    if flag == "motif":
+        print("Motif videos getting created for "+file+" ...")
+        labels = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
+    if flag == "community":
+        print("Community videos getting created for "+file+" ...")
+        labels = np.load(os.path.join(path_to_file,"","community","",'community_label_'+file+'.npy'))
     capture = cv.VideoCapture(os.path.join(cfg['project_path'],"videos",file+videoType))
 
     if capture.isOpened():
@@ -35,8 +39,12 @@ def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType):
         print('Cluster: %d' %(cluster))
         cluster_lbl = np.where(labels == cluster)
         cluster_lbl = cluster_lbl[0]
-
-        output = os.path.join(path_to_file,"cluster_videos",file+'motif_%d.avi' %cluster)
+        
+        if flag == "motif":
+            output = os.path.join(path_to_file,"cluster_videos",file+'motif_%d.avi' %cluster)
+        if flag == "community":
+            output = os.path.join(path_to_file,"community_videos",file+'motif_%d.avi' %cluster)
+            
         video = cv.VideoWriter(output, cv.VideoWriter_fourcc('M','J','P','G'), fps, (int(width), int(height)))
 
         if len(cluster_lbl) < cfg['lenght_of_motif_video']:
@@ -54,10 +62,13 @@ def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType):
     capture.release()
 
 
-def motif_videos(config, model_name, videoType='.mp4', cluster_method="kmeans", n_cluster=[30]):
+def motif_videos(config, videoType='.mp4'):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
-
+    model_name = cfg['model_name']
+    n_cluster = cfg['n_cluster']
+    flag = 'motif'
+    
     files = []
     if cfg['all_data'] == 'No':
         all_flag = input("Do you want to write motif videos for your entire dataset? \n"
@@ -80,11 +91,52 @@ def motif_videos(config, model_name, videoType='.mp4', cluster_method="kmeans", 
     else:
         files.append(all_flag)
 
-    for cluster in n_cluster:
-        print("Cluster size is: %d " %cluster)
-        for file in files:
-            path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",cluster_method+'-'+str(cluster))
-            if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
-                    os.mkdir(os.path.join(path_to_file,"cluster_videos"))
+    print("Cluster size is: %d " %n_cluster)
+    for file in files:
+        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
+            os.mkdir(os.path.join(path_to_file,"cluster_videos"))
 
-            get_cluster_vid(cfg, path_to_file, file, cluster, videoType)
+        get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag)
+    
+    print("All videos have been created!")
+    
+    
+def community_videos(config, videoType='.mp4'):
+    config_file = Path(config).resolve()
+    cfg = read_config(config_file)
+    model_name = cfg['model_name']
+    n_cluster = cfg['n_cluster']
+    flag = 'community'
+    
+    files = []
+    if cfg['all_data'] == 'No':
+        all_flag = input("Do you want to write motif videos for your entire dataset? \n"
+                     "If you only want to use a specific dataset type filename: \n"
+                     "yes/no/filename ")
+    else:
+        all_flag = 'yes'
+
+    if all_flag == 'yes' or all_flag == 'Yes':
+        for file in cfg['video_sets']:
+            files.append(file)
+
+    elif all_flag == 'no' or all_flag == 'No':
+        for file in cfg['video_sets']:
+            use_file = input("Do you want to quantify " + file + "? yes/no: ")
+            if use_file == 'yes':
+                files.append(file)
+            if use_file == 'no':
+                continue
+    else:
+        files.append(all_flag)
+
+    print("Cluster size is: %d " %n_cluster)
+    for file in files:
+        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        if not os.path.exists(os.path.join(path_to_file,"community_videos")):
+            os.mkdir(os.path.join(path_to_file,"community_videos"))
+
+        get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag)
+    
+    print("All videos have been created!")
