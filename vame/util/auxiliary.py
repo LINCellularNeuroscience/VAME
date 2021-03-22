@@ -73,9 +73,6 @@ def create_config_template():
     individual_parameterization: 
     random_state_kmeans: 
     n_init_kmeans:
-    snapshot:
-    snapshot_epoch:
-    median_filter:
     \n
 # Video writer:
     lenght_of_motif_video:
