@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Variational Animal Motion Embedding 0.1 Toolbox
+Variational Animal Motion Embedding 1.0-alpha Toolbox
 © K. Luxem & P. Bauer, Department of Cellular Neuroscience
 Leibniz Institute for Neurobiology, Magdeburg, Germany
 
@@ -103,13 +103,10 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     
     cfg_file['Project']=str(project)
     cfg_file['project_path']=str(project_path)+'/'
-    cfg_file['test_fraction']=0.2
+    cfg_file['test_fraction']=0.1
     cfg_file['video_sets']=video_names
     cfg_file['all_data']='yes'
     cfg_file['load_data']='-PE-seq-clean'
-    cfg_file['snapshot']='no'
-    cfg_file['snapshot_epoch']=50
-    cfg_file['median_filter']=5
     cfg_file['anneal_function']='linear'
     cfg_file['batch_size']=256 
     cfg_file['max_epochs']=500 
@@ -133,14 +130,29 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['dropout_rec']=0
     cfg_file['hidden_size_pred']=256
     cfg_file['dropout_pred']=0
-    cfg_file['kl_start']=3
-    cfg_file['annealtime']=8
+    cfg_file['kl_start']=2
+    cfg_file['annealtime']=4
     cfg_file['mse_reconstruction_reduction']='sum'
     cfg_file['mse_prediction_reduction']='sum'
     cfg_file['kmeans_loss']=cfg_file['zdims']
     cfg_file['kmeans_lambda']=0.1
     cfg_file['scheduler']=1
-    cfg_file['lenght_of_motif_video'] = 1000
+    cfg_file['length_of_motif_video'] = 1000
+    cfg_file['noise'] = False
+    cfg_file['scheduler_step_size'] = 100
+    cfg_file['legacy'] = False
+    cfg_file['individual_parameterization'] = False
+    cfg_file['random_state_kmeans'] = 42
+    cfg_file['n_init_kmeans'] = 15
+    cfg_file['model_name']='VAME'
+    cfg_file['n_cluster'] = 15
+    cfg_file['pretrained_weights'] = False
+    cfg_file['pretrained_model']='None'
+    cfg_file['min_dist'] = 0.1
+    cfg_file['n_neighbors'] = 200
+    cfg_file['random_state'] = 42
+    cfg_file['num_points'] = 30000
+    cfg_file['scheduler_gamma'] = 0.2
     
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file

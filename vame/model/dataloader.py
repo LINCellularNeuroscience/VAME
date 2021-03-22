@@ -24,7 +24,7 @@ class SEQUENCE_DATASET(Dataset):
             
         self.data_points = len(self.X[0,:])
         
-        if train and not os.path.exists(path_to_file+'seq_mean.npy'):
+        if train and not os.path.exists(os.path.join(path_to_file,'seq_mean.npy')):
             print("Compute mean and std for temporal dataset.")
             self.mean = np.mean(self.X)
             self.std = np.std(self.X)

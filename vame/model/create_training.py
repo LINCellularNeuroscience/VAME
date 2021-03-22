@@ -18,7 +18,56 @@ import scipy.signal
 from vame.util.auxiliary import read_config
 
 
-def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
+def traindata(cfg, files, testfraction, num_features, savgol_filter):
+    
+    X_train = []
+    pos = []
+    pos_temp = 0
+    pos.append(0)
+    for file in files:
+        path_to_file = os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
+        data = np.load(path_to_file)
+        X_mean = np.mean(data,axis=1)
+        X_std = np.std(data, axis=1)
+        X_z = (data.T - X_mean) / X_std
+        X_len = len(data.T)
+        pos_temp += X_len
+        pos.append(pos_temp)
+        X_train.append(X_z)
+    
+    X = np.concatenate(X_train, axis=0)
+    
+    detect_anchors = np.std(data, axis=1)
+    sort_anchors = np.sort(detect_anchors)
+    anchor_1 = int(np.where(detect_anchors == sort_anchors[0])[0])
+    anchor_2 = int(np.where(detect_anchors == sort_anchors[1])[0])
+    
+    X = np.delete(X, anchor_1, 1)
+    X = np.delete(X, anchor_2-1, 1)
+    
+    X = X.T
+    
+    if savgol_filter:
+        X_med = scipy.signal.savgol_filter(X, cfg['savgol_length'], cfg['savgol_order'])
+        
+    num_frames = len(X_med.T)
+    test = int(num_frames*testfraction)
+    
+    z_test =X_med[:,:test]
+    z_train = X_med[:,test:]
+        
+    #save numpy arrays the the test/train info:
+    np.save(os.path.join(cfg['project_path'],"data", "train",'train_seq.npy'), z_train)
+    np.save(os.path.join(cfg['project_path'],"data", "train", 'test_seq.npy'), z_test)
+    
+    for i, file in enumerate(files):
+        np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
+    
+    print('Lenght of train data: %d' %len(z_train.T))
+    print('Lenght of test data: %d' %len(z_test.T))
+    
+
+def traindata_legacy(cfg, files, testfraction, num_features, savgol_filter):
 
     X_train = []
     pos = []
@@ -67,10 +116,10 @@ def temporal_traindata(cfg, files, testfraction, num_features, savgol_filter):
 def create_trainset(config):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
-
-    path_to_file = cfg['project_path']+'/data/'
-    if not os.path.exists(cfg['project_path']+'/data/train/'):
-        os.mkdir(path_to_file+'/train/')
+    legacy = cfg['legacy']
+    
+    if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
+        os.mkdir(os.path.join(cfg['project_path'],'data','train',""))
 
     files = []
     if cfg['all_data'] == 'No':
@@ -85,4 +134,7 @@ def create_trainset(config):
             files.append(file)
 
     print("Creating training dataset...")
-    temporal_traindata(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
+    if legacy == False:
+        traindata(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
+    else:
+        traindata_legacy(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])

@@ -24,3 +24,6 @@ dependencies:
     - pyyaml
     - opencv-python-headless
     - h5py
+    - umap-learn
+    - networkx    
+    - tqdm

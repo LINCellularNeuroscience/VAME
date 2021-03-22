@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Variational Animal Motion Embedding 0.1 Toolbox
+Variational Animal Motion Embedding 1.0-alpha Toolbox
 © K. Luxem & P. Bauer, Department of Cellular Neuroscience
 Leibniz Institute for Neurobiology, Magdeburg, Germany
 
@@ -29,8 +29,11 @@ def create_config_template():
     """
     import ruamel.yaml
     yaml_str = """\
-# Project name
+# Project configurations
     Project:
+    model_name:
+    n_cluster:
+    
     \n
 # Project path and videos
     project_path:
@@ -46,6 +49,8 @@ def create_config_template():
     test_fraction:
     \n
 # RNN model general hyperparameter:
+    pretrained_model: 
+    pretrained_weights: 
     num_features:
     batch_size:
     max_epochs:
@@ -58,16 +63,26 @@ def create_config_template():
     time_window:
     prediction_decoder:
     prediction_steps:
+    noise: 
+    scheduler:
+    scheduler_step_size:
+    scheduler_gamma:
     \n
 # Segmentation:
     load_data:
-    snapshot:
-    snapshot_epoch:
-    median_filter:
+    individual_parameterization: 
+    random_state_kmeans: 
+    n_init_kmeans:
     \n
 # Video writer:
-    lenght_of_motif_video:
-
+    length_of_motif_video:
+    \n
+# UMAP parameter:
+    min_dist:
+    n_neighbors: 
+    random_state: 
+    num_points:
+    \n
 # ONLY CHANGE ANYTHING BELOW IF YOU ARE FAMILIAR WITH RNN MODELS
 # RNN encoder hyperparamter:
     hidden_size_layer_1:
@@ -90,7 +105,9 @@ def create_config_template():
     anneal_function:
     kl_start:
     annealtime:
-    scheduler:
+    \n
+# Legacy mode
+    legacy: 
     """
     ruamelFile = ruamel.yaml.YAML()
     cfg_file = ruamelFile.load(yaml_str)
