@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 16 17:53:54 2021
+Variational Animal Motion Embedding 0.1 Toolbox
+© K. Luxem & P. Bauer, Department of Cellular Neuroscience
+Leibniz Institute for Neurobiology, Magdeburg, Germany
 
-@author: kluxem
+https://github.com/LINCellularNeuroscience/VAME
+Licensed under GNU General Public License v3.0
 """
 
 import torch
