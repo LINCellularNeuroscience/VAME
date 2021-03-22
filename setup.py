@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="vame",
-    version='0.1',
+    version='1.0',
     packages=find_packages(),
     entry_points={"console_scripts": "vame = vame:main"},
     author="K. Luxem & P. Bauer",
