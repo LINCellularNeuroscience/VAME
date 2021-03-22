@@ -9,14 +9,7 @@ Created on Fri Jun 19 11:23:43 2020
 import numpy as np
 import networkx as nx
 import random
-
-from pathlib import Path
 from matplotlib import pyplot as plt
-
-from apted import APTED
-from apted.helpers import Tree
-
-from vame.util.auxiliary import read_config
 
 def hierarchy_pos(G, root=None, width=.5, vert_gap = 0.2, vert_loc = 0, xcenter = 0.5):
 
@@ -240,10 +233,7 @@ def graph_to_tree(motif_usage, transition_matrix, n_cluster, merge_sel=1):
                 temp_node = new_node
                 
         idx -= 2
-            
-#        for i in range(n_cluster-1)[::-1]:
-#            T.add_edge(merge[i,1],merge[i,0])
-
+        
     return T
 
 
@@ -376,83 +366,4 @@ def traverse_tree_cutline(T, root_node=None,cutline=2):
     community_bag = _traverse_tree_cutline(T, node, traverse_list,cutline, level, color_map,community_bag)
     
     return community_bag
-
-
-
-def TED(T1, T2, root_node_1=None, root_node_2=None):
-#    print(root_node_1)
-    order_T1 = traverse_tree(T1, root_node_1)
-#    print(root_node_2)
-    order_T2 = traverse_tree(T2, root_node_2)
-    
-    tree1=Tree.from_text(order_T1)
-    tree2=Tree.from_text(order_T2)
-        
-    apted = APTED(tree1,tree2)
-    return apted.compute_edit_distance()
-
-
-def tree_edit_distance(tree_list, root_node_list=None):
-    dim = len(tree_list)
-    distance_matrix = np.zeros((dim, dim))
-    
-    if root_node_list == None:
-        for i, tree1 in enumerate(tree_list):
-            for j,tree2 in enumerate(tree_list):
-                ted = TED(tree1,tree2)
-                distance_matrix[i,j] = ted
-                
-    else:
-        for i, tree1 in enumerate(tree_list):
-            root_node_1 = root_node_list[i]
-            for j,tree2 in enumerate(tree_list):
-                root_node_2 = root_node_list[j]
-                ted = TED(tree1,tree2, root_node_1,root_node_2)
-                distance_matrix[i,j] = ted
-    
-    return distance_matrix 
-
-
-def behavior_hierarchy(config, model_name, cluster_method, n_cluster):
-    config_file = Path(config).resolve()
-    cfg = read_config(config_file)
-    
-    files = []
-    if cfg['all_data'] == 'No':
-        all_flag = input("Do you want to quantify your entire dataset? \n"
-                     "If you only want to use a specific dataset type filename: \n"
-                     "yes/no/filename ")
-    else: 
-        all_flag = 'yes'
-        
-    if all_flag == 'yes' or all_flag == 'Yes':
-        for file in cfg['video_sets']:
-            files.append(file)
-            
-    elif all_flag == 'no' or all_flag == 'No':
-        for file in cfg['video_sets']:
-            use_file = input("Do you want to quantify " + str(file) + "? yes/no: ")
-            if use_file == 'yes':
-                files.append(file)
-            if use_file == 'no':
-                continue
-    else:
-        files.append(all_flag)
-    
-    trees = []
-    for file in files:
-        path_to_file=cfg['project_path']+'results/'+str(file)+'/'+model_name+'/'+cluster_method+'-'+str(n_cluster)
-        transition_matrix =  np.load(path_to_file+'/behavior_quantification/transition_matrix.npy')
-        T = graph_to_tree(path_to_file, transition_matrix, n_cluster, merge_sel=1)   
-        trees.append(T)
-        
-    draw_tree(trees[0])
-    
-    # tree edit distance
-    ted = tree_edit_distance(trees)
-    
-    
-    
-    
-    
     
