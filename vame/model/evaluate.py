@@ -69,7 +69,7 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
         ax1.plot(data_orig[1,...], color='k', label='Sequence Data')
         ax1.plot(data_tilde[1,...], color='r', linestyle='dashed', label='Sequence Reconstruction')
 
-        fig.savefig(filepath+'evaluate/'+'Reconstruction_'+model_name+'.png')
+        fig.savefig(os.path.join(filepath,'evaluate','Reconstruction_'+model_name+'.png'))
 
 
 def plot_loss(cfg, filepath, model_name):

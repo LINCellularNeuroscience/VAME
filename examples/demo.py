@@ -77,7 +77,8 @@ vame.generative_model(config, mode="centers") #options: mode: "sampling", "recon
 # and have something cool to show around ;) 
 # Note: This function is currently very slow. Once the frames are saved you can create a video
 # or gif via e.g. ImageJ or other tools
-vame.gif(config, pose_ref_index=[0,5], start=0, length=500, file_format='.mp4', crop_size=(300,300))
+vame.gif(config, pose_ref_index=[0,5], subtract_background=True, start=None, 
+         length=500, max_lag=30, label='community', file_format='.mp4', crop_size=(300,300))
 
 
 

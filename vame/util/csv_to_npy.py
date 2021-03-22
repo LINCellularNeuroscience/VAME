@@ -9,7 +9,7 @@ https://github.com/LINCellularNeuroscience/VAME
 Licensed under GNU General Public License v3.0
 """
 
-
+import os
 import numpy as np
 import pandas as pd
 
@@ -64,5 +64,5 @@ def csv_to_numpy(config, datapath):
         final_positions = np.array(body_position_nan)
     
         # save the final_positions array with np.save()
-        np.save(path_to_file+'/data/'+file+'/'+file+"-PE-seq.npy", final_positions)
+        np.save(os.path.join(path_to_file,'data',file,file+"-PE-seq.npy"), final_positions)
         print("conversion from DeepLabCut csv to numpy complete...")

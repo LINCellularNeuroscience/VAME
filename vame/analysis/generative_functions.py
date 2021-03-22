@@ -108,7 +108,7 @@ def load_model(cfg, model_name):
                             hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
                             dropout_rec, dropout_pred).cuda()
     
-    model.load_state_dict(torch.load(cfg['project_path']+'/'+'model/best_model/'+model_name+'_'+cfg['Project']+'.pkl'))
+    model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',model_name+'_'+cfg['Project']+'.pkl')))
     model.eval()
     
     return model
@@ -146,18 +146,18 @@ def generative_model(config, mode="sampling"):
     model = load_model(cfg, model_name)
     
     for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
 
         if mode == "sampling":
-            latent_vector = np.load(os.path.join(path_to_file,"",'latent_vector_'+file+'.npy'))
+            latent_vector = np.load(os.path.join(path_to_file,'latent_vector_'+file+'.npy'))
             random_generative_samples(cfg, model, latent_vector)
         
         if mode == "reconstruction":
-            latent_vector = np.load(os.path.join(path_to_file,"",'latent_vector_'+file+'.npy'))
+            latent_vector = np.load(os.path.join(path_to_file,'latent_vector_'+file+'.npy'))
             random_reconstruction_samples(cfg, model, latent_vector)
             
         if mode == "centers":
-            cluster_center = np.load(os.path.join(path_to_file,"",'cluster_center_'+file+'.npy'))
+            cluster_center = np.load(os.path.join(path_to_file,'cluster_center_'+file+'.npy'))
             visualize_cluster_center(cfg, model, cluster_center)
 
     

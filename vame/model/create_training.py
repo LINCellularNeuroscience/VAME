@@ -118,9 +118,8 @@ def create_trainset(config):
     cfg = read_config(config_file)
     legacy = cfg['legacy']
     
-    path_to_file = cfg['project_path']+'/data/'
-    if not os.path.exists(cfg['project_path']+'/data/train/'):
-        os.mkdir(path_to_file+'/train/')
+    if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
+        os.mkdir(os.path.join(cfg['project_path'],'data','train',""))
 
     files = []
     if cfg['all_data'] == 'No':

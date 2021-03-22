@@ -12,7 +12,6 @@ import cv2 as cv
 import numpy as np
 import pandas as pd
 import tqdm    
-import matplotlib.pyplot as plt
 
 from pathlib import Path
 from vame.util.auxiliary import read_config  
@@ -98,10 +97,10 @@ def background(path_to_file,filename,video_format='.mp4',num_frames=1000):
     Compute background image from fixed camera 
     """
     import scipy.ndimage
-    capture = cv.VideoCapture(path_to_file+'/videos/'+filename+video_format)
+    capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
     
     if not capture.isOpened():
-        raise Exception("Unable to open video file: {0}".format(path_to_file+'/videos/'+filename+video_format))
+        raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
         
     frame_count = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
     ret, frame = capture.read()
@@ -156,10 +155,10 @@ def align_mouse(path_to_file,filename,video_format,crop_size, pose_list, pose_re
         i = interpol(i)
     
     if use_video:
-        capture = cv.VideoCapture(path_to_file+'/videos/'+filename+video_format)
+        capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
 
         if not capture.isOpened():
-            raise Exception("Unable to open video file: {0}".format(path_to_file+'/videos/'+filename))
+            raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
           
     for idx in tqdm.tqdm(range(frame_count), disable=not True, desc='Align frames'):
         
@@ -253,7 +252,7 @@ def play_aligned_video(a, n, frame_count):
 def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, use_video=False, check_video=False):
     
     #read out data
-    data = pd.read_csv(path_to_file+'/videos/pose_estimation/'+filename+'.csv', skiprows = 2)
+    data = pd.read_csv(os.path.join(path_to_file,'videos','pose_estimation',filename+'.csv'), skiprows = 2)
     data_mat = pd.DataFrame.to_numpy(data)
     data_mat = data_mat[:,1:] 
     
@@ -275,9 +274,9 @@ def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, u
     if use_video:
         #compute background
         bg = background(path_to_file,filename)
-        capture = cv.VideoCapture(path_to_file+'/videos/'+filename+video_format)
+        capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
         if not capture.isOpened():
-            raise Exception("Unable to open video file: {0}".format(path_to_file+'/videos/'+filename))
+            raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
             
         frame_count = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
         capture.release()
@@ -311,7 +310,7 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
         print("Egocentric alignment for file %s" %file)
         egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size, 
                                            use_video=use_video, check_video=check_video)
-        np.save(path_to_file+'/data/'+file+'/'+file+'-PE-seq.npy', egocentric_time_series)
+        np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series)
 #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
         
 

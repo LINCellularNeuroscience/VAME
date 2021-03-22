@@ -65,7 +65,7 @@ def get_labels(cfg, files, model_name, n_cluster):
     labels = []
     for file in files:
         path_to_file = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
-        label = np.load(path_to_file+'/'+str(n_cluster)+'_km_label_'+file+'.npy')
+        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))
         labels.append(label)
     return labels
 
@@ -221,8 +221,6 @@ def community(config, show_umap=False, cut_tree=None):
             embed = umap_embedding(cfg, file, model_name, n_cluster)
             umap_vis(cfg, files, embed, community_labels_all[idx])
     
-
-
 # with open(os.path.join(path_to_file,"community","","hierarchy"+file+".txt"), "rb") as fp:   # Unpickling
 #     b = pickle.load(fp)
 

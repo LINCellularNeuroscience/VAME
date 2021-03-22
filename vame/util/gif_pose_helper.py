@@ -151,6 +151,8 @@ def interpol(arr):
 
 def get_animal_frames(cfg, filename, pose_ref_index, start, length, subtract_background, file_format='.mp4', crop_size=(300, 300)):
     path_to_file = cfg['project_path']
+    time_window = cfg['time_window']
+    lag = int(time_window / 2)
     #read out data
     data = pd.read_csv(os.path.join(path_to_file,"videos","pose_estimation",filename+'.csv'), skiprows = 2)
     data_mat = pd.DataFrame.to_numpy(data)
@@ -198,21 +200,21 @@ def get_animal_frames(cfg, filename, pose_ref_index, start, length, subtract_bac
     
     for idx in tqdm.tqdm(range(length), disable=not True, desc='Align frames'):
         try:
-            capture.set(1,idx+start)
+            capture.set(1,idx+start+lag)
             ret, frame = capture.read()
             frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
             if subtract_background == True:
                 frame = frame - bg
                 frame[frame <= 0] = 0
         except:
-            print("Couldn't find a frame in capture.read(). #Frame: %d" %idx+start)
+            print("Couldn't find a frame in capture.read(). #Frame: %d" %idx+start+lag)
             continue
         
        #Read coordinates and add border
         pose_list_bordered = []
                 
         for i in pose_list:
-            pose_list_bordered.append((int(i[idx+start][0]+crop_size[0]),int(i[idx+start][1]+crop_size[1])))
+            pose_list_bordered.append((int(i[idx+start+lag][0]+crop_size[0]),int(i[idx+start+lag][1]+crop_size[1])))
         
         img = cv.copyMakeBorder(frame, crop_size[1], crop_size[1], crop_size[0], crop_size[0], cv.BORDER_CONSTANT, 0)
         

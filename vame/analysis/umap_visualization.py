@@ -77,6 +77,9 @@ def visualization(config, label=None):
         
         try:
             embed = np.load(os.path.join(path_to_file,"","community","","umap_embedding_"+file+".npy"))
+            num_points = cfg['num_points']
+            if num_points > embed.shape[0]:
+                num_points = embed.shape[0]
         except:
             print("Compute embedding for file %s" %file)
             reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'], 

@@ -68,7 +68,7 @@ def embedd_latent_vectors(cfg, files, model, legacy):
 
     for file in files:
         print('Embedd latent vector for file %s' %file)
-        data = np.load(project_path+'/data/'+file+'/'+file+'-PE-seq-clean.npy')
+        data = np.load(os.path.join(project_path,'data',file,file+'-PE-seq-clean.npy'))
         latent_vector_list = []
         with torch.no_grad(): 
             for i in tqdm.tqdm(range(data.shape[1] - temp_win)):
@@ -84,12 +84,38 @@ def embedd_latent_vectors(cfg, files, model, legacy):
     return latent_vector_files
 
 
+def consecutive(data, stepsize=1):
+    data = data[:]
+    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
+
+
+def get_motif_usage(label):
+    motif_usage = np.unique(label, return_counts=True)
+    cons = consecutive(motif_usage[0])
+    if len(cons) != 1:
+        usage_list = list(motif_usage[1])
+        for i in range(len(cons)-1):
+            a = cons[i+1][0]
+            b = cons[i][-1]
+            d = (a-b)-1
+            for j in range(1,d+1):
+                index = cons[i][-1]+j
+                usage_list.insert(index,0)
+        usage = np.array(usage_list)
+        motif_usage = usage
+    else:
+        motif_usage = motif_usage[1]
+    
+    return motif_usage
+
+
 def same_parameterization(cfg, files, latent_vector_files, cluster):
     random_state = cfg['random_state_kmeans']
     n_init = cfg['n_init_kmeans']
     
     labels = []
     cluster_centers = []
+    motif_usages = []
     latent_vector_cat = np.concatenate(latent_vector_files, axis=0)
     kmeans = KMeans(init='k-means++', n_clusters=cluster, random_state=random_state, n_init=n_init).fit(latent_vector_cat)
     clust_center = kmeans.cluster_centers_
@@ -100,9 +126,12 @@ def same_parameterization(cfg, files, latent_vector_files, cluster):
         file_len = latent_vector_files[i].shape[0]
         labels.append(label[idx:idx+file_len])
         cluster_centers.append(clust_center)
+        
+        motif_usage = get_motif_usage(label[idx:idx+file_len])
+        motif_usages.append(motif_usage)
         idx += file_len
     
-    return labels, cluster_centers
+    return labels, cluster_centers, motif_usages
     
 
 def individual_parameterization(cfg, files, latent_vector_files, cluster):
@@ -111,15 +140,18 @@ def individual_parameterization(cfg, files, latent_vector_files, cluster):
     
     labels = []
     cluster_centers = []
+    motif_usages = []
     for i, file in enumerate(files):
         print(file)
         kmeans = KMeans(init='k-means++', n_clusters=cluster, random_state=random_state, n_init=n_init).fit(latent_vector_files[i])
         clust_center = kmeans.cluster_centers_
-        label = kmeans.predict(latent_vector_files[i])        
+        label = kmeans.predict(latent_vector_files[i])  
+        motif_usage = get_motif_usage(label)
+        motif_usages.append(motif_usage)
         labels.append(label)
         cluster_centers.append(clust_center)
     
-    return labels, cluster_centers
+    return labels, cluster_centers, motif_usages
 
 
 def pose_segmentation(config):
@@ -181,10 +213,10 @@ def pose_segmentation(config):
 
             if ind_param == False:
                 print("For all animals the same k-Means parameterization of latent vectors is applied for %d cluster" %n_cluster)
-                labels, cluster_center = same_parameterization(cfg, files, latent_vectors, n_cluster)
+                labels, cluster_center, motif_usages = same_parameterization(cfg, files, latent_vectors, n_cluster)
             else:
                 print("Individual k-Means parameterization of latent vectors for %d cluster" %n_cluster)
-                labels, cluster_center = individual_parameterization(cfg, files, latent_vectors, n_cluster)
+                labels, cluster_center, motif_usages = individual_parameterization(cfg, files, latent_vectors, n_cluster)
             
             for idx, file in enumerate(files):
                 print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
@@ -195,9 +227,10 @@ def pose_segmentation(config):
                         print(error)                    
                     
                 save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
-                np.save(save_data+'/'+str(n_cluster)+'_km_label_'+file, labels[idx])
-                np.save(save_data+'/cluster_center_'+file, cluster_center[idx])
-                np.save(save_data+'/'+'latent_vector_'+file, latent_vectors[idx])
+                np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file, labels[idx]))
+                np.save(os.path.join(save_data,'cluster_center_'+file, cluster_center[idx]))
+                np.save(os.path.join(save_data,'latent_vector_'+file, latent_vectors[idx]))
+                np.save(os.path.join(save_data,'motif_usage_'+file, motif_usages[idx]))
             
         else:
             print('\n'
@@ -219,10 +252,10 @@ def pose_segmentation(config):
                     
                 if ind_param == False:
                     print("For all animals the same k-Means parameterization of latent vectors is applied for %d cluster" %n_cluster)
-                    labels, cluster_center = same_parameterization(cfg, files, latent_vectors, n_cluster)
+                    labels, cluster_center, motif_usages = same_parameterization(cfg, files, latent_vectors, n_cluster)
                 else:
                     print("Individual k-Means parameterization of latent vectors for %d cluster" %n_cluster)
-                    labels, cluster_center = individual_parameterization(cfg, files, latent_vectors, n_cluster)
+                    labels, cluster_center, motif_usages = individual_parameterization(cfg, files, latent_vectors, n_cluster)
                 
                 
                 for idx, file in enumerate(files):
@@ -233,10 +266,11 @@ def pose_segmentation(config):
                         except OSError as error:
                             print(error)   
                         
-                    save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster))
-                    np.save(save_data+'/'+str(n_cluster)+'_km_label_'+file, labels[idx])
-                    np.save(save_data+'/cluster_center_'+file, cluster_center[idx])
-                    np.save(save_data+'/'+'latent_vector_'+file, latent_vectors[idx])
+                    save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+                    np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file, labels[idx]))
+                    np.save(os.path.join(save_data,'cluster_center_'+file, cluster_center[idx]))
+                    np.save(os.path.join(save_data,'latent_vector_'+file, latent_vectors[idx]))
+                    np.save(os.path.join(save_data,'motif_usage_'+file, motif_usages[idx]))
             else:
                 print('No new parameterization has been calculated.')
             
