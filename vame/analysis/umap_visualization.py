@@ -81,6 +81,8 @@ def visualization(config, label=None):
             if num_points > embed.shape[0]:
                 num_points = embed.shape[0]
         except:
+            if not os.path.exists(os.path.join(path_to_file,"community")):
+                os.mkdir(os.path.join(path_to_file,"community"))
             print("Compute embedding for file %s" %file)
             reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'], 
                     random_state=cfg['random_state']) 
