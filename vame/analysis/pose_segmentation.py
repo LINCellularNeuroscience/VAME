@@ -70,8 +70,8 @@ def embedd_latent_vectors(cfg, files, model, legacy):
         data = np.load(os.path.join(project_path,'data',file,file+'-PE-seq-clean.npy'))
         latent_vector_list = []
         with torch.no_grad(): 
-#            for i in tqdm.tqdm(range(data.shape[1] - temp_win)):
-            for i in tqdm.tqdm(range(100)):
+            for i in tqdm.tqdm(range(data.shape[1] - temp_win)):
+            # for i in tqdm.tqdm(range(10000)):
                 data_sample_np = data[:,i:temp_win+i].T
                 data_sample_np = np.reshape(data_sample_np, (1, temp_win, num_features))
                 h_n = model.encoder(torch.from_numpy(data_sample_np).type('torch.FloatTensor').cuda())
@@ -167,7 +167,7 @@ def pose_segmentation(config):
         from segment_behavior import behavior_segmentation
         behavior_segmentation(config, model_name=model_name, cluster_method='kmeans', n_cluster=n_cluster)
         
-    if legacy == False:
+    else:
         ind_param = cfg['individual_parameterization']
         
         for folders in cfg['video_sets']:
@@ -206,7 +206,7 @@ def pose_segmentation(config):
         
         if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):
             new = True
-            print("Hello1")
+            # print("Hello1")
             model = load_model(cfg, model_name, legacy)
             latent_vectors = embedd_latent_vectors(cfg, files, model, legacy)
 
@@ -246,7 +246,8 @@ def pose_segmentation(config):
             else:
                 print('No new parameterization has been calculated.')
                 new = False
-        print("Hello2")
+                
+        # print("Hello2")
         if new == True:
             for idx, file in enumerate(files):
                 print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
