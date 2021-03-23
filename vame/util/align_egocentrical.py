@@ -313,5 +313,5 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
         np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series)
 #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
         
-
+    print("Your data is now ine right format and you can call vame.create_trainset()")
 

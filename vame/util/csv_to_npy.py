@@ -66,3 +66,5 @@ def csv_to_numpy(config, datapath):
         # save the final_positions array with np.save()
         np.save(os.path.join(path_to_file,'data',file,file+"-PE-seq.npy"), final_positions)
         print("conversion from DeepLabCut csv to numpy complete...")
+
+    print("Your data is now ine right format and you can call vame.create_trainset()")

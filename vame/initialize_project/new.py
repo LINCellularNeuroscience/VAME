@@ -158,9 +158,12 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     # Write dictionary to yaml  config file
     auxiliary.write_config(projconfigfile,cfg_file)
 
-    print('A VAME project has been created. \n'
-          '\n'
-          'Next use vame.create_trainset(config) to split your data into a train and test set. \n'
-          'Afterwards you can use vame.train_model() to train the model on your data.')
+    print('A VAME project has been created. \n')
+    print('Now its time to prepare your data for VAME. '
+          'The first step is to move your pose .csv file (e.g. DeepLabCut .csv) into the '
+          '//YOUR//VAME//PROJECT//videos//pose_estimation folder. From here you can call '
+          'either the function vame.egocentric_alignment() or if your data is by design egocentric '
+          'call vame.csv_to_numpy(). This will prepare the data in .csv into the right format to start '
+          'working with VAME.')
 
     return projconfigfile

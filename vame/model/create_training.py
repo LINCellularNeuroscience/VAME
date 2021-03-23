@@ -138,3 +138,6 @@ def create_trainset(config):
         traindata(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
     else:
         traindata_legacy(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
+        
+    print("A training and test set has been created. Now everything is ready to train a variational autoencoder"
+          "via vame.train_model() ...")
