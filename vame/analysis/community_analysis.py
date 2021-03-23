@@ -110,7 +110,7 @@ def create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster
                             motif_idx = int(input('Which motif number? '))
                             community_bag.append([motif_idx])
                         print(community_bag)
-                        flag_2 = input('\nAre all motifs in the list? (yes/no)')
+                        flag_2 = input('\nAre all motifs in the list? (yes/no/restart)')
                 if flag_2 == "restart":
                     continue
                 if flag_2 == 'yes':

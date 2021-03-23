@@ -276,7 +276,7 @@ def train_model(config):
 
     BEST_LOSS = 999999
     convergence = 0
-    print('Latent Dimensions: %d, Time window: %d, Beta: %d, lr: %.4f\n' %(ZDIMS, cfg['time_window'], BETA, LEARNING_RATE))
+    print('Latent Dimensions: %d, Time window: %d, Batch Size: %d, Beta: %d, lr: %.4f\n' %(ZDIMS, cfg['time_window'], TRAIN_BATCH_SIZE, BETA, LEARNING_RATE))
     
     # simple logging of diverse losses
     train_losses = []

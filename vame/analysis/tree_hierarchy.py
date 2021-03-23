@@ -246,6 +246,8 @@ def draw_tree(T):
     pos = hierarchy_pos(T,'Root',width=.5, vert_gap = 0.1, vert_loc = 0, xcenter = 50) 
     fig = plt.figure(2)
     nx.draw_networkx(T, pos)  
+    figManager = plt.get_current_fig_manager()
+    figManager.window.showMaximized()
     
 
 def traverse_tree(T, root_node=None):
