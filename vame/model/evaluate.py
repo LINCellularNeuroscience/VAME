@@ -72,7 +72,7 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
             fig.suptitle('Reconstruction of input sequence')
             ax1[0,i].plot(data_orig[i,...], color='k', label='Sequence Data')
             ax1[0,i].plot(data_tilde[i,...], color='r', linestyle='dashed', label='Sequence Reconstruction')
-
+        axs[0,0].set(xlabel='time steps', ylabel='reconstruction')
         fig.savefig(os.path.join(filepath,'evaluate','Reconstruction_'+model_name+'.png'))
 
 
