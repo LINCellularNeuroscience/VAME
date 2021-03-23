@@ -123,6 +123,7 @@ def eval_temporal(cfg, use_gpu, model_name, legacy):
     dropout_encoder = cfg['dropout_encoder']
     dropout_rec = cfg['dropout_rec']
     dropout_pred = cfg['dropout_pred']
+    softplus = cfg['softplus']
 
     filepath = os.path.join(cfg['project_path'],"model")
 
@@ -132,12 +133,12 @@ def eval_temporal(cfg, use_gpu, model_name, legacy):
         torch.cuda.manual_seed(SEED)
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred).cuda()
+                        dropout_rec, dropout_pred, softplus).cuda()
         model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl')))
     else:
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred).to()
+                        dropout_rec, dropout_pred, softplus).to()
 
         model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl'), map_location=torch.device('cpu')))
 

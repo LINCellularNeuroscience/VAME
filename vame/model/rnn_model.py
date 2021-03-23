@@ -46,16 +46,20 @@ class Lambda(nn.Module):
     :param hidden_size: hidden size of the encoder
     :param latent_length: latent vector length
     """
-    def __init__(self,ZDIMS, hidden_size_layer_1, hidden_size_layer_2):
+    def __init__(self,ZDIMS, hidden_size_layer_1, hidden_size_layer_2, softplus):
         super(Lambda, self).__init__()
         
         self.hid_dim = hidden_size_layer_1*4
         self.latent_length = ZDIMS
+        self.softplus = softplus
         
         self.hidden_to_mean = nn.Linear(self.hid_dim, self.latent_length)
         self.hidden_to_logvar = nn.Linear(self.hid_dim, self.latent_length)
         
-
+        if self.softplus == True:
+            print("Using a softplus activation to ensures that the variance is parameterized as non-negative and activated by a smooth function")
+            self.softplus_fn = nn.Softplus()
+        
     def forward(self, hidden):
         """Given last hidden state of encoder, passes through a linear layer, and finds the mean and variance
 
@@ -64,7 +68,10 @@ class Lambda(nn.Module):
         """
         
         self.mean = self.hidden_to_mean(hidden)
-        self.logvar = self.hidden_to_logvar(hidden)
+        if self.softplus == True:
+            self.logvar = self.softplus_fn(self.hidden_to_logvar(hidden))
+        else:
+            self.logvar = self.hidden_to_logvar(hidden)
         
         if self.training:
             std = torch.exp(0.5 * self.logvar)
@@ -145,13 +152,13 @@ class Decoder_Future(nn.Module):
 class RNN_VAE(nn.Module):
     def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
-                        dropout_rec, dropout_pred):
+                        dropout_rec, dropout_pred, softplus):
         super(RNN_VAE,self).__init__()
         
         self.FUTURE_DECODER = FUTURE_DECODER
         self.seq_len = int(TEMPORAL_WINDOW / 2)
         self.encoder = Encoder(NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder)
-        self.lmbda = Lambda(ZDIMS, hidden_size_layer_1, hidden_size_layer_2)
+        self.lmbda = Lambda(ZDIMS, hidden_size_layer_1, hidden_size_layer_2, softplus)
         self.decoder = Decoder(self.seq_len,ZDIMS,NUM_FEATURES, hidden_size_rec, dropout_rec)
         if FUTURE_DECODER:
             self.decoder_future = Decoder_Future(self.seq_len,ZDIMS,NUM_FEATURES,FUTURE_STEPS, hidden_size_pred,
@@ -301,7 +308,7 @@ class Decoder_Future_LEGACY(nn.Module):
 class RNN_VAE_LEGACY(nn.Module):
     def __init__(self,TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred):
+                        dropout_rec, dropout_pred, softplus):
         super(RNN_VAE_LEGACY,self).__init__()
 
         self.FUTURE_DECODER = FUTURE_DECODER

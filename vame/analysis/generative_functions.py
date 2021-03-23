@@ -102,11 +102,12 @@ def load_model(cfg, model_name):
     dropout_encoder = cfg['dropout_encoder']
     dropout_rec = cfg['dropout_rec']
     dropout_pred = cfg['dropout_pred']
+    softplus = cfg['softplus']
      
     print('Load model... ')
     model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
                             hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
-                            dropout_rec, dropout_pred).cuda()
+                            dropout_rec, dropout_pred, softplus).cuda()
     
     model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',model_name+'_'+cfg['Project']+'.pkl')))
     model.eval()

@@ -153,6 +153,7 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['random_state'] = 42
     cfg_file['num_points'] = 30000
     cfg_file['scheduler_gamma'] = 0.2
+    cfg_file['softplus'] = False
 
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file

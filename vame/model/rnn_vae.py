@@ -263,6 +263,7 @@ def train_model(config):
     dropout_pred = cfg['dropout_pred']
     noise = cfg['noise']
     scheduler_step_size = cfg['scheduler_step_size']
+    softplus = cfg['softplus']
 
     # Loss
     MSE_REC_REDUCTION = cfg['mse_reconstruction_reduction']
@@ -297,12 +298,12 @@ def train_model(config):
         torch.cuda.manual_seed(SEED)
         model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred).cuda()
+                        dropout_rec, dropout_pred, softplus).cuda()
     else: #cpu support ...
         torch.cuda.manual_seed(SEED)
         model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred).to()
+                        dropout_rec, dropout_pred, softplus).to()
 
     if pretrained_weights:
         if os.path.exists(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')): #TODO, fix this path seeking....

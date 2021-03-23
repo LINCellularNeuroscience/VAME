@@ -33,7 +33,6 @@ def create_config_template():
     Project:
     model_name:
     n_cluster:
-    
     \n
 # Project path and videos
     project_path:
@@ -67,6 +66,7 @@ def create_config_template():
     scheduler:
     scheduler_step_size:
     scheduler_gamma:
+    softplus: 
     \n
 # Segmentation:
     load_data:
