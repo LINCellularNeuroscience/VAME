@@ -59,7 +59,7 @@ vame.pose_segmentation(config)
 vame.motif_videos(config, videoType='.mp4')
 
 # OPTIONAL: Create behavioural hierarchies via community detection
-vame.community(config, umap_vis=False, cut_tree=2)
+vame.community(config, show_umap=False, cut_tree=2)
 
 # OPTIONAL: Create community videos to get insights about behavior on a hierarchical scale
 vame.community_videos(config)
@@ -79,8 +79,3 @@ vame.generative_model(config, mode="centers") #options: mode: "sampling", "recon
 # or gif via e.g. ImageJ or other tools
 vame.gif(config, pose_ref_index=[0,5], subtract_background=True, start=None, 
          length=500, max_lag=30, label='community', file_format='.mp4', crop_size=(300,300))
-
-
-
-
-
