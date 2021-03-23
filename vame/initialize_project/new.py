@@ -31,29 +31,29 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     year = date.year
     d = str(month[0:3]+str(day))
     date = dt.today().strftime('%Y-%m-%d')
-    
+
     if working_directory == None:
         working_directory = '.'
-        
+
     wd = Path(working_directory).resolve()
-    project_name = '{pn}-{date}'.format(pn=project, date=d+'-'+str(year)) 
-    
+    project_name = '{pn}-{date}'.format(pn=project, date=d+'-'+str(year))
+
     project_path = wd / project_name
-    
-    
+
+
     if project_path.exists():
         print('Project "{}" already exists!'.format(project_path))
         return
-    
+
     video_path = project_path / 'videos'
     data_path = project_path / 'data'
     results_path = project_path / 'results'
     model_path = project_path / 'model'
-    
+
     for p in [video_path, data_path, results_path, model_path]:
         p.mkdir(parents=True)
         print('Created "{}"'.format(p))
-    
+
     vids = []
     for i in videos:
         #Check if it is a folder
@@ -70,8 +70,8 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
             if os.path.isfile(i):
                 vids = vids + [i]
             videos = vids
-            
-            
+
+
     videos = [Path(vp) for vp in videos]
     video_names = []
     dirs_data = [data_path/Path(i.stem) for i in videos]
@@ -81,26 +81,26 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
         """
         p.mkdir(parents = True, exist_ok = True)
         video_names.append(p.stem)
-        
+
     dirs_results = [results_path/Path(i.stem) for i in videos]
     for p in dirs_results:
         """
         Creates directory under results
         """
         p.mkdir(parents = True, exist_ok = True)
-        
+
     destinations = [video_path.joinpath(vp.name) for vp in videos]
-    
+
     os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
     os.mkdir(str(project_path)+'/model/pretrained_model')
-           
+
     print("Copying the videos \n")
     for src, dst in zip(videos, destinations):
         shutil.copy(os.fspath(src),os.fspath(dst))
 
     cfg_file,ruamelFile = auxiliary.create_config_template()
     cfg_file
-    
+
     cfg_file['Project']=str(project)
     cfg_file['project_path']=str(project_path)+'/'
     cfg_file['test_fraction']=0.1
@@ -108,8 +108,8 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['all_data']='yes'
     cfg_file['load_data']='-PE-seq-clean'
     cfg_file['anneal_function']='linear'
-    cfg_file['batch_size']=256 
-    cfg_file['max_epochs']=500 
+    cfg_file['batch_size']=256
+    cfg_file['max_epochs']=500
     cfg_file['transition_function']='GRU'
     cfg_file['beta']=1
     cfg_file['zdims']=30
@@ -153,23 +153,14 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['random_state'] = 42
     cfg_file['num_points'] = 30000
     cfg_file['scheduler_gamma'] = 0.2
-    
+
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file
     auxiliary.write_config(projconfigfile,cfg_file)
-    
+
     print('A VAME project has been created. \n'
           '\n'
           'Next use vame.create_trainset(config) to split your data into a train and test set. \n'
-          'Afterwards you can use vame.rnn_model() to train the model on your data.')
-    
+          'Afterwards you can use vame.train_model() to train the model on your data.')
+
     return projconfigfile
-    
-    
-    
-    
-    
-    
-            
-            
-            
