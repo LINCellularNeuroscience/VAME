@@ -207,6 +207,7 @@ def pose_segmentation(config):
         
         folder = os.path.dirname(os.path.join(cfg['project_path'],"results",file,model_name,""))
         if not os.listdir(folder):
+            new = True
             print(os.path.join(cfg['project_path'],"results",file,model_name,""))
             model = load_model(cfg, model_name, legacy)
             latent_vectors = embedd_latent_vectors(cfg, files, model, legacy)
@@ -218,25 +219,10 @@ def pose_segmentation(config):
                 print("Individual k-Means parameterization of latent vectors for %d cluster" %n_cluster)
                 labels, cluster_center, motif_usages = individual_parameterization(cfg, files, latent_vectors, n_cluster)
             
-            print(files)
-            for idx, file in enumerate(files):
-                print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
-                if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):                    
-                    try:
-                        os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
-                    except OSError as error:
-                        print(error)                    
-                    
-                save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
-                np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file), labels[idx])
-                np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
-                np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
-                np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
-            
         else:
             print('\n'
                   'For model %s a latent vector embedding already exists. \n' 
-                  'Parameterization of latent vector with %d k-Means cluster \n' %(model_name, n_cluster))
+                  'Parameterization of latent vector with %d k-Means cluster' %(model_name, n_cluster))
             
             if os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):
                 flag = input('WARNING: A parameterization for the chosen cluster size of the model already exists! \n'
@@ -245,6 +231,7 @@ def pose_segmentation(config):
                 flag = 'yes'
             
             if flag == 'yes':
+                new = True
                 path_to_latent_vector = os.listdir(folder)[0]
                 latent_vectors = []
                 for file in files:
@@ -257,29 +244,31 @@ def pose_segmentation(config):
                 else:
                     print("Individual k-Means parameterization of latent vectors for %d cluster" %n_cluster)
                     labels, cluster_center, motif_usages = individual_parameterization(cfg, files, latent_vectors, n_cluster)
-                
-                
-                for idx, file in enumerate(files):
-                    print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
-                    if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):                    
-                        try:
-                            os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
-                        except OSError as error:
-                            print(error)   
-                        
-                    save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
-                    np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file), labels[idx])
-                    np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
-                    np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
-                    np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
+
             else:
                 print('No new parameterization has been calculated.')
+                new = False
+        
+        if new == True:
+            for idx, file in enumerate(files):
+                print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
+                if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):                    
+                    try:
+                        os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
+                    except OSError as error:
+                        print(error)   
+                    
+                save_data = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+                np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file), labels[idx])
+                np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
+                np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
+                np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
+    
+        
+            print("You succesfully extracted motifs with VAME! From here, you can proceed running vame.motif_videos() "
+                  "to get an idea of the behavior captured by VAME. This will leave you with short snippets of certain movements."
+                  "To get the full picture of the spatiotemporal dynamic we recommend applying our community approach afterwards.")
             
-        
-        print("You succesfully extracted motifs with VAME! From here, you can proceed running vame.motif_videos() "
-              "to get an idea of the behavior captured by VAME. This will leave you with short snippets of certain movements."
-              "To get the full picture of the spatiotemporal dynamic we recommend applying our community approach afterwards.")
-        
         
         
         
