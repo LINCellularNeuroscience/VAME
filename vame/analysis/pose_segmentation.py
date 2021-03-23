@@ -15,8 +15,6 @@ import numpy as np
 from pathlib import Path
 
 import torch
-import scipy.signal
-from sklearn import mixture
 from sklearn.cluster import KMeans
 
 from vame.util.auxiliary import read_config
@@ -39,17 +37,18 @@ def load_model(cfg, model_name, legacy):
     dropout_encoder = cfg['dropout_encoder']
     dropout_rec = cfg['dropout_rec']
     dropout_pred = cfg['dropout_pred']
+    softplus = cfg['softplus']
      
     if legacy == False:
         print('Load model... ')
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
                                 hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
-                                dropout_rec, dropout_pred).cuda()
+                                dropout_rec, dropout_pred, softplus).cuda()
     else:
         print('ATTENTIION - legacy model... ')
         model = RNN_VAE_LEGACY(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
                                 hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
-                                dropout_rec, dropout_pred).cuda()
+                                dropout_rec, dropout_pred, softplus).cuda()
     
     model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',model_name+'_'+cfg['Project']+'.pkl')))
     model.eval()
@@ -71,7 +70,8 @@ def embedd_latent_vectors(cfg, files, model, legacy):
         data = np.load(os.path.join(project_path,'data',file,file+'-PE-seq-clean.npy'))
         latent_vector_list = []
         with torch.no_grad(): 
-            for i in tqdm.tqdm(range(data.shape[1] - temp_win)):
+#            for i in tqdm.tqdm(range(data.shape[1] - temp_win)):
+            for i in tqdm.tqdm(range(100)):
                 data_sample_np = data[:,i:temp_win+i].T
                 data_sample_np = np.reshape(data_sample_np, (1, temp_win, num_features))
                 h_n = model.encoder(torch.from_numpy(data_sample_np).type('torch.FloatTensor').cuda())
@@ -155,7 +155,6 @@ def individual_parameterization(cfg, files, latent_vector_files, cluster):
 
 
 def pose_segmentation(config):
-
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
@@ -205,10 +204,9 @@ def pose_segmentation(config):
             print("CUDA is not working! Attempting to use the CPU...")
             torch.device("cpu")
         
-        folder = os.path.dirname(os.path.join(cfg['project_path'],"results",file,model_name,""))
-        if not os.listdir(folder):
+        if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")):
             new = True
-            print(os.path.join(cfg['project_path'],"results",file,model_name,""))
+            print("Hello1")
             model = load_model(cfg, model_name, legacy)
             latent_vectors = embedd_latent_vectors(cfg, files, model, legacy)
 
@@ -232,10 +230,10 @@ def pose_segmentation(config):
             
             if flag == 'yes':
                 new = True
-                path_to_latent_vector = os.listdir(folder)[0]
+                path_to_latent_vector = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
                 latent_vectors = []
                 for file in files:
-                    latent_vector = np.load(os.path.join(cfg['project_path'],"results",file,model_name,path_to_latent_vector,'latent_vector_'+file+'.npy'))
+                    latent_vector = np.load(os.path.join(path_to_latent_vector,'latent_vector_'+file+'.npy'))
                     latent_vectors.append(latent_vector)
                     
                 if ind_param == False:
@@ -248,7 +246,7 @@ def pose_segmentation(config):
             else:
                 print('No new parameterization has been calculated.')
                 new = False
-        
+        print("Hello2")
         if new == True:
             for idx, file in enumerate(files):
                 print(os.path.join(cfg['project_path'],"results",file,"",model_name,'kmeans-'+str(n_cluster),""))
