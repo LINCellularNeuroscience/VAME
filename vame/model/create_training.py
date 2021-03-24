@@ -39,11 +39,19 @@ def traindata(cfg, files, testfraction, num_features, savgol_filter):
     
     detect_anchors = np.std(data, axis=1)
     sort_anchors = np.sort(detect_anchors)
-    anchor_1 = int(np.where(detect_anchors == sort_anchors[0])[0])
-    anchor_2 = int(np.where(detect_anchors == sort_anchors[1])[0])
+    anchor_1_temp = int(np.where(detect_anchors == sort_anchors[0])[0])
+    anchor_2_temp = int(np.where(detect_anchors == sort_anchors[1])[0])
+    
+    if anchor_1_temp > anchor_2_temp:
+        anchor_1 = anchor_1_temp
+        anchor_2 = anchor_2_temp
+        
+    else:
+        anchor_1 = anchor_2_temp
+        anchor_2 = anchor_1_temp
     
     X = np.delete(X, anchor_1, 1)
-    X = np.delete(X, anchor_2-1, 1)
+    X = np.delete(X, anchor_2, 1)
     
     X = X.T
     
