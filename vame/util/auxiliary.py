@@ -33,6 +33,7 @@ def create_config_template():
     Project:
     model_name:
     n_cluster:
+    pose_confidence: 
     \n
 # Project path and videos
     project_path:

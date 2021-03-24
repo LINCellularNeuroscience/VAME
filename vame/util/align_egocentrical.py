@@ -125,8 +125,8 @@ def background(path_to_file,filename,video_format='.mp4',num_frames=1000):
     return background
 
 
-def align_mouse(path_to_file,filename,video_format,crop_size, pose_list, pose_ref_index,
-                      pose_flip_ref,bg,frame_count,use_video=True):  
+def align_mouse(path_to_file,filename,video_format,crop_size, pose_list, 
+                pose_ref_index, confidence, pose_flip_ref,bg,frame_count,use_video=True):  
     
     #returns: list of cropped images (if video is used) and list of cropped DLC points
     #
@@ -147,7 +147,7 @@ def align_mouse(path_to_file,filename,video_format,crop_size, pose_list, pose_re
     
     for i in pose_list:
         for j in i:
-            if j[2] <= 0.8:
+            if j[2] <= confidence:
                 j[0],j[1] = np.nan, np.nan      
                 
 
@@ -249,7 +249,7 @@ def play_aligned_video(a, n, frame_count):
     cv.destroyAllWindows()
 
 
-def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, use_video=False, check_video=False):
+def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, confidence, use_video=False, check_video=False):
     
     #read out data
     data = pd.read_csv(os.path.join(path_to_file,'videos','pose_estimation',filename+'.csv'), skiprows = 2)
@@ -286,7 +286,7 @@ def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, u
     
     
     frames, n, time_series = align_mouse(path_to_file, filename, video_format, crop_size, pose_list, pose_ref_index,
-                      pose_flip_ref, bg, frame_count, use_video)
+                                         confidence, pose_flip_ref, bg, frame_count, use_video)
     
     if check_video:
         play_aligned_video(frames, n, frame_count)
@@ -302,14 +302,15 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
     
     path_to_file = cfg['project_path']
     filename = cfg['video_sets']
+    confidence = cfg['pose_confidence']
     video_format=video_format
     crop_size=crop_size
     
     # call function and save into your VAME data folder
     for file in filename:
-        print("Egocentric alignment for file %s" %file)
+        print("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
         egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size, 
-                                           use_video=use_video, check_video=check_video)
+                                                   confidence, use_video=use_video, check_video=check_video)
         np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series)
 #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
         
