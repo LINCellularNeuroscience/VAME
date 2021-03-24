@@ -340,7 +340,7 @@ def train_model(config):
                                                   BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
                                                   KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
 
-        if scheduler_step_size % epoch == 0 and epoch != 0:
+        if epoch % scheduler_step_size == 0 and epoch != 0:
             for param_group in optimizer.param_groups:
                 print('learning rate update: {}'.format(param_group['lr']))
         # logging losses
