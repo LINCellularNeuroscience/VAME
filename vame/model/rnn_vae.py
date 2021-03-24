@@ -149,8 +149,8 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         kullback_loss += kl_loss.item()
         kmeans_losses += kmeans_loss.item()
 
-        if idx % 1000 == 0:
-            print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
+        # if idx % 1000 == 0:
+        #     print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
    
     scheduler.step() #be sure scheduler is called before optimizer in >1.1 pytorch
 
@@ -204,7 +204,7 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
             kullback_loss += kl_loss.item()
             kmeans_losses += kmeans_loss
 
-    print('Test loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}\n'.format(test_loss / idx,
+    print('Test loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}'.format(test_loss / idx,
           mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx))
 
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
@@ -218,7 +218,7 @@ def train_model(config):
     pretrained_weights = cfg['pretrained_weights']
     pretrained_model = cfg['pretrained_model']
     
-    print("Train Variational Autoencoder - Model name: %s \n" %model_name)
+    print("Train Variational Autoencoder - model name: %s \n" %model_name)
     if not os.path.exists(os.path.join(cfg['project_path'],'model','best_model',"")):
         os.mkdir(os.path.join(cfg['project_path'],'model','best_model',""))
         os.mkdir(os.path.join(cfg['project_path'],'model','best_model','snapshots',""))
@@ -306,9 +306,12 @@ def train_model(config):
                         dropout_rec, dropout_pred, softplus).to()
 
     if pretrained_weights:
-        if os.path.exists(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')): #TODO, fix this path seeking....
-            print("Loading pretrained Model: %s\n" %pretrained_model)
-            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'), strict=False))
+        if os.path.exists(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')): 
+            print("Loading pretrained weights from model: %s\n" %pretrained_model)
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')))
+            KL_START = 0
+            ANNEALTIME = 1
+            
     """ DATASET """
     trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
     testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
@@ -323,7 +326,8 @@ def train_model(config):
         scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=cfg['scheduler_gamma'], last_epoch=-1)
     else:
         scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
-
+    
+    print("Start training... ")
     for epoch in range(1,EPOCHS):
         weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
                                                                          anneal_function, BETA, KL_START,
@@ -336,8 +340,9 @@ def train_model(config):
                                                   BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
                                                   KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
 
-        for param_group in optimizer.param_groups:
-            print('lr: {}'.format(param_group['lr']))
+        if scheduler_step_size % epoch == 0 and epoch != 0:
+            for param_group in optimizer.param_groups:
+                print('learning rate update: {}'.format(param_group['lr']))
         # logging losses
         train_losses.append(train_loss)
         test_losses.append(test_loss)
@@ -350,7 +355,7 @@ def train_model(config):
         # save best model
         if weight > 0.99 and current_loss <= BEST_LOSS:
             BEST_LOSS = current_loss
-            print("Saving model!\n")
+            print("Saving model!")
 
             if use_gpu:
                 torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",model_name+'_'+cfg['Project']+'.pkl'))
@@ -367,6 +372,7 @@ def train_model(config):
             torch.save(model.state_dict(), os.path.join(cfg['project_path'],'model','best_model','snapshots',model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl'))
 
         if convergence > cfg['model_convergence']:
+            print('Finished training...')
             print('Model converged. Please check your model with vame.evaluate_model(). \n'
                   'You can also re-run vame.trainmodel() to further improve your model. \n'
                   'Make sure to set _pretrained_weights_ in your config.yaml to "true" \n'
@@ -387,9 +393,11 @@ def train_model(config):
         np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_train_losses_'+model_name), mse_losses)
         np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_test_losses_'+model_name), current_loss)
         np.save(os.path.join(cfg['project_path'],'model','model_losses','fut_losses_'+model_name), fut_losses)
-
+        
+        print("\n")
 
     if convergence < cfg['model_convergence']:
+        print('Finished training...')
         print('Model seems to have not reached convergence. You may want to check your model \n'
               'with vame.evaluate_model(). If your satisfied you can continue. \n'
               'Use vame.pose_segmentation() to identify behavioral motifs! \n'
