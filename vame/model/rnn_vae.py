@@ -329,6 +329,7 @@ def train_model(config):
     
     print("Start training... ")
     for epoch in range(1,EPOCHS):
+        print("Epoch: %d" %epoch)
         weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
                                                                          anneal_function, BETA, KL_START,
                                                                          ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
