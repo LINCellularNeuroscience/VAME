@@ -368,11 +368,13 @@ def train_model(config):
 
         if convergence > cfg['model_convergence']:
             print('Model converged. Please check your model with vame.evaluate_model(). \n'
-                  'You can also re-run vame.rnn_model() to further improve your model. \n'
+                  'You can also re-run vame.trainmodel() to further improve your model. \n'
+                  'Make sure to set _pretrained_weights_ in your config.yaml to "true" \n'
+                  'and plug your current model name into _pretrained_model_. \n'
                   'Hint: Set "model_convergence" in your config.yaml to a higher value. \n'
                   '\n'
                   'Next: \n'
-                  'Use vame.behavior_segmentation() to identify behavioral motifs in your dataset!')
+                  'Use vame.pose_segmentation() to identify behavioral motifs in your dataset!')
             #return
             break
 
@@ -388,7 +390,7 @@ def train_model(config):
 
 
     if convergence < cfg['model_convergence']:
-        print('Model seemed to have not reached convergence. You may want to check your model \n'
-              'with vame.evaluate_model(). If your satisfied you can continue with \n'
-              'Use vame.behavior_segmentation() to identify behavioral motifs!\n\n'
-              'OPTIONAL: You can re-run vame.rnn_model() to improve performance.')
+        print('Model seems to have not reached convergence. You may want to check your model \n'
+              'with vame.evaluate_model(). If your satisfied you can continue. \n'
+              'Use vame.pose_segmentation() to identify behavioral motifs! \n'
+              'OPTIONAL: You can re-run vame.train_model() to improve performance.')
