@@ -70,7 +70,7 @@ vame.visualization(config, label=None) #options: label: None, "motif", "communit
 # OPTIONAL: Use the generative model (reconstruction decoder) to sample from 
 # the learned data distribution, reconstruct random real samples or visualize
 # the cluster center for validation
-vame.generative_model(config, mode="centers") #options: mode: "sampling", "reconstruction", "centers
+vame.generative_model(config, mode="centers") #options: mode: "sampling", "reconstruction", "centers", "motifs"
 
 # OPTIONAL: Create a video of an egocentrically aligned mouse + path through 
 # the community space (similar to our gif on github) to learn more about your representation
