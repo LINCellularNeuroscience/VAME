@@ -89,18 +89,27 @@ def consecutive(data, stepsize=1):
     return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
 
 
-def get_motif_usage(label):
+def get_motif_usage(label, n_cluster):
     motif_usage = np.unique(label, return_counts=True)
     cons = consecutive(motif_usage[0])
+   # if len(cons) != 1:
+   #     usage_list = list(motif_usage[1])
+   #     for i in range(len(cons)-1):
+   #         a = cons[i+1][0]
+   #         b = cons[i][-1]
+   #         d = (a-b)-1
+   #        for j in range(1,d+1):
+   #            index = cons[i][-1]+j
+   #             usage_list.insert(index,0)
+   #     usage = np.array(usage_list)
+   #     motif_usage = usage
     if len(cons) != 1:
-        usage_list = list(motif_usage[1])
-        for i in range(len(cons)-1):
-            a = cons[i+1][0]
-            b = cons[i][-1]
-            d = (a-b)-1
-            for j in range(1,d+1):
-                index = cons[i][-1]+j
-                usage_list.insert(index,0)
+        used_motifs = list(motif_usage[0])
+        usage_list = list(motif_usage[1])   
+        for i in range(n_cluster):
+            if i not in used_motifs:
+                used_motifs.insert(i, i)
+                usage_list.insert(i,0)
         usage = np.array(usage_list)
         motif_usage = usage
     else:
@@ -112,7 +121,7 @@ def get_motif_usage(label):
 def same_parameterization(cfg, files, latent_vector_files, cluster):
     random_state = cfg['random_state_kmeans']
     n_init = cfg['n_init_kmeans']
-    
+    n_cluster=cfg['n_cluster']
     labels = []
     cluster_centers = []
     motif_usages = []
@@ -127,7 +136,7 @@ def same_parameterization(cfg, files, latent_vector_files, cluster):
         labels.append(label[idx:idx+file_len])
         cluster_centers.append(clust_center)
         
-        motif_usage = get_motif_usage(label[idx:idx+file_len])
+        motif_usage = get_motif_usage(label[idx:idx+file_len], n_cluster)
         motif_usages.append(motif_usage)
         idx += file_len
     
