@@ -43,6 +43,8 @@ def create_config_template():
     all_data:
     \n
 # Creation of train set:
+    robust:
+    iqr_factor:
     savgol_filter:
     savgol_length:
     savgol_order:

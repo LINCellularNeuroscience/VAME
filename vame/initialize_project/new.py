@@ -155,6 +155,8 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['scheduler_gamma'] = 0.2
     cfg_file['softplus'] = False
     cfg_file['pose_confidence'] = 0.99
+    cfg_file['iqr_factor'] = 4
+    cfg_file['robust'] = True
 
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file
