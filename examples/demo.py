@@ -10,12 +10,12 @@ Licensed under GNU General Public License v3.0
 """
 
 import vame
+import glob
 
 # These paths have to be set manually 
 working_directory = '/YOUR/WORKING/DIRECTORY/'
 project='Your-VAME-Project'
-videos = ['/directory/to/your/video-1','/directory/to/your/video-2','...']
-    
+videos = glob.glob(r'your_vi_dir\*.vi_type')    
 # Initialize your project
 # Step 1.1:
 config = vame.init_new_project(project=project, videos=videos, working_directory=working_directory, videotype='.mp4')
