@@ -234,7 +234,7 @@ def update_config(config):
     cfg_file['robust'] = True
     cfg_file['beta_norm'] = False
     cfg_file['n_layers'] = 1
-    cfg_file['axis'] = None
+    cfg_file['axis'] = 'None'
     
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file
