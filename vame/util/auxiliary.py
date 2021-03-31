@@ -174,68 +174,76 @@ def update_config(config):
     for file in cfg['video_sets']:
         video_names.append(file)
     
-    cfg_file,ruamelFile = create_config_template()
+    flag = input("ATTENTION! You are about to overwrite your current config.yaml. If you did changes, "
+                 "back up your current version and compare to the updated version. Do you want to continue? (yes/no)")
     
-    cfg_file['Project']=str(project)
-    cfg_file['project_path']=str(project_path)+'/'
-    cfg_file['test_fraction']=.1
-    cfg_file['video_sets']=video_names
-    cfg_file['all_data']='yes'
-    cfg_file['load_data']='-PE-seq-clean'
-    cfg_file['anneal_function']='linear'
-    cfg_file['batch_size']=256
-    cfg_file['max_epochs']=500
-    cfg_file['transition_function']='GRU'
-    cfg_file['beta']=1
-    cfg_file['zdims']=30
-    cfg_file['learning_rate']=5e-4
-    cfg_file['time_window']=30
-    cfg_file['prediction_decoder']=1
-    cfg_file['prediction_steps']=15
-    cfg_file['model_convergence']=50
-    cfg_file['model_snapshot']=50
-    cfg_file['num_features']=12
-    cfg_file['savgol_filter']=True
-    cfg_file['savgol_length']=5
-    cfg_file['savgol_order']=2
-    cfg_file['hidden_size_layer_1']=256
-    cfg_file['hidden_size_layer_2']=256
-    cfg_file['dropout_encoder']=0
-    cfg_file['hidden_size_rec']=256
-    cfg_file['dropout_rec']=0
-    cfg_file['hidden_size_pred']=256
-    cfg_file['dropout_pred']=0
-    cfg_file['kl_start']=2
-    cfg_file['annealtime']=4
-    cfg_file['mse_reconstruction_reduction']='sum'
-    cfg_file['mse_prediction_reduction']='sum'
-    cfg_file['kmeans_loss']=cfg_file['zdims']
-    cfg_file['kmeans_lambda']=0.1
-    cfg_file['scheduler']=1
-    cfg_file['length_of_motif_video'] = 1000
-    cfg_file['noise'] = False
-    cfg_file['scheduler_step_size'] = 100
-    cfg_file['legacy'] = False
-    cfg_file['individual_parameterization'] = False
-    cfg_file['random_state_kmeans'] = 42
-    cfg_file['n_init_kmeans'] = 15
-    cfg_file['model_name']='VAME'
-    cfg_file['n_cluster'] = 15
-    cfg_file['pretrained_weights'] = False
-    cfg_file['pretrained_model']='None'
-    cfg_file['min_dist'] = 0.1
-    cfg_file['n_neighbors'] = 200
-    cfg_file['random_state'] = 42
-    cfg_file['num_points'] = 30000
-    cfg_file['scheduler_gamma'] = 0.2
-    cfg_file['softplus'] = False
-    cfg_file['pose_confidence'] = 0.99
-    cfg_file['iqr_factor'] = 4
-    cfg_file['robust'] = True
-    cfg_file['beta_norm'] = False
-    cfg_file['n_layers'] = 1
-    cfg_file['axis'] = 'None'
-    
-    projconfigfile=os.path.join(str(project_path),'config.yaml')
-    # Write dictionary to yaml  config file
-    write_config(projconfigfile,cfg_file)
+    if flag == 'yes':
+        cfg_file,ruamelFile = create_config_template()
+        
+        cfg_file['Project']=str(project)
+        cfg_file['project_path']=str(project_path)+'/'
+        cfg_file['test_fraction']=.1
+        cfg_file['video_sets']=video_names
+        cfg_file['all_data']='yes'
+        cfg_file['load_data']='-PE-seq-clean'
+        cfg_file['anneal_function']='linear'
+        cfg_file['batch_size']=256
+        cfg_file['max_epochs']=500
+        cfg_file['transition_function']='GRU'
+        cfg_file['beta']=1
+        cfg_file['zdims']=30
+        cfg_file['learning_rate']=5e-4
+        cfg_file['time_window']=30
+        cfg_file['prediction_decoder']=1
+        cfg_file['prediction_steps']=15
+        cfg_file['model_convergence']=50
+        cfg_file['model_snapshot']=50
+        cfg_file['num_features']=12
+        cfg_file['savgol_filter']=True
+        cfg_file['savgol_length']=5
+        cfg_file['savgol_order']=2
+        cfg_file['hidden_size_layer_1']=256
+        cfg_file['hidden_size_layer_2']=256
+        cfg_file['dropout_encoder']=0
+        cfg_file['hidden_size_rec']=256
+        cfg_file['dropout_rec']=0
+        cfg_file['hidden_size_pred']=256
+        cfg_file['dropout_pred']=0
+        cfg_file['kl_start']=2
+        cfg_file['annealtime']=4
+        cfg_file['mse_reconstruction_reduction']='sum'
+        cfg_file['mse_prediction_reduction']='sum'
+        cfg_file['kmeans_loss']=cfg_file['zdims']
+        cfg_file['kmeans_lambda']=0.1
+        cfg_file['scheduler']=1
+        cfg_file['length_of_motif_video'] = 1000
+        cfg_file['noise'] = False
+        cfg_file['scheduler_step_size'] = 100
+        cfg_file['legacy'] = False
+        cfg_file['individual_parameterization'] = False
+        cfg_file['random_state_kmeans'] = 42
+        cfg_file['n_init_kmeans'] = 15
+        cfg_file['model_name']='VAME'
+        cfg_file['n_cluster'] = 15
+        cfg_file['pretrained_weights'] = False
+        cfg_file['pretrained_model']='None'
+        cfg_file['min_dist'] = 0.1
+        cfg_file['n_neighbors'] = 200
+        cfg_file['random_state'] = 42
+        cfg_file['num_points'] = 30000
+        cfg_file['scheduler_gamma'] = 0.2
+        cfg_file['softplus'] = False
+        cfg_file['pose_confidence'] = 0.99
+        cfg_file['iqr_factor'] = 4
+        cfg_file['robust'] = True
+        cfg_file['beta_norm'] = False
+        cfg_file['n_layers'] = 1
+        cfg_file['axis'] = 'None'
+        
+        projconfigfile=os.path.join(str(project_path),'config.yaml')
+        # Write dictionary to yaml  config file
+        write_config(projconfigfile,cfg_file)
+        
+        print("Your config.yaml has been updated.")
+    else:
+        print("No changes have been applied.")
