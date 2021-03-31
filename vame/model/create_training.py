@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Variational Animal Motion Embedding 0.1 Toolbox
+Variational Animal Motion Embedding 1.0-alpha Toolbox
 © K. Luxem & P. Bauer, Department of Cellular Neuroscience
 Leibniz Institute for Neurobiology, Magdeburg, Germany
 
@@ -22,6 +22,7 @@ from vame.util.auxiliary import read_config
 #Helper function to return indexes of nans
 def nan_helper(y):
     return np.isnan(y), lambda z: z.nonzero()[0]
+
 #Interpolates all nan values of given array
 def interpol(arr):
     y = np.transpose(arr)
@@ -40,8 +41,8 @@ def traindata(cfg, files, testfraction, num_features, savgol_filter):
         print("z-scoring of file %s" %file)
         path_to_file = os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
         data = np.load(path_to_file)
-        X_mean = np.mean(data,axis=1)
-        X_std = np.std(data, axis=1)
+        X_mean = np.mean(data,axis=None)
+        X_std = np.std(data, axis=None)
         X_z = (data.T - X_mean) / X_std
         
         if cfg['robust'] == True:
@@ -63,7 +64,7 @@ def traindata(cfg, files, testfraction, num_features, savgol_filter):
         X_train.append(X_z)
     
     X = np.concatenate(X_train, axis=0)
-    X_std = np.std(X)
+    # X_std = np.std(X)
     
     detect_anchors = np.std(data, axis=1)
     sort_anchors = np.sort(detect_anchors)
@@ -186,5 +187,5 @@ def create_trainset(config):
     else:
         traindata_legacy(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
         
-    print("A training and test set has been created. Now everything is ready to train a variational autoencoder"
+    print("A training and test set has been created. Now everything is ready to train a variational autoencoder "
           "via vame.train_model() ...")
