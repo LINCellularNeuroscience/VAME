@@ -32,7 +32,7 @@ def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
         height = capture.get(cv.CAP_PROP_FRAME_HEIGHT)
 #        print('width, height:', width, height)
 
-        fps = capture.get(cv.CAP_PROP_FPS)
+        fps = 25#capture.get(cv.CAP_PROP_FPS)
 #        print('fps:', fps)
 
     cluster_start = cfg['time_window'] / 2
