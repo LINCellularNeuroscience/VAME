@@ -102,8 +102,8 @@ def visualization(config, label=None):
             umap_vis(file, embed, num_points)
             
         if label == 'motif':
-            label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
-            umap_label_vis(file, embed, label, n_cluster, num_points)
+            motif_label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
+            umap_label_vis(file, embed, motif_label, n_cluster, num_points)
 
         if label == "community":
             community_label = np.load(os.path.join(path_to_file,"","community","","community_label_"+file+".npy"))
