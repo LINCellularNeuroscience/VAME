@@ -63,7 +63,10 @@ def merge_func(transition_matrix, n_cluster, motif_norm, merge_sel):
         cost_temp = 100
         for i in range(n_cluster):
             for j in range(n_cluster):
-                cost = motif_norm[i] + motif_norm[j] / np.abs(transition_matrix[i,j] + transition_matrix[j,i] )
+                try:
+                    cost = (motif_norm[i] + motif_norm[j]) / np.abs(transition_matrix[i,j] + transition_matrix[j,i] )
+                except ZeroDivisionError:
+                    print("Error: Transition probabilities between motif "+str(i)+" and motif "+str(j)+ " are zero.")
                 if cost <= cost_temp:
                     cost_temp = cost
                     merge_nodes = (np.array([i]), np.array([j]))                
