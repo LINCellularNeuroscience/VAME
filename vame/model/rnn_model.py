@@ -8,13 +8,15 @@ https://github.com/LINCellularNeuroscience/VAME
 Licensed under GNU General Public License v3.0
 """
 
+
 import torch
 from torch import nn
 from torch.autograd import Variable
 
 
 # NEW MODEL WITH SMALL ALTERATIONS
-""" MODEL """
+""" MODEL - partially adapted from https://github.com/tejaslodaya/timeseries-clustering-vae/blob/master/vrae/vrae.py """
+
 class Encoder(nn.Module):
     def __init__(self, NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder):
         super(Encoder, self).__init__()
@@ -41,11 +43,6 @@ class Encoder(nn.Module):
     
     
 class Lambda(nn.Module):
-    """Lambda module converts output of encoder to latent vector
-
-    :param hidden_size: hidden size of the encoder
-    :param latent_length: latent vector length
-    """
     def __init__(self,ZDIMS, hidden_size_layer_1, hidden_size_layer_2, softplus):
         super(Lambda, self).__init__()
         
@@ -61,11 +58,6 @@ class Lambda(nn.Module):
             self.softplus_fn = nn.Softplus()
         
     def forward(self, hidden):
-        """Given last hidden state of encoder, passes through a linear layer, and finds the mean and variance
-
-        :param cell_output: last hidden state of encoder
-        :return: latent vector
-        """
         
         self.mean = self.hidden_to_mean(hidden)
         if self.softplus == True:
@@ -219,11 +211,6 @@ class Encoder_LEGACY(nn.Module):
 
 
 class Lambda_LEGACY(nn.Module):
-    """Lambda module converts output of encoder to latent vector
-
-    :param hidden_size: hidden size of the encoder
-    :param latent_length: latent vector length
-    """
     def __init__(self,ZDIMS, hidden_size_layer_1, hidden_size_layer_2):
         super(Lambda_LEGACY, self).__init__()
 
@@ -237,12 +224,6 @@ class Lambda_LEGACY(nn.Module):
         self.softplus = nn.Softplus()
 
     def forward(self, cell_output):
-        """Given last hidden state of encoder, passes through a linear layer, and finds the mean and variance
-
-        :param cell_output: last hidden state of encoder
-        :return: latent vector
-        """
-
         self.latent_mean = self.hidden_to_mean(cell_output)
 
         # based on Pereira et al 2019:
