@@ -32,9 +32,12 @@ VAME was developed by Kevin Luxem and Pavol Bauer.
 The development of VAME is heavily inspired by [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut/).
 As such, the VAME project management codebase has been adapted from the DeepLabCut codebase.
 The DeepLabCut 2.0 toolbox is © A. & M.W. Mathis Labs [deeplabcut.org](http:\\deeplabcut.org), released under LGPL v3.0.
+The implementaiton of the VRAE model is partially adapted from the [Timeseries clustering](https://github.com/tejaslodaya/timeseries-clustering-vae) repository developed by [Tejas Lodaya](https://tejaslodaya.com).
 
 ### References
-VAME preprint: [Identifying Behavioral Structure from Deep Variational Embeddings of Animal Motion](https://www.biorxiv.org/content/10.1101/2020.05.14.095430v1)
+VAME preprint: [Identifying Behavioral Structure from Deep Variational Embeddings of Animal Motion](https://www.biorxiv.org/content/10.1101/2020.05.14.095430v2)
+Kingma & Welling: [Auto-Encoding Vareiational Bayes](https://arxiv.org/abs/1312.6114)
+Pereira & Silveira: [Learning Representations from Healthcare Time Series Data for Unsupervised Anomaly Detection](https://www.joao-pereira.pt/publications/accepted_version_BigComp19.pdf)
 
 ### License: GPLv3
 See the [LICENSE file](../master/LICENSE) for the full statement.
