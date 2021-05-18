@@ -7,7 +7,8 @@ Leibniz Institute for Neurobiology, Magdeburg, Germany
 https://github.com/LINCellularNeuroscience/VAME
 Licensed under GNU General Public License v3.0
 
-The Model is partially adapted from https://github.com/tejaslodaya/timeseries-clustering-vae/blob/master/vrae/vrae.py
+The Model is partially adapted from the Timeseries Clustering repository developed by Tejas Lodaya:
+https://github.com/tejaslodaya/timeseries-clustering-vae/blob/master/vrae/vrae.py
 """
 
 
