@@ -323,7 +323,7 @@ def train_model(config):
 
     if optimizer_scheduler:
         print('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
-        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=cfg['scheduler_gamma'], patience=cfg['scheduler_step_size'], threshold=1e-3, threshold_mode='rel')
+        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=cfg['scheduler_gamma'], patience=cfg['scheduler_step_size'], threshold=1e-3, threshold_mode='rel', verbose=True)
     else:
         scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
     
@@ -341,9 +341,6 @@ def train_model(config):
                                                   BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
                                                   KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
 
-        if epoch % scheduler_step_size == 0 and epoch != 0:
-            for param_group in optimizer.param_groups:
-                print('learning rate update: {}'.format(param_group['lr']))
         # logging losses
         train_losses.append(train_loss)
         test_losses.append(test_loss)
