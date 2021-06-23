@@ -152,7 +152,7 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         # if idx % 1000 == 0:
         #     print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
    
-    scheduler.step() #be sure scheduler is called before optimizer in >1.1 pytorch
+    scheduler.step(loss) #be sure scheduler is called before optimizer in >1.1 pytorch
 
     if future_decoder:
         print('Train loss: {:.3f}, MSE-Loss: {:.3f}, MSE-Future-Loss {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(train_loss / idx,
