@@ -323,6 +323,7 @@ def train_model(config):
 
     if optimizer_scheduler:
         print('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
+        # Thanks to @alexcwsmith for the optimized scheduler contribution
         scheduler = ReduceLROnPlateau(optimizer, 'min', factor=cfg['scheduler_gamma'], patience=cfg['scheduler_step_size'], threshold=1e-3, threshold_mode='rel', verbose=True)
     else:
         scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
