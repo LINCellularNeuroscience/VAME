@@ -13,7 +13,7 @@ import torch
 from torch import nn
 import torch.utils.data as Data
 from torch.autograd import Variable
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
 
 import os
 import numpy as np
@@ -152,7 +152,7 @@ def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start
         # if idx % 1000 == 0:
         #     print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
    
-    scheduler.step() #be sure scheduler is called before optimizer in >1.1 pytorch
+    scheduler.step(loss) #be sure scheduler is called before optimizer in >1.1 pytorch
 
     if future_decoder:
         print('Train loss: {:.3f}, MSE-Loss: {:.3f}, MSE-Future-Loss {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(train_loss / idx,
@@ -323,7 +323,7 @@ def train_model(config):
 
     if optimizer_scheduler:
         print('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
-        scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=cfg['scheduler_gamma'], last_epoch=-1)
+        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=cfg['scheduler_gamma'], patience=cfg['scheduler_step_size'], threshold=1e-3, threshold_mode='rel', verbose=True)
     else:
         scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
     
@@ -341,9 +341,6 @@ def train_model(config):
                                                   BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
                                                   KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
 
-        if epoch % scheduler_step_size == 0 and epoch != 0:
-            for param_group in optimizer.param_groups:
-                print('learning rate update: {}'.format(param_group['lr']))
         # logging losses
         train_losses.append(train_loss)
         test_losses.append(test_loss)
