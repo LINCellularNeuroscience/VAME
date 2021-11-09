@@ -37,7 +37,7 @@ vame.egocentric_alignment(config, pose_ref_index=[0,5])
 
 # If your experiment is by design egocentrical (e.g. head-fixed experiment on treadmill etc) 
 # you can use the following to convert your .csv to a .npy array, ready to train vame on it
-vame.csv_to_numpy(config, datapath='C:\\Research\\VAME\\vame_alpha_release-Mar16-2021\\videos\\pose_estimation\\')
+vame.csv_to_numpy(config, datapath='/YOUR/WORKING/DIRECTORY/Your-VAME-Project-Apr14-2020/videos/pose_estimation/')
 
 # Step 1.3:
 # create the training set for the VAME model
