@@ -34,7 +34,7 @@ def csv_to_numpy(config, datapath):
 
     for file in filename:
         # Read in your .csv file, skip the first two rows and create a numpy array
-        data = pd.read_csv(datapath+file+'.csv', skiprows = 2)
+        data = pd.read_csv(f'{datapath}/{file}.csv', skiprows = 2)
         data_mat = pd.DataFrame.to_numpy(data)
         data_mat = data_mat[:,1:]
 
