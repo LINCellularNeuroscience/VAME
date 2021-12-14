@@ -316,6 +316,8 @@ def train_model(config):
             try:
                 print("Loading pretrained weights from %s\n" %pretrained_model)
                 model.load_state_dict(torch.load(pretrained_model))
+                KL_START = 0
+                ANNEALTIME = 1
             except:
                 print("Could not load pretrained model. Check file path in config.yaml.")
             
