@@ -274,7 +274,7 @@ def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, c
         
     if use_video:
         #compute background
-        bg = background(path_to_file,filename)
+        bg = background(path_to_file,filename,video_format)
         capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
         if not capture.isOpened():
             raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
