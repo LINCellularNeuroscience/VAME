@@ -27,3 +27,5 @@ dependencies:
     - umap-learn
     - networkx    
     - tqdm
+    - graphviz
+    - torchviz

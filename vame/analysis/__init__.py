@@ -17,4 +17,5 @@ from vame.analysis.community_analysis import community
 from vame.analysis.umap_visualization import visualization
 from vame.analysis.generative_functions import generative_model
 from vame.analysis.gif_creator import gif
+from vame.analysis.vis_network import vis_rnn_network
 

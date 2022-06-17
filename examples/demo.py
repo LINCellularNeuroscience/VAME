@@ -72,6 +72,9 @@ vame.community_videos(config)
 # OPTIONAL: Down projection of latent vectors and visualization via UMAP
 vame.visualization(config, label=None) #options: label: None, "motif", "community"
 
+# OPTIONAL:vis the rnn network
+vame.vis_rnn_network(config)
+
 # OPTIONAL: Use the generative model (reconstruction decoder) to sample from 
 # the learned data distribution, reconstruct random real samples or visualize
 # the cluster center for validation
