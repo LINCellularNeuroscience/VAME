@@ -35,7 +35,7 @@ def interpol(arr):
     
     return arr
 
-def csv_to_numpy(config, datapath):
+def csv_to_numpy(config):
     """
     This is a function to convert your pose-estimation.csv file to a numpy array.
 
@@ -53,8 +53,9 @@ def csv_to_numpy(config, datapath):
     confidence = cfg['pose_confidence']
 
     for file in filename:
+        print(file)
         # Read in your .csv file, skip the first two rows and create a numpy array
-        data = pd.read_csv(datapath+file+'.csv', skiprows = 3, header=None)
+        data = pd.read_csv(os.path.join(path_to_file,"videos","pose_estimation",file+'.csv'), skiprows = 3, header=None)
         data_mat = pd.DataFrame.to_numpy(data)
         data_mat = data_mat[:,1:]
 
