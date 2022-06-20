@@ -41,7 +41,7 @@ vame.csv_to_numpy(config)
 
 # Step 1.3:
 # create the training set for the VAME model
-vame.create_trainset(config)
+vame.create_trainset(config, fixed=False, check_parameter=False)
 
 # Step 2:
 # Train VAME:
