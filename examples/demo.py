@@ -45,15 +45,15 @@ vame.create_trainset(config, fixed=False, check_parameter=False)
 
 # Step 2:
 # Train VAME:
-vame.train_model(config)
+vame.train_model(config, fixed=False)
 
 # Step 3:
 # Evaluate model
-vame.evaluate_model(config)
+vame.evaluate_model(config, fixed=False)
 
 # Step 4:
 # Segment motifs/pose
-vame.pose_segmentation(config)
+vame.pose_segmentation(config, parameterization="kmeans", fixed=False)
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
