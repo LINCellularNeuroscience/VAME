@@ -15,6 +15,7 @@ import pandas as pd
 from pathlib import Path
 import scipy.signal
 from scipy.stats import iqr
+import matplotlib.pyplot as plt
 
 from vame.util.auxiliary import read_config
 
@@ -31,20 +32,84 @@ def interpol(arr):
     arr = np.transpose(y)
     return arr
 
-def traindata(cfg, files, testfraction, num_features, savgol_filter):
+def plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med, anchor_1, anchor_2):
+    plot_X_orig = np.concatenate(X_true, axis=0).T
+    plot_X_med = X_med.copy()
+    iqr_cutoff = cfg['iqr_factor']*iqr_val
+    
+    plt.figure()
+    plt.plot(plot_X_orig.T)
+    plt.axhline(y=iqr_cutoff, color='r', linestyle='--', label="IQR cutoff")
+    plt.axhline(y=-iqr_cutoff, color='r', linestyle='--')
+    plt.title("Full Signal z-scored")
+    plt.legend()
+    
+    if num_frames > 1000:
+        rnd = np.random.choice(num_frames)
+        
+        plt.figure()
+        plt.plot(plot_X_med[:,rnd:rnd+1000].T)
+        plt.axhline(y=iqr_cutoff, color='r', linestyle='--', label="IQR cutoff")
+        plt.axhline(y=-iqr_cutoff, color='r', linestyle='--')
+        plt.title("Filtered signal z-scored")
+        plt.legend()
+        
+        plt.figure()
+        plt.plot(plot_X_orig[:,rnd:rnd+1000].T)
+        plt.axhline(y=iqr_cutoff, color='r', linestyle='--', label="IQR cutoff")
+        plt.axhline(y=-iqr_cutoff, color='r', linestyle='--')
+        plt.title("Original signal z-scored")
+        plt.legend()
+        
+        plt.figure()
+        plt.plot(plot_X_orig[:,rnd:rnd+1000].T, 'g', alpha=0.5)
+        plt.plot(plot_X_med[:,rnd:rnd+1000].T, '--m', alpha=0.6)
+        plt.axhline(y=iqr_cutoff, color='r', linestyle='--', label="IQR cutoff")
+        plt.axhline(y=-iqr_cutoff, color='r', linestyle='--')
+        plt.title("Overlayed z-scored")
+        plt.legend()
+        
+    else:
+        plt.figure()
+        plt.plot(plot_X_med.T)
+        plt.axhline(y=iqr_cutoff, color='r', linestyle='--', label="IQR cutoff")
+        plt.axhline(y=-iqr_cutoff, color='r', linestyle='--')
+        plt.title("Filtered signal z-scored")
+        plt.legend()
+        
+        plt.figure()
+        plt.plot(plot_X_orig.T)
+        plt.axhline(y=iqr_cutoff, color='r', linestyle='--', label="IQR cutoff")
+        plt.axhline(y=-iqr_cutoff, color='r', linestyle='--')
+        plt.title("Original signal z-scored")
+        plt.legend()
+        
+    print("Please run the function with check_parameter=False if you are happy with the results")
+
+def traindata_aligned(cfg, files, testfraction, num_features, savgol_filter, check_parameter):
     
     X_train = []
     pos = []
     pos_temp = 0
     pos.append(0)
+    
+    if check_parameter == True:
+        X_true = []
+        files = [files[0]]
+        
     for file in files:
         print("z-scoring of file %s" %file)
         path_to_file = os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
         data = np.load(path_to_file)
+        
         X_mean = np.mean(data,axis=None)
         X_std = np.std(data, axis=None)
         X_z = (data.T - X_mean) / X_std
-        
+          
+        if check_parameter == True:
+            X_z_copy = X_z.copy()
+            X_true.append(X_z_copy)
+            
         if cfg['robust'] == True:
             iqr_val = iqr(X_z)
             print("IQR value: %.2f, IQR cutoff: %.2f" %(iqr_val, cfg['iqr_factor']*iqr_val))
@@ -56,7 +121,7 @@ def traindata(cfg, files, testfraction, num_features, savgol_filter):
                     elif X_z[i,marker] < -cfg['iqr_factor']*iqr_val:
                         X_z[i,marker] = np.nan       
 
-                X_z[i,:] = interpol(X_z[i,:])
+            X_z = interpol(X_z)
              
         X_len = len(data.T)
         pos_temp += X_len
@@ -66,7 +131,7 @@ def traindata(cfg, files, testfraction, num_features, savgol_filter):
     X = np.concatenate(X_train, axis=0)
     # X_std = np.std(X)
     
-    detect_anchors = np.std(data, axis=1)
+    detect_anchors = np.std(X.T, axis=1)
     sort_anchors = np.sort(detect_anchors)
     if sort_anchors[0] == sort_anchors[1]:
         anchors = np.where(detect_anchors == sort_anchors[0])[0]
@@ -100,65 +165,92 @@ def traindata(cfg, files, testfraction, num_features, savgol_filter):
     
     z_test =X_med[:,:test]
     z_train = X_med[:,test:]
+      
+    if check_parameter == True:
+        plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med, anchor_1, anchor_2)
         
-    #save numpy arrays the the test/train info:
-    np.save(os.path.join(cfg['project_path'],"data", "train",'train_seq.npy'), z_train)
-    np.save(os.path.join(cfg['project_path'],"data", "train", 'test_seq.npy'), z_test)
-    
-    for i, file in enumerate(files):
-        np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
-    
-    print('Lenght of train data: %d' %len(z_train.T))
-    print('Lenght of test data: %d' %len(z_test.T))
+    else:        
+        #save numpy arrays the the test/train info:
+        np.save(os.path.join(cfg['project_path'],"data", "train",'train_seq.npy'), z_train)
+        np.save(os.path.join(cfg['project_path'],"data", "train", 'test_seq.npy'), z_test)
+        
+        for i, file in enumerate(files):
+            np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
+        
+        print('Lenght of train data: %d' %len(z_train.T))
+        print('Lenght of test data: %d' %len(z_test.T))
     
 
-def traindata_legacy(cfg, files, testfraction, num_features, savgol_filter):
-
+def traindata_fixed(cfg, files, testfraction, num_features, savgol_filter, check_parameter):
     X_train = []
     pos = []
     pos_temp = 0
     pos.append(0)
+    
+    if check_parameter == True:
+        X_true = []
+        rnd_file = np.random.choice(len(files))
+        files = [files[0]]
+        
     for file in files:
-        path_to_file= os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
-        print(path_to_file)
-        X = np.load(path_to_file)
-        X_len = len(X.T)
+        print("z-scoring of file %s" %file)
+        path_to_file = os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
+        data = np.load(path_to_file)
+        X_mean = np.mean(data,axis=None)
+        X_std = np.std(data, axis=None)
+        X_z = (data.T - X_mean) / X_std
+        
+        if check_parameter == True:
+            X_z_copy = X_z.copy()
+            X_true.append(X_z_copy)
+        
+        if cfg['robust'] == True:
+            iqr_val = iqr(X_z)
+            print("IQR value: %.2f, IQR cutoff: %.2f" %(iqr_val, cfg['iqr_factor']*iqr_val))
+            for i in range(X_z.shape[0]):
+                for marker in range(X_z.shape[1]):
+                    if X_z[i,marker] > cfg['iqr_factor']*iqr_val:
+                        X_z[i,marker] = np.nan
+                        
+                    elif X_z[i,marker] < -cfg['iqr_factor']*iqr_val:
+                        X_z[i,marker] = np.nan       
+
+                X_z[i,:] = interpol(X_z[i,:])      
+        
+        X_len = len(data.T)
         pos_temp += X_len
         pos.append(pos_temp)
-        X_train.append(X)
-
-    X = np.concatenate(X_train, axis=1)
-
-    seq_inter = np.zeros((X.shape[0],X.shape[1]))
-    for s in range(num_features):
-        seq_temp = X[s,:]
-        seq_pd = pd.Series(seq_temp)
-        if np.isnan(seq_pd[0]):
-            seq_pd[0] = next(x for x in seq_pd if not np.isnan(x))
-        seq_pd_inter = seq_pd.interpolate(method="linear", order=None)
-        seq_inter[s,:] = seq_pd_inter
+        X_train.append(X_z)
+    
+    X = np.concatenate(X_train, axis=0).T
 
     if savgol_filter:
-        X_med = scipy.signal.savgol_filter(seq_inter, cfg['savgol_length'], cfg['savgol_order'])
+        X_med = scipy.signal.savgol_filter(X, cfg['savgol_length'], cfg['savgol_order'])   
+    else:
+        X_med = X
+        
     num_frames = len(X_med.T)
     test = int(num_frames*testfraction)
-
+    
     z_test =X_med[:,:test]
     z_train = X_med[:,test:]
+    
+    if check_parameter == True:
+        plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med)
+        
+    else:
+        #save numpy arrays the the test/train info:
+        np.save(os.path.join(cfg['project_path'],"data", "train",'train_seq.npy'), z_train)
+        np.save(os.path.join(cfg['project_path'],"data", "train", 'test_seq.npy'), z_test)
+        
+        for i, file in enumerate(files):
+            np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
+        
+        print('Lenght of train data: %d' %len(z_train.T))
+        print('Lenght of test data: %d' %len(z_test.T))
 
-    #save numpy arrays the the test/train info:
-    np.save(os.path.join(cfg['project_path'],"data", "train",'train_seq.npy'), z_train)
-    np.save(os.path.join(cfg['project_path'],"data", "train", 'test_seq.npy'), z_test)
 
-
-    for i, file in enumerate(files):
-        np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
-
-    print('Length of train data: %d' %len(z_train.T))
-    print('Length of test data: %d' %len(z_test.T))
-
-
-def create_trainset(config):
+def create_trainset(config, fixed=False, check_parameter=False):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
@@ -182,10 +274,10 @@ def create_trainset(config):
     if cfg['robust'] == True:
         print("Using robust setting to eliminate outliers! IQR factor: %d" %cfg['iqr_factor'])
         
-    if legacy == False:
-        traindata(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
+    if fixed == False:
+        traindata_aligned(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
     else:
-        traindata_legacy(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'])
-        
-    print("A training and test set has been created. Now everything is ready to train a variational autoencoder "
-          "via vame.train_model() ...")
+        traindata_fixed(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
+    
+    if check_parameter == False:
+        print("A training and test set has been created. Next step: vame.train_model()")
