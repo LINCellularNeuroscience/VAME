@@ -27,3 +27,4 @@ dependencies:
     - umap-learn
     - networkx    
     - tqdm
+    - hmmlearn
