@@ -210,7 +210,7 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
 
 
-def train_model(config):
+def train_model(config, fixed=False):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
@@ -247,7 +247,7 @@ def train_model(config):
     SNAPSHOT = cfg['model_snapshot']
     LEARNING_RATE = cfg['learning_rate']
     NUM_FEATURES = cfg['num_features']
-    if legacy == False:
+    if fixed == False:
         NUM_FEATURES = NUM_FEATURES - 2
     TEMPORAL_WINDOW = cfg['time_window']*2
     FUTURE_DECODER = cfg['prediction_decoder']
