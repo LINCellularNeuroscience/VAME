@@ -210,13 +210,14 @@ def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
 
 
-def train_model(config, fixed=False):
+def train_model(config):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
     model_name = cfg['model_name']
     pretrained_weights = cfg['pretrained_weights']
     pretrained_model = cfg['pretrained_model']
+    fixed = cfg['egocentric_data']
     
     print("Train Variational Autoencoder - model name: %s \n" %model_name)
     if not os.path.exists(os.path.join(cfg['project_path'],'model','best_model',"")):
