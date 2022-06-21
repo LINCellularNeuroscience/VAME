@@ -53,7 +53,7 @@ vame.evaluate_model(config)
 
 # Step 4:
 # Segment motifs/pose
-vame.pose_segmentation(config, parameterization="kmeans")
+vame.pose_segmentation(config)
 
 
 #------------------------------------------------------------------------------
