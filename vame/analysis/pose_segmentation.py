@@ -181,12 +181,14 @@ def individual_parameterization(cfg, files, latent_vector_files, cluster):
     return labels, cluster_centers, motif_usages
 
 
-def pose_segmentation(config, parameterization="kmeans", fixed=False):
+def pose_segmentation(config):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
+    fixed = cfg['egocentric_data']
+    parameterization = cfg_file['parameterization']
     
     print('Pose segmentation for VAME model: %s \n' %model_name)
     
@@ -299,3 +301,4 @@ def pose_segmentation(config, parameterization="kmeans", fixed=False):
             print("You succesfully extracted motifs with VAME! From here, you can proceed running vame.motif_videos() ")
                   # "to get an idea of the behavior captured by VAME. This will leave you with short snippets of certain movements."
                   # "To get the full picture of the spatiotemporal dynamic we recommend applying our community approach afterwards.")
+            
