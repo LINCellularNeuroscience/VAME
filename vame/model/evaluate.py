@@ -160,7 +160,7 @@ def eval_temporal(cfg, use_gpu, model_name, fixed):
 
 
 
-def evaluate_model(config, fixed=False):
+def evaluate_model(config):
     """
         Evaluation of testset
     """
@@ -168,6 +168,7 @@ def evaluate_model(config, fixed=False):
     cfg = read_config(config_file)
     legacy = cfg['legacy']
     model_name = cfg['model_name']
+    fixed = cfg['egocentric_data']
 
     if not os.path.exists(os.path.join(cfg['project_path'],"model","evaluate")):
         os.mkdir(os.path.join(cfg['project_path'],"model","evaluate"))
