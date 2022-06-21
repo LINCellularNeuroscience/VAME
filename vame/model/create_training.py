@@ -69,6 +69,11 @@ def plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med, anchor_1, anch
         plt.title("Overlayed z-scored")
         plt.legend()
         
+        # plot_X_orig = np.delete(plot_X_orig.T, anchor_1, 1)
+        # plot_X_orig = np.delete(plot_X_orig, anchor_2, 1)
+        # mse = (np.square(plot_X_orig[rnd:rnd+1000, :] - plot_X_med[:,rnd:rnd+1000].T)).mean(axis=0)
+        
+        
     else:
         plt.figure()
         plt.plot(plot_X_med.T)
@@ -105,7 +110,16 @@ def traindata_aligned(cfg, files, testfraction, num_features, savgol_filter, che
         X_mean = np.mean(data,axis=None)
         X_std = np.std(data, axis=None)
         X_z = (data.T - X_mean) / X_std
-          
+        
+        # Introducing artificial error spikes
+        # rang = [1.5, 2, 2.5, 3, 3.5, 3, 3, 2.5, 2, 1.5]
+        # for i in range(num_frames):
+        #     if i % 300 == 0:
+        #         rnd = np.random.choice(12,2)
+        #         for j in range(10):
+        #             X_z[i+j, rnd[0]] = X_z[i+j, rnd[0]] * rang[j]
+        #             X_z[i+j, rnd[1]] = X_z[i+j, rnd[1]] * rang[j]
+                
         if check_parameter == True:
             X_z_copy = X_z.copy()
             X_true.append(X_z_copy)
@@ -250,10 +264,11 @@ def traindata_fixed(cfg, files, testfraction, num_features, savgol_filter, check
         print('Lenght of test data: %d' %len(z_test.T))
 
 
-def create_trainset(config, fixed=False, check_parameter=False):
+def create_trainset(config, check_parameter=False):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
+    fixed = cfg['egocentric_data']
     
     if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
         os.mkdir(os.path.join(cfg['project_path'],'data','train',""))
