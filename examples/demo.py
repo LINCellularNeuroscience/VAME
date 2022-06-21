@@ -41,19 +41,20 @@ vame.csv_to_numpy(config)
 
 # Step 1.3:
 # create the training set for the VAME model
-vame.create_trainset(config, fixed=False, check_parameter=False)
+vame.create_trainset(config, check_parameter=False)
 
 # Step 2:
 # Train VAME:
-vame.train_model(config, fixed=False)
+vame.train_model(config)
 
 # Step 3:
 # Evaluate model
-vame.evaluate_model(config, fixed=False)
+vame.evaluate_model(config)
 
 # Step 4:
 # Segment motifs/pose
-vame.pose_segmentation(config, parameterization="kmeans", fixed=False)
+vame.pose_segmentation(config, parameterization="kmeans")
+
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
