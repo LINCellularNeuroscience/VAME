@@ -51,6 +51,8 @@ def csv_to_numpy(config):
     path_to_file = cfg['project_path']
     filename = cfg['video_sets']
     confidence = cfg['pose_confidence']
+    if cfg['egocentric_data'] == False:
+        raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
 
     for file in filename:
         print(file)

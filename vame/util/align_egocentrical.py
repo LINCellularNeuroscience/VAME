@@ -307,6 +307,9 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
     video_format=video_format
     crop_size=crop_size
     
+    if cfg['egocentric_data'] == True:
+        raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
+    
     # call function and save into your VAME data folder
     for file in filename:
         print("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
