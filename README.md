@@ -41,3 +41,6 @@ Pereira & Silveira: [Learning Representations from Healthcare Time Series Data f
 
 ### License: GPLv3
 See the [LICENSE file](../master/LICENSE) for the full statement.
+
+### Code Reference (DOI)
+[![DOI](https://zenodo.org/badge/254593619.svg)](https://zenodo.org/badge/latestdoi/254593619)
