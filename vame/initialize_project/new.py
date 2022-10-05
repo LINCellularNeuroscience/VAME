@@ -160,6 +160,7 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['beta_norm'] = False
     cfg_file['n_layers'] = 1
     cfg_file['axis'] = None
+    cfg_file['hmm_trained'] = False
 
     projconfigfile=os.path.join(str(project_path),'config.yaml')
     # Write dictionary to yaml  config file
