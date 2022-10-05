@@ -12,6 +12,7 @@ Licensed under GNU General Public License v3.0
 import os
 import tqdm
 import torch
+import pickle
 import numpy as np
 from pathlib import Path
 
@@ -142,10 +143,19 @@ def same_parameterization(cfg, files, latent_vector_files, states, parameterizat
         label = kmeans.predict(latent_vector_cat)
         
     elif parameterization == "hmm":
-        print("Using a HMM as parameterization!")
-        hmm_model = hmm.GaussianHMM(n_components=states, covariance_type="full", n_iter=100)
-        hmm_model.fit(latent_vector_cat)
-        label = hmm_model.predict(latent_vector_cat)
+        if cfg['hmm_trained'] == False:
+            print("Using a HMM as parameterization!")
+            hmm_model = hmm.GaussianHMM(n_components=states, covariance_type="full", n_iter=100)
+            hmm_model.fit(latent_vector_cat)
+            label = hmm_model.predict(latent_vector_cat)
+            save_data = os.path.join(cfg['project_path'], "results", "")
+            with open(save_data+"hmm_trained.pkl", "wb") as file: pickle.dump(hmm_model, file)
+        else:
+            print("Using a pretrained HMM as parameterization!")
+            save_data = os.path.join(cfg['project_path'], "results", "")
+            with open(save_data+"hmm_trained.pkl", "rb") as file:
+                hmm_model = pickle.load(file)
+            label = hmm_model.predict(latent_vector_cat)
         
     idx = 0
     for i, file in enumerate(files):
