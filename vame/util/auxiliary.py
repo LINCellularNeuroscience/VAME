@@ -76,6 +76,7 @@ def create_config_template():
     \n
 # Segmentation:
     parameterization:
+    hmm_trained: False
     load_data:
     individual_parameterization: 
     random_state_kmeans: 
