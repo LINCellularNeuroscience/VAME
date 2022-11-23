@@ -21,6 +21,7 @@ First, you should make sure that you have a GPU powerful enough to train deep le
 If you want to follow an example first you can download [video-1](https://drive.google.com/file/d/1w6OW9cN_-S30B7rOANvSaR9c3O5KeF0c/view?usp=sharing) here and find the .csv file in our [example](https://github.com/LINCellularNeuroscience/VAME/tree/master/examples) folder. 
 
 ## News
+* November 2022: Finally the VAME paper is published! Check it out [on the publisher werbsite](https://www.nature.com/articles/s42003-022-04080-7). In comparison to the preprint version, there is also a practical workflow guide included with many useful instructions on how to use VAME.
 * March 2021: We are happy to release VAME 1.0 with a bunch of improvements and new features! These include the community analysis script, a model allowing generation of unseen datapoints, new visualization functions, as well as the much requested function to generate GIF sequences containing UMAP embeddings and trajectories together with the video of the behaving animal. Big thanks also to [@MMathisLab](https://github.com/MMathisLab) for contributing to the OS compatibility and usability of our code.
 * November 2020: We uploaded an egocentric alignment [script](https://github.com/LINCellularNeuroscience/VAME/blob/master/examples/align_demo.py) to allow more researcher to use VAME
 * October 2020: We updated our manuscript on [Biorxiv](https://www.biorxiv.org/content/10.1101/2020.05.14.095430v2)
