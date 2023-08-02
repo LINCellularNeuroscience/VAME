@@ -12,6 +12,7 @@ import cv2 as cv
 import numpy as np
 import pandas as pd
 import tqdm    
+import glob
 
 from pathlib import Path
 from vame.util.auxiliary import read_config  
@@ -253,9 +254,17 @@ def play_aligned_video(a, n, frame_count):
 def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, confidence, use_video=False, check_video=False):
     
     #read out data
-    data = pd.read_csv(os.path.join(path_to_file,'videos','pose_estimation',filename+'.csv'), skiprows = 2)
+    dataFile = glob.glob(os.path.join(path_to_file,'videos','pose_estimation',filename+'*'))
+    if len(dataFile)>1:
+        raise AssertionError("Multiple data files match video {}".format(filename))
+    else:
+        dataFile=dataFile[0]
+    if dataFile.endswith('.csv'):
+        data = pd.read_csv(dataFile, skiprows = 2, index_col=0)
+    elif dataFile.endswith('.h5'):
+        data = pd.read_hdf(dataFile)
     data_mat = pd.DataFrame.to_numpy(data)
-    data_mat = data_mat[:,1:] 
+  #  data_mat = data_mat[:,1:] 
     
     # get the coordinates for alignment from data table
     pose_list = []
