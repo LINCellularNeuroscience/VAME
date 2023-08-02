@@ -6,6 +6,9 @@ Leibniz Institute for Neurobiology, Magdeburg, Germany
 
 https://github.com/LINCellularNeuroscience/VAME
 Licensed under GNU General Public License v3.0
+
+The Model is partially adapted from the Timeseries Clustering repository developed by Tejas Lodaya:
+https://github.com/tejaslodaya/timeseries-clustering-vae/blob/master/vrae/vrae.py
 """
 
 
@@ -15,7 +18,7 @@ from torch.autograd import Variable
 
 
 # NEW MODEL WITH SMALL ALTERATIONS
-""" MODEL - partially adapted from https://github.com/tejaslodaya/timeseries-clustering-vae/blob/master/vrae/vrae.py """
+""" MODEL  """
 
 class Encoder(nn.Module):
     def __init__(self, NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder):

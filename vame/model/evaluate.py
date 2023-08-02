@@ -118,7 +118,7 @@ def eval_temporal(cfg, use_gpu, model_name, legacy, snapshot=None, suffix=None):
     TEMPORAL_WINDOW = cfg['time_window']*2
     FUTURE_STEPS = cfg['prediction_steps']
     NUM_FEATURES = cfg['num_features']
-    if legacy == False:
+    if fixed == False:
         NUM_FEATURES = NUM_FEATURES - 2
     TEST_BATCH_SIZE = 64
     PROJECT_PATH = cfg['project_path']
@@ -161,7 +161,8 @@ def eval_temporal(cfg, use_gpu, model_name, legacy, snapshot=None, suffix=None):
     if use_gpu:
         plot_loss(cfg, filepath, model_name)
     else:
-        pass #note, loading of losses needs to be adapted for CPU use #TODO
+        plot_loss(cfg, filepath, model_name)
+        # pass #note, loading of losses needs to be adapted for CPU use #TODO
 
 
 def evaluate_model(config, use_snapshots=False):#, suffix=None
@@ -181,6 +182,7 @@ def evaluate_model(config, use_snapshots=False):#, suffix=None
     cfg = read_config(config_file)
     legacy = cfg['legacy']
     model_name = cfg['model_name']
+    fixed = cfg['egocentric_data']
 
     if not os.path.exists(os.path.join(cfg['project_path'],"model","evaluate")):
         os.mkdir(os.path.join(cfg['project_path'],"model","evaluate"))
@@ -194,11 +196,6 @@ def evaluate_model(config, use_snapshots=False):#, suffix=None
         torch.device("cpu")
         print("CUDA is not working, or a GPU is not found; using CPU!")
 
-<<<<<<< HEAD
-    print("\n\nEvaluation of %s model. \n" %model_name)
-    eval_temporal(cfg, use_gpu, model_name, legacy)
-
-=======
     print("\n\nEvaluation of %s model. \n" %model_name)   
     if not use_snapshots:
         eval_temporal(cfg, use_gpu, model_name, legacy=legacy)#suffix=suffix
@@ -209,7 +206,7 @@ def evaluate_model(config, use_snapshots=False):#, suffix=None
             epoch=snap.split('_')[-1]
             eval_temporal(cfg, use_gpu, model_name, snapshot=fullpath, legacy=legacy, suffix='snapshot'+str(epoch))
             eval_temporal(cfg, use_gpu, model_name, legacy=legacy, suffix='bestModel')
->>>>>>> 9efe653... Added option to evaluate all snapshots, fixed bug when prediction_decoder is off
+
     print("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
           "OPTIONS:\n"
           "- vame.pose_segmentation() to identify behavioral motifs.\n"

@@ -43,6 +43,7 @@ def create_config_template():
     all_data:
     \n
 # Creation of train set:
+    egocentric_data: 
     robust:
     iqr_factor:
     axis: 
@@ -71,9 +72,14 @@ def create_config_template():
     scheduler:
     scheduler_step_size:
     scheduler_gamma:
+    #Note the optimal scheduler threshold below can vary greatly (from .1-.0001) between experiments. 
+    #You are encouraged to read the torch.optim.ReduceLROnPlateau docs to understand the threshold to use.
+    scheduler_threshold:
     softplus: 
     \n
 # Segmentation:
+    parameterization:
+    hmm_trained: False
     load_data:
     individual_parameterization: 
     random_state_kmeans: 
@@ -231,7 +237,8 @@ def update_config(config):
         cfg_file['n_neighbors'] = 200
         cfg_file['random_state'] = 42
         cfg_file['num_points'] = 30000
-        cfg_file['scheduler_gamma'] = 0.2
+	cfg_file['scheduler_gamma'] = 0.2
+        cfg_file['scheduler_threshold'] = .1
         cfg_file['softplus'] = False
         cfg_file['pose_confidence'] = 0.99
         cfg_file['iqr_factor'] = 4
@@ -239,6 +246,8 @@ def update_config(config):
         cfg_file['beta_norm'] = False
         cfg_file['n_layers'] = 1
         cfg_file['axis'] = 'None'
+        cfg_file['egocentric_data'] = True
+        cfg_file['parameterization'] = 'kmeans'
         
         projconfigfile=os.path.join(str(project_path),'config.yaml')
         # Write dictionary to yaml  config file
