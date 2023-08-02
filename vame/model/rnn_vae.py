@@ -217,6 +217,7 @@ def train_model(config):
     model_name = cfg['model_name']
     pretrained_weights = cfg['pretrained_weights']
     pretrained_model = cfg['pretrained_model']
+    fixed = cfg['egocentric_data']
     
     print("Train Variational Autoencoder - model name: %s \n" %model_name)
     if not os.path.exists(os.path.join(cfg['project_path'],'model','best_model',"")):
@@ -247,7 +248,7 @@ def train_model(config):
     SNAPSHOT = cfg['model_snapshot']
     LEARNING_RATE = cfg['learning_rate']
     NUM_FEATURES = cfg['num_features']
-    if legacy == False:
+    if fixed == False:
         NUM_FEATURES = NUM_FEATURES - 2
     TEMPORAL_WINDOW = cfg['time_window']*2
     FUTURE_DECODER = cfg['prediction_decoder']

@@ -68,6 +68,7 @@ def motif_videos(config, videoType='.mp4'):
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
+    param = cfg['parameterization']
     flag = 'motif'
     
     files = []
@@ -94,7 +95,7 @@ def motif_videos(config, videoType='.mp4'):
 
     print("Cluster size is: %d " %n_cluster)
     for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
             os.mkdir(os.path.join(path_to_file,"cluster_videos"))
 

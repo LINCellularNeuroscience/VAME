@@ -274,7 +274,7 @@ def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, c
         
     if use_video:
         #compute background
-        bg = background(path_to_file,filename)
+        bg = background(path_to_file,filename,video_format)
         capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
         if not capture.isOpened():
             raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
@@ -306,6 +306,9 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
     confidence = cfg['pose_confidence']
     video_format=video_format
     crop_size=crop_size
+    
+    if cfg['egocentric_data'] == True:
+        raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
     
     # call function and save into your VAME data folder
     for file in filename:
