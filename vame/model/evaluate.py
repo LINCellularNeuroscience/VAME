@@ -25,10 +25,10 @@ if use_gpu:
     pass
 else:
     torch.device("cpu")
-
+    
 
 def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
-                        FUTURE_DECODER, FUTURE_STEPS):
+                        FUTURE_DECODER, FUTURE_STEPS, suffix=None):
     x = test_loader.__iter__().next()
     x = x.permute(0,2,1)
     if use_gpu:
@@ -70,10 +70,13 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
         fig, ax1 = plt.subplots(1, 5)
         for i in range(5):
             fig.suptitle('Reconstruction of input sequence')
-            ax1[0,i].plot(data_orig[i,...], color='k', label='Sequence Data')
-            ax1[0,i].plot(data_tilde[i,...], color='r', linestyle='dashed', label='Sequence Reconstruction')
-        axs[0,0].set(xlabel='time steps', ylabel='reconstruction')
-        fig.savefig(os.path.join(filepath,'evaluate','Reconstruction_'+model_name+'.png'))
+            ax1[i].plot(data_orig[i,...], color='k', label='Sequence Data')
+            ax1[i].plot(data_tilde[i,...], color='r', linestyle='dashed', label='Sequence Reconstruction')
+        fig.set_tight_layout(True)
+        if not suffix:
+            fig.savefig(os.path.join(filepath,'evaluate','Reconstruction_'+model_name+'.png'), bbox_inches='tight')
+        elif suffix:
+            fig.savefig(os.path.join(filepath,'evaluate','Reconstruction_'+model_name+'_'+suffix+'.png'), bbox_inches='tight')
 
 
 def plot_loss(cfg, filepath, model_name):
@@ -108,8 +111,7 @@ def plot_loss(cfg, filepath, model_name):
     fig.savefig(os.path.join(filepath,"evaluate",'MSE-and-KL-Loss'+model_name+'.png'))
 
 
-def eval_temporal(cfg, use_gpu, model_name, fixed):
-
+def eval_temporal(cfg, use_gpu, model_name, legacy, snapshot=None, suffix=None):#, 
     SEED = 19
     ZDIMS = cfg['zdims']
     FUTURE_DECODER = cfg['prediction_decoder']
@@ -143,15 +145,19 @@ def eval_temporal(cfg, use_gpu, model_name, fixed):
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                         hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
                         dropout_rec, dropout_pred, softplus).to()
-
-        model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl'), map_location=torch.device('cpu')))
-
+        if not snapshot:
+            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],"model","best_model",model_name+'_'+cfg['Project']+'.pkl'), map_location=torch.device('cpu')))
+        elif snapshot:
+            model.load_state_dict(torch.load(snapshot), map_location=torch.device('cpu'))
     model.eval() #toggle evaluation mode
 
     testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
     test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
 
-    plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS)
+    if not snapshot:
+        plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS)#, suffix=suffix
+    elif snapshot:
+        plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS, suffix=suffix)#, 
     if use_gpu:
         plot_loss(cfg, filepath, model_name)
     else:
@@ -159,10 +165,18 @@ def eval_temporal(cfg, use_gpu, model_name, fixed):
         # pass #note, loading of losses needs to be adapted for CPU use #TODO
 
 
-
-def evaluate_model(config):
+def evaluate_model(config, use_snapshots=False):#, suffix=None
     """
-        Evaluation of testset
+    Evaluation of testset.
+        
+    Parameters
+    ----------
+    config : str
+        Path to config file.
+    model_name : str
+        name of model (same as in config.yaml)
+    use_snapshots : bool
+        Whether to plot for all snapshots or only the best model.
     """
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
@@ -182,10 +196,18 @@ def evaluate_model(config):
         torch.device("cpu")
         print("CUDA is not working, or a GPU is not found; using CPU!")
 
-    print("\n\nEvaluation of %s model. \n" %model_name)
-    eval_temporal(cfg, use_gpu, model_name, fixed)
+    print("\n\nEvaluation of %s model. \n" %model_name)   
+    if not use_snapshots:
+        eval_temporal(cfg, use_gpu, model_name, legacy=legacy)#suffix=suffix
+    elif use_snapshots:
+        snapshots=os.listdir(os.path.join(cfg['project_path'],'model','best_model','snapshots'))
+        for snap in snapshots:
+            fullpath = os.path.join(cfg['project_path'],"model","best_model","snapshots",snap)
+            epoch=snap.split('_')[-1]
+            eval_temporal(cfg, use_gpu, model_name, snapshot=fullpath, legacy=legacy, suffix='snapshot'+str(epoch))
+            eval_temporal(cfg, use_gpu, model_name, legacy=legacy, suffix='bestModel')
 
     print("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
           "OPTIONS:\n"
-          "- vame.behavior_segmentation() to identify behavioral motifs.\n"
+          "- vame.pose_segmentation() to identify behavioral motifs.\n"
           "- re-run the model for further fine tuning. Check again with vame.evaluate_model()")
