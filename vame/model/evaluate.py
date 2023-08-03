@@ -29,7 +29,9 @@ else:
 
 def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
                         FUTURE_DECODER, FUTURE_STEPS, suffix=None):
-    x = test_loader.__iter__().next()
+    #x = test_loader.__iter__().next()
+    dataiter = iter(test_loader)
+    x = next(dataiter)
     x = x.permute(0,2,1)
     if use_gpu:
         data = x[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
@@ -111,7 +113,7 @@ def plot_loss(cfg, filepath, model_name):
     fig.savefig(os.path.join(filepath,"evaluate",'MSE-and-KL-Loss'+model_name+'.png'))
 
 
-def eval_temporal(cfg, use_gpu, model_name, legacy, snapshot=None, suffix=None):#, 
+def eval_temporal(cfg, use_gpu, model_name, fixed, snapshot=None, suffix=None):
     SEED = 19
     ZDIMS = cfg['zdims']
     FUTURE_DECODER = cfg['prediction_decoder']
@@ -165,7 +167,7 @@ def eval_temporal(cfg, use_gpu, model_name, legacy, snapshot=None, suffix=None):
         # pass #note, loading of losses needs to be adapted for CPU use #TODO
 
 
-def evaluate_model(config, use_snapshots=False):#, suffix=None
+def evaluate_model(config, use_snapshots=False):
     """
     Evaluation of testset.
         
@@ -180,7 +182,7 @@ def evaluate_model(config, use_snapshots=False):#, suffix=None
     """
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
-    legacy = cfg['legacy']
+    #legacy = cfg['legacy']
     model_name = cfg['model_name']
     fixed = cfg['egocentric_data']
 
@@ -198,14 +200,14 @@ def evaluate_model(config, use_snapshots=False):#, suffix=None
 
     print("\n\nEvaluation of %s model. \n" %model_name)   
     if not use_snapshots:
-        eval_temporal(cfg, use_gpu, model_name, legacy=legacy)#suffix=suffix
+        eval_temporal(cfg, use_gpu, model_name, fixed)#suffix=suffix
     elif use_snapshots:
         snapshots=os.listdir(os.path.join(cfg['project_path'],'model','best_model','snapshots'))
         for snap in snapshots:
             fullpath = os.path.join(cfg['project_path'],"model","best_model","snapshots",snap)
             epoch=snap.split('_')[-1]
-            eval_temporal(cfg, use_gpu, model_name, snapshot=fullpath, legacy=legacy, suffix='snapshot'+str(epoch))
-            eval_temporal(cfg, use_gpu, model_name, legacy=legacy, suffix='bestModel')
+            eval_temporal(cfg, use_gpu, model_name, fixed, snapshot=fullpath, suffix='snapshot'+str(epoch))
+            #eval_temporal(cfg, use_gpu, model_name, legacy=legacy, suffix='bestModel')
 
     print("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
           "OPTIONS:\n"

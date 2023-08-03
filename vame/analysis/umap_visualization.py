@@ -49,6 +49,7 @@ def visualization(config, label=None):
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
+    param = cfg['parameterization']
     
     files = []
     if cfg['all_data'] == 'No':
@@ -73,7 +74,7 @@ def visualization(config, label=None):
         files.append(all_flag)
 
     for idx, file in enumerate(files):
-        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",'kmeans-'+str(n_cluster))
+        path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",param+'-'+str(n_cluster))
         
         try:
             embed = np.load(os.path.join(path_to_file,"","community","","umap_embedding_"+file+".npy"))

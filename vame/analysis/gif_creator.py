@@ -58,6 +58,7 @@ def gif(config, pose_ref_index, subtract_background=True, start=None, length=500
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
+    param = cfg['parameterization']
     
     files = []
     if cfg['all_data'] == 'No':
@@ -83,7 +84,7 @@ def gif(config, pose_ref_index, subtract_background=True, start=None, length=500
         
 
     for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"gif_frames")):
             os.mkdir(os.path.join(path_to_file,"gif_frames"))
         
