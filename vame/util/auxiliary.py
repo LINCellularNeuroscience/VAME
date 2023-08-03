@@ -237,7 +237,7 @@ def update_config(config):
         cfg_file['n_neighbors'] = 200
         cfg_file['random_state'] = 42
         cfg_file['num_points'] = 30000
-	cfg_file['scheduler_gamma'] = 0.2
+        cfg_file['scheduler_gamma'] = 0.2
         cfg_file['scheduler_threshold'] = .1
         cfg_file['softplus'] = False
         cfg_file['pose_confidence'] = 0.99
