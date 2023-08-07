@@ -307,11 +307,20 @@ def train_model(config):
                         dropout_rec, dropout_pred, softplus).to()
 
     if pretrained_weights:
-        if os.path.exists(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')): 
-            print("Loading pretrained weights from model: %s\n" %pretrained_model)
+        try:
+            print("Loading pretrained weights from model: %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
             model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')))
             KL_START = 0
             ANNEALTIME = 1
+        except:
+            print("No file found at %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
+            try:
+                print("Loading pretrained weights from %s\n" %pretrained_model)
+                model.load_state_dict(torch.load(pretrained_model))
+                KL_START = 0
+                ANNEALTIME = 1
+            except:
+                print("Could not load pretrained model. Check file path in config.yaml.")
             
     """ DATASET """
     trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)

@@ -72,6 +72,9 @@ def create_config_template():
     scheduler:
     scheduler_step_size:
     scheduler_gamma:
+    #Note the optimal scheduler threshold below can vary greatly (from .1-.0001) between experiments. 
+    #You are encouraged to read the torch.optim.ReduceLROnPlateau docs to understand the threshold to use.
+    scheduler_threshold:
     softplus: 
     \n
 # Segmentation:
@@ -235,6 +238,7 @@ def update_config(config):
         cfg_file['random_state'] = 42
         cfg_file['num_points'] = 30000
         cfg_file['scheduler_gamma'] = 0.2
+        cfg_file['scheduler_threshold'] = .1
         cfg_file['softplus'] = False
         cfg_file['pose_confidence'] = 0.99
         cfg_file['iqr_factor'] = 4

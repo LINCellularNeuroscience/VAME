@@ -61,10 +61,10 @@ def get_transition_matrix(adjacency_matrix, threshold = 0.0):
     return transition_matrix
 
 
-def get_labels(cfg, files, model_name, n_cluster):
+def get_labels(cfg, files, model_name, n_cluster,parameterization):
     labels = []
     for file in files:
-        path_to_file = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+        path_to_file = os.path.join(cfg['project_path'],"results",file,model_name,parameterization+'-'+str(n_cluster),"")
         label = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))
         labels.append(label)
     return labels
@@ -121,7 +121,7 @@ def create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster
 
 
 def get_community_labels(files, labels, communities_all):
-    # transform kmeans parameterized latent vector into communities
+    # transform parameterized latent vector into communities
     community_labels_all = []
     for k, file in enumerate(files):
         num_comm = len(communities_all[k])  
@@ -139,13 +139,13 @@ def get_community_labels(files, labels, communities_all):
     return community_labels_all
 
 
-def umap_embedding(cfg, file, model_name, n_cluster):
+def umap_embedding(cfg, file, model_name, n_cluster,parameterization):
     reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'], 
                         random_state=cfg['random_state']) 
     
     print("UMAP calculation for file %s" %file)
     
-    folder = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+    folder = os.path.join(cfg['project_path'],"results",file,model_name,parameterization+'-'+str(n_cluster),"")
     latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
     
     num_points = cfg['num_points']
@@ -178,6 +178,7 @@ def community(config, show_umap=False, cut_tree=None):
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
+    parameterization = cfg['parameterization']
     
     files = []
     if cfg['all_data'] == 'No':
@@ -201,13 +202,13 @@ def community(config, show_umap=False, cut_tree=None):
     else:
         files.append(all_flag)
     
-    labels = get_labels(cfg, files, model_name, n_cluster)
+    labels = get_labels(cfg, files, model_name, n_cluster,parameterization)
     transition_matrices = compute_transition_matrices(files, labels, n_cluster)
     communities_all, trees = create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster)
     community_labels_all = get_community_labels(files, labels, communities_all)    
     
     for idx, file in enumerate(files):
-        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,parameterization+'-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"community")):
             os.mkdir(os.path.join(path_to_file,"community"))
         
@@ -218,7 +219,7 @@ def community(config, show_umap=False, cut_tree=None):
             pickle.dump(communities_all[idx], fp)
     
         if show_umap == True:
-            embed = umap_embedding(cfg, file, model_name, n_cluster)
+            embed = umap_embedding(cfg, file, model_name, n_cluster,parameterization)
             umap_vis(cfg, files, embed, community_labels_all[idx])
     
 # with open(os.path.join(path_to_file,"community","","hierarchy"+file+".txt"), "rb") as fp:   # Unpickling
