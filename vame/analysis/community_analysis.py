@@ -63,7 +63,7 @@ def get_transition_matrix(adjacency_matrix, threshold = 0.0):
             transition_matrix=np.nan_to_num(transition_matrix)
     return transition_matrix
 
-def consecutive(data, stepsize=1):
+def consecutive(data, stepsize=1): #identifies location of missing motif and returns array(s) at the split
     data = data[:]
     return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
 
@@ -100,10 +100,12 @@ def consecutive(data, stepsize=1):
 #     return usage
 
 # New find_zero_labels 8/8/2022 KL
-def find_zero_labels(motif_usage, n_cluster):
+def find_zero_labels(motif_usage, n_cluster): #motif_usage is 2D list where the first index is a unique list of motif used
+                                              #second index is the motif usage in frames
+                                              #returns list of motif usage frames with 0's where motifs weren't used
     cons = consecutive(motif_usage[0])
     usage_list = list(motif_usage[1])
-    if len(cons) != 1:
+    if len(cons) != 1: #if missing motif is in the middle of the list
         print("Go")
         if 0 not in cons[0]:
             first_id = cons[0][0]
@@ -120,12 +122,15 @@ def find_zero_labels(motif_usage, n_cluster):
         if len(usage_list) < n_cluster:
             usage_list.insert(n_cluster,0)
             
-    elif len(cons[0]) != n_cluster:
+    elif len(cons[0]) != n_cluster: #if missing motif is at the front or end of list
         # diff = n_cluster - cons[0][-1]
         usage_list = list(motif_usage[1])
-        usage_list.insert(n_cluster-1,0)
+        if cons[0][0] != 0: #missing motif at front of list
+            usage_list.insert(0,0)
+        else: #missing motif at end of list
+            usage_list.insert(n_cluster-1,0)
     
-    if len(usage_list) < n_cluster:
+    if len(usage_list) < n_cluster: #if there's more than one motif missing
         for k in range(len(usage_list), n_cluster):
             usage_list.insert(k,0)
             
