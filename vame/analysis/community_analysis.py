@@ -154,11 +154,11 @@ def augment_motif_timeseries(label, n_cluster):
         
     return augmented_label, zero_motifs
 
-def get_labels(cfg, files, model_name, n_cluster):
+def get_labels(cfg, files, model_name, n_cluster, parametrization):
     shapes = []
     for file in files:
-        path_to_file = os.path.join(cfg['project_path'],"results",file,'VAME', 'kmeans-'+str(n_cluster),"")
-        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))
+        path_to_file = os.path.join(cfg['project_path'],"results",file,'VAME', parametrization + '-' + str(n_cluster),"")
+        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + parametrization + '_label_'+file+'.npy'))
         shape = len(label)
         shapes.append(shape)
     shapes = np.array(shapes)
@@ -166,18 +166,18 @@ def get_labels(cfg, files, model_name, n_cluster):
     
     labels = []
     for file in files:
-        path_to_file = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
-        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))
+        path_to_file = os.path.join(cfg['project_path'],"results",file,model_name, parametrization + '-'+str(n_cluster),"")
+        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + parametrization + '_label_'+file+'.npy'))
         label = label[:min_frames]
         augmented_label,zero_motifs = augment_motif_timeseries(label, n_cluster)
         labels.append(augmented_label)
     return labels
 
-def get_community_label(cfg, files, model_name, n_cluster):
+def get_community_label(cfg, files, model_name, n_cluster, parametrization):
     shapes = []
     for file in files:
-        path_to_file = os.path.join(cfg['project_path'],"results",file,'VAME', 'kmeans-'+str(n_cluster),"")
-        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))
+        path_to_file = os.path.join(cfg['project_path'],"results",file,'VAME', parametrization + '-'+str(n_cluster),"")
+        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + parametrization + '_label_'+file+'.npy'))
         shape = len(label)
         shapes.append(shape)
     shapes = np.array(shapes)
@@ -185,8 +185,8 @@ def get_community_label(cfg, files, model_name, n_cluster):
     
     community_label = []
     for file in files:
-        path_to_file = os.path.join(cfg['project_path'],"results",file,'VAME', 'kmeans-'+str(n_cluster),"")
-        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))[:min_frames]
+        path_to_file = os.path.join(cfg['project_path'],"results",file,'VAME', parametrization + '-'+str(n_cluster),"")
+        label = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + parametrization + '_label_'+file+'.npy'))[:min_frames]
         community_label.extend(label)
     community_label = np.array(community_label)
     return community_label
@@ -319,13 +319,13 @@ def get_cohort_community_labels(files, labels, communities_all):
     return community_labels_all
 
 
-def umap_embedding(cfg, file, model_name, n_cluster):
+def umap_embedding(cfg, file, model_name, n_cluster, parameterization):
     reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'], 
                         random_state=cfg['random_state']) 
     
     print("UMAP calculation for file %s" %file)
     
-    folder = os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+    folder = os.path.join(cfg['project_path'],"results",file,model_name, parameterization +'-'+str(n_cluster),"")
     latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
     
     num_points = cfg['num_points']
@@ -359,6 +359,7 @@ def community(config, cohort=True, show_umap=False, cut_tree=None):
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
+    parameterization = cfg['parameterization']
     
     files = []
     if cfg['all_data'] == 'No':
@@ -383,7 +384,7 @@ def community(config, cohort=True, show_umap=False, cut_tree=None):
         files.append(all_flag)
     
     if cohort==True:
-        labels = get_community_label(cfg, files, model_name, n_cluster)
+        labels = get_community_label(cfg, files, model_name, n_cluster, parameterization)
         augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
         _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
         _, usage_full = np.unique(augmented_label, return_counts=True)
@@ -393,25 +394,25 @@ def community(config, cohort=True, show_umap=False, cut_tree=None):
         
         np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
         np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
-        np.save(os.path.join(cfg['project_path'],"cohort_km_label"+'.npy'), labels)
+        np.save(os.path.join(cfg['project_path'],"cohort_" + parameterization + "_label"+'.npy'), labels)
         np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
         
         with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
             pickle.dump(communities_all, fp)
     
         if show_umap == True:
-            embed = umap_embedding(cfg, files, model_name, n_cluster)
+            embed = umap_embedding(cfg, files, model_name, n_cluster, parameterization)
             umap_vis(cfg, files, embed, community_labels_all)
     
     # Work in Progress
     elif cohort == False:
-        labels = get_labels(cfg, files, model_name, n_cluster)
+        labels = get_labels(cfg, files, model_name, n_cluster, parameterization)
         transition_matrices = compute_transition_matrices(files, labels, n_cluster)
         communities_all, trees = create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster)
         community_labels_all = get_community_labels(files, labels, communities_all)
 
         for idx, file in enumerate(files):
-            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parameterization + '-'+str(n_cluster),"")
             if not os.path.exists(os.path.join(path_to_file,"community")):
                 os.mkdir(os.path.join(path_to_file,"community"))
             
@@ -422,7 +423,7 @@ def community(config, cohort=True, show_umap=False, cut_tree=None):
                 pickle.dump(communities_all[idx], fp)
         
             if show_umap == True:
-                embed = umap_embedding(cfg, file, model_name, n_cluster)
+                embed = umap_embedding(cfg, file, model_name, n_cluster, parameterization)
                 umap_vis(cfg, files, embed, community_labels_all[idx])
 
 
