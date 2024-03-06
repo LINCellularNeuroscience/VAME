@@ -257,8 +257,23 @@ def traindata_fixed(cfg, files, testfraction, num_features, savgol_filter, check
         np.save(os.path.join(cfg['project_path'],"data", "train",'train_seq.npy'), z_train)
         np.save(os.path.join(cfg['project_path'],"data", "train", 'test_seq.npy'), z_test)
         
+        y_shifted_indices = [0, 2, 4, 6, 8, 10, 12]
+        x_shifted_indices = [1, 3, 5, 7, 9, 11, 13]
+        belly_Y_ind = 10
+        belly_X_ind = 11
+        
         for i, file in enumerate(files):
-            np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
+            
+            # Shifting section added 2/29/2024 PN
+            X_med_shifted_file = X_med[:, pos[i]:pose[i+1]]
+            belly_Y_shift = X_med[belly_Y_ind, pos[i]:pos[i+1]]
+            belly_X_shift = X_med[belly_X_ind, pos[i]:pos[i+1]]
+            
+            X_med_shifted_file[y_shifted_indices,:] -= belly_Y_shift
+            X_med_shifted_file[x_shifted_indices,:] -= belly_X_shift
+            
+            # np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
+            np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med_shifted_file) # saving new shifted file
         
         print('Lenght of train data: %d' %len(z_train.T))
         print('Lenght of test data: %d' %len(z_test.T))

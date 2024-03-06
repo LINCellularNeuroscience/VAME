@@ -12,7 +12,7 @@ import cv2 as cv
 import numpy as np
 import pandas as pd
 import tqdm    
-import glob
+
 
 from pathlib import Path
 from vame.util.auxiliary import read_config  
@@ -21,13 +21,28 @@ from vame.util.auxiliary import read_config
 def crop_and_flip(rect, src, points, ref_index):
     #Read out rect structures and convert
     center, size, theta = rect
+    
     center, size = tuple(map(int, center)), tuple(map(int, size))
+
+    # center_lst = list(center)
+    # center_lst[0] = center[0] - size[0]//2
+    # center_lst[1] = center[1] - size[1]//2
+        
+    # center = tuple(center_lst)
+    
+    
+    # center[0] -= size[0]//2
+    # center[1] -= size[0]//2 # added this shift to change center to belly 2/28/2024
+    
     #Get rotation matrix 
     M = cv.getRotationMatrix2D(center, theta, 1)
        
     #shift DLC points
     x_diff = center[0] - size[0]//2
     y_diff = center[1] - size[1]//2
+
+    # x_diff = center[0]
+    # y_diff = center[1]
     
     dlc_points_shifted = []
     
@@ -45,9 +60,16 @@ def crop_and_flip(rect, src, points, ref_index):
     
     #check if flipped correctly, otherwise flip again
     if dlc_points_shifted[ref_index[1]][0] >= dlc_points_shifted[ref_index[0]][0]:
-        rect = ((size[0]//2,size[0]//2),size,180)
+        rect = ((size[0]//2,size[0]//2),size,180) #should second value be size[1]? Is this relevant to the flip? 3/5/24 KKL
         center, size, theta = rect
         center, size = tuple(map(int, center)), tuple(map(int, size))
+        
+        
+        # center_lst = list(center)
+        # center_lst[0] = center[0] - size[0]//2
+        # center_lst[1] = center[1] - size[1]//2
+        # center = tuple(center_lst)
+        
         #Get rotation matrix 
         M = cv.getRotationMatrix2D(center, theta, 1)
         
@@ -55,6 +77,10 @@ def crop_and_flip(rect, src, points, ref_index):
         #shift DLC points
         x_diff = center[0] - size[0]//2
         y_diff = center[1] - size[1]//2
+        
+        # x_diff = center[0]
+        # y_diff = center[1]
+    
         
         points = dlc_points_shifted
         dlc_points_shifted = []
@@ -184,24 +210,50 @@ def align_mouse(path_to_file,filename,video_format,crop_size, pose_list,
         
         img = cv.copyMakeBorder(frame, crop_size[1], crop_size[1], crop_size[0], crop_size[0], cv.BORDER_CONSTANT, 0)
         
+        
+        coord_center = []
         punkte = []
+        
         for i in pose_ref_index:
             coord = []
-            coord.append(pose_list_bordered[i][0])
-            coord.append(pose_list_bordered[i][1])
+            
+            coord.append(pose_list_bordered[i][0]) # changed from pose_list_bordered[i][0] 2/28/2024 PN
+            coord.append(pose_list_bordered[i][1]) # changed from pose_list_bordered[i][1] 2/28/2024 PN
+            
             punkte.append(coord)
+            
+            
+        # coord_center.append(pose_list_bordered[5][0]-5)
+        # coord_center.append(pose_list_bordered[5][0]+5)
+        
+        # coord_center = [coord_center]
         punkte = [punkte]
+        
+        # coord_center = np.asarray(coord_center)
         punkte = np.asarray(punkte)
         
         #calculate minimal rectangle around snout and tail
         rect = cv.minAreaRect(punkte)
-    
+        # rect_belly = cv.minAreaRect(coord_center)
+        
+        # center_belly, size_belly, theta_belly = rect_belly
+        
         #change size in rect tuple structure to be equal to crop_size
         lst = list(rect)
         lst[1] = crop_size
+        # lst[0] = center_belly
         rect = tuple(lst)
         
         center, size, theta = rect
+        
+        # lst2 = list(rect)
+        # lst2[0][0] = center[0] - size[0]//2
+        # lst2[0][1] = center[1] - size[1]//2
+        
+        # rect = tuple(lst2)
+        
+        # center[0] -= size[0]//2
+        # center[1] -= size[0]//2 # added this shift to change center to belly 2/28/2024
         
         #crop image
         out, shifted_points = crop_and_flip(rect, img,pose_list_bordered,pose_flip_ref)
@@ -254,17 +306,9 @@ def play_aligned_video(a, n, frame_count):
 def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, confidence, use_video=False, check_video=False):
     
     #read out data
-    dataFile = glob.glob(os.path.join(path_to_file,'videos','pose_estimation',filename+'*'))
-    if len(dataFile)>1:
-        raise AssertionError("Multiple data files match video {}".format(filename))
-    else:
-        dataFile=dataFile[0]
-    if dataFile.endswith('.csv'):
-        data = pd.read_csv(dataFile, skiprows = 2, index_col=0)
-    elif dataFile.endswith('.h5'):
-        data = pd.read_hdf(dataFile)
+    data = pd.read_csv(os.path.join(path_to_file,'videos','pose_estimation',filename+'.csv'), skiprows = 2)
     data_mat = pd.DataFrame.to_numpy(data)
-  #  data_mat = data_mat[:,1:] 
+    data_mat = data_mat[:,1:] 
     
     # get the coordinates for alignment from data table
     pose_list = []
@@ -304,7 +348,7 @@ def alignment(path_to_file, filename, pose_ref_index, video_format, crop_size, c
     return time_series, frames
 
 
-def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_video=False, video_format='.mp4', check_video=False):
+def egocentric_alignment(config, pose_ref_index=[5,6], crop_size=(300,300), use_video=False, video_format='.mp4', check_video=False): # pose_ref_index changed in this script from [0,5] to                                                                                                                                         [5,6] on 2/7/2024 PN
     """ Happy aligning """
     #config parameters
     config_file = Path(config).resolve()
@@ -316,6 +360,11 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
     video_format=video_format
     crop_size=crop_size
     
+    y_shifted_indices = [0, 2, 4, 6, 8, 10, 12]
+    x_shifted_indices = [1, 3, 5, 7, 9, 11, 13]
+    belly_Y_ind = 10
+    belly_X_ind = 11
+
     if cfg['egocentric_data'] == True:
         raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
     
@@ -324,7 +373,16 @@ def egocentric_alignment(config, pose_ref_index=[0,5], crop_size=(300,300), use_
         print("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
         egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size, 
                                                    confidence, use_video=use_video, check_video=check_video)
-        np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series)
+        
+        # Shifiting section added 2/29/2024 PN
+        egocentric_time_series_shifted = egocentric_time_series
+        belly_Y_shift = egocentric_time_series[belly_Y_ind,:]
+        belly_X_shift = egocentric_time_series[belly_X_ind,:]
+        
+        egocentric_time_series_shifted[y_shifted_indices, :] -= belly_Y_shift
+        egocentric_time_series_shifted[x_shifted_indices, :] -= belly_X_shift
+  
+        np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series_shifted) # save new shifted file
 #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
         
     print("Your data is now ine right format and you can call vame.create_trainset()")
