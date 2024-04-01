@@ -30,7 +30,7 @@ def umap_vis(file, embed, num_points):
 def umap_label_vis(file, embed, label, n_cluster, num_points):
     fig = plt.figure(1)
     plt.scatter(embed[:num_points,0], embed[:num_points,1],  c=label[:num_points], cmap='Spectral', s=2, alpha=.7)
-    plt.colorbar(boundaries=np.arange(n_cluster+1)-0.5).set_ticks(np.arange(n_cluster))
+    #plt.colorbar(boundaries=np.arange(n_cluster+1)-0.5).set_ticks(np.arange(n_cluster))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
 
@@ -39,7 +39,7 @@ def umap_vis_comm(file, embed, community_label, num_points):
     num = np.unique(community_label).shape[0]
     fig = plt.figure(1)
     plt.scatter(embed[:num_points,0], embed[:num_points,1],  c=community_label[:num_points], cmap='Spectral', s=2, alpha=.7)
-    plt.colorbar(boundaries=np.arange(num+1)-0.5).set_ticks(np.arange(num))
+    #plt.colorbar(boundaries=np.arange(num+1)-0.5).set_ticks(np.arange(num))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
     
@@ -101,7 +101,7 @@ def visualization(config, label=None):
         print("Visualizing %d data points.. " %num_points)
         if label == None:                    
             umap_vis(file, embed, num_points)
-            
+
         if label == 'motif':
             motif_label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
             umap_label_vis(file, embed, motif_label, n_cluster, num_points)
