@@ -195,7 +195,7 @@ def traindata_aligned(cfg, files, testfraction, num_features, savgol_filter, che
         print('Lenght of test data: %d' %len(z_test.T))
     
 
-def traindata_fixed(cfg, pos_ref_index, files, testfraction, num_features, savgol_filter, check_parameter):
+def traindata_fixed(cfg, pose_ref_index, files, testfraction, num_features, savgol_filter, check_parameter):
     X_train = []
     pos = []
     pos_temp = 0
@@ -259,8 +259,8 @@ def traindata_fixed(cfg, pos_ref_index, files, testfraction, num_features, savgo
         
         y_shifted_indices = np.arange(0, num_features, 2)
         x_shifted_indices = np.arange(1, num_features, 2)
-        belly_Y_ind = pos_ref_index[0] * 2
-        belly_X_ind = pos_ref_index[0] * 2 + 1
+        belly_Y_ind = pose_ref_index[0] * 2
+        belly_X_ind = (pose_ref_index[0] * 2) + 1
 
         for i, file in enumerate(files):
             
@@ -279,7 +279,7 @@ def traindata_fixed(cfg, pos_ref_index, files, testfraction, num_features, savgo
         print('Lenght of test data: %d' %len(z_test.T))
 
 
-def create_trainset(config, pos_ref_index, check_parameter=False):
+def create_trainset(config, pose_ref_index, check_parameter=False):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
@@ -306,10 +306,10 @@ def create_trainset(config, pos_ref_index, check_parameter=False):
         
     if fixed == False:
         print("Creating trainset from the vame.egocentrical_alignment() output ")
-        traindata_aligned(cfg, pos_ref_index, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
+        traindata_aligned(cfg, pose_ref_index, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
     else:
         print("Creating trainset from the vame.csv_to_numpy() output ")
-        traindata_fixed(cfg, pos_ref_index, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
+        traindata_fixed(cfg, pose_ref_index, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
     
     if check_parameter == False:
         print("A training and test set has been created. Next step: vame.train_model()")
