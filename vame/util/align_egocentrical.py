@@ -357,13 +357,14 @@ def egocentric_alignment(config, pose_ref_index=[5,6], crop_size=(300,300), use_
     path_to_file = cfg['project_path']
     filename = cfg['video_sets']
     confidence = cfg['pose_confidence']
+    num_features = cfg['num_features']
     video_format=video_format
     crop_size=crop_size
     
-    y_shifted_indices = [0, 2, 4, 6, 8, 10, 12]
-    x_shifted_indices = [1, 3, 5, 7, 9, 11, 13]
-    belly_Y_ind = 10
-    belly_X_ind = 11
+    y_shifted_indices = np.arange(0, num_features, 2)
+    x_shifted_indices = np.arange(1, num_features, 2)
+    belly_Y_ind = pose_ref_index[0] * 2
+    belly_X_ind = (pose_ref_index[0] * 2) + 1
 
     if cfg['egocentric_data'] == True:
         raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
