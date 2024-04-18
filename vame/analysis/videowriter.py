@@ -19,9 +19,10 @@ from vame.util.auxiliary import read_config
 
 
 def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
+    param = cfg['parameterization']
     if flag == "motif":
         print("Motif videos getting created for "+file+" ...")
-        labels = np.load(os.path.join(path_to_file,str(n_cluster)+'_km_label_'+file+'.npy'))
+        labels = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
     if flag == "community":
         print("Community videos getting created for "+file+" ...")
         labels = np.load(os.path.join(path_to_file,"community",'community_label_'+file+'.npy'))

@@ -147,6 +147,7 @@ def generative_model(config, mode="sampling"):
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
+    parametrization = cfg['parametrization']
     
     files = []
     if cfg['all_data'] == 'No':
@@ -174,7 +175,7 @@ def generative_model(config, mode="sampling"):
     model = load_model(cfg, model_name)
     
     for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,'kmeans-'+str(n_cluster),"")
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization + '-' +str(n_cluster),"")
 
         if mode == "sampling":
             latent_vector = np.load(os.path.join(path_to_file,'latent_vector_'+file+'.npy'))
@@ -190,7 +191,7 @@ def generative_model(config, mode="sampling"):
 
         if mode == "motifs":
             latent_vector = np.load(os.path.join(path_to_file,'latent_vector_'+file+'.npy'))
-            labels = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_km_label_'+file+'.npy'))
+            labels = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_' + parametrization + '_label_'+file+'.npy'))
             random_generative_samples_motif(cfg, model, latent_vector,labels,n_cluster)            
 
     

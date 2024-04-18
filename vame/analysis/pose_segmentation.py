@@ -301,7 +301,7 @@ def pose_segmentation(config):
                         print(error)   
                     
                 save_data = os.path.join(cfg['project_path'],"results",file,model_name,parameterization+'-'+str(n_cluster),"")
-                np.save(os.path.join(save_data,str(n_cluster)+'_km_label_'+file), labels[idx])
+                np.save(os.path.join(save_data,str(n_cluster)+'_' + parameterization + '_label_'+file), labels[idx])
                 if parameterization=="kmeans":
                     np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
                 np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])

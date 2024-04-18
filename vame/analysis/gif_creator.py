@@ -111,7 +111,7 @@ def gif(config, pose_ref_index, subtract_background=True, start=None, length=500
             np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
         
         if label == "motif":
-            umap_label = np.load(os.path.join(path_to_file,str(n_cluster)+"_km_label_"+file+'.npy'))
+            umap_label = np.load(os.path.join(path_to_file,str(n_cluster)+"_" + param + "_label_"+file+'.npy'))
         elif label == "community":
             umap_label = np.load(os.path.join(path_to_file,"community","community_label_"+file+'.npy'))
         elif label == None:
