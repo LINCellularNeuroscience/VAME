@@ -3,6 +3,10 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("requirements.txt", "r") as req_file:
+    requirements = req_file.read().splitlines()
+
+
 setup(
     name="vame",
     version='1.0',
@@ -16,16 +20,5 @@ setup(
     setup_requires=[
         "pytest",
     ],	
-    install_requires=[
-        "pytest-shutil",
-        "scipy",
-        "numpy",
-        "matplotlib",
-        "pathlib",
-	"pandas",
-        "ruamel.yaml",
-	"sklearn",
-        "pyyaml",
-        "opencv-python",
-    ],
+    install_requires=requirements,
 )
