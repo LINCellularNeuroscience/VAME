@@ -22,7 +22,7 @@ import os
 from pathlib import Path
 import shutil
 
-def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
+def init_new_project(project, videos, poses_estimations, working_directory=None, videotype='.mp4'):
     from datetime import datetime as dt
     from vame.util import auxiliary
     date = dt.today()
@@ -98,6 +98,12 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     print("Copying the videos \n")
     for src, dst in zip(videos, destinations):
         shutil.copy(os.fspath(src),os.fspath(dst))
+
+    print("Copying pose estimation files\n")
+    for src, dst in zip(poses_estimations, [str(project_path)+'/videos/pose_estimation/'+Path(p).name for p in poses_estimations]):
+        print('Copying ',src,' to ',dst)
+        shutil.copy(os.fspath(src),os.fspath(dst))
+    
 
     cfg_file,ruamelFile = auxiliary.create_config_template()
     cfg_file
