@@ -33,7 +33,7 @@ def create_config_template():
     Project:
     model_name:
     n_cluster:
-    pose_confidence: 
+    pose_confidence:
     \n
 # Project path and videos
     project_path:
@@ -43,18 +43,18 @@ def create_config_template():
     all_data:
     \n
 # Creation of train set:
-    egocentric_data: 
+    egocentric_data:
     robust:
     iqr_factor:
-    axis: 
+    axis:
     savgol_filter:
     savgol_length:
     savgol_order:
     test_fraction:
     \n
 # RNN model general hyperparameter:
-    pretrained_model: 
-    pretrained_weights: 
+    pretrained_model:
+    pretrained_weights:
     num_features:
     batch_size:
     max_epochs:
@@ -68,21 +68,21 @@ def create_config_template():
     time_window:
     prediction_decoder:
     prediction_steps:
-    noise: 
+    noise:
     scheduler:
     scheduler_step_size:
     scheduler_gamma:
-    #Note the optimal scheduler threshold below can vary greatly (from .1-.0001) between experiments. 
+    #Note the optimal scheduler threshold below can vary greatly (from .1-.0001) between experiments.
     #You are encouraged to read the torch.optim.ReduceLROnPlateau docs to understand the threshold to use.
     scheduler_threshold:
-    softplus: 
+    softplus:
     \n
 # Segmentation:
     parameterization:
     hmm_trained: False
     load_data:
-    individual_parameterization: 
-    random_state_kmeans: 
+    individual_parameterization:
+    random_state_kmeans:
     n_init_kmeans:
     \n
 # Video writer:
@@ -90,8 +90,8 @@ def create_config_template():
     \n
 # UMAP parameter:
     min_dist:
-    n_neighbors: 
-    random_state: 
+    n_neighbors:
+    random_state:
     num_points:
     \n
 # ONLY CHANGE ANYTHING BELOW IF YOU ARE FAMILIAR WITH RNN MODELS
@@ -119,7 +119,7 @@ def create_config_template():
     annealtime:
     \n
 # Legacy mode
-    legacy: 
+    legacy:
     """
     ruamelFile = ruamel.yaml.YAML()
     cfg_file = ruamelFile.load(yaml_str)
@@ -170,22 +170,24 @@ def write_config(configname,cfg):
 
         ruamelFile.dump(cfg_file, cf)
 
-def update_config(config):
+def update_config(config, force_update: bool = False):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
-    
+
     project = cfg['Project']
     project_path = cfg['project_path']
     video_names = []
     for file in cfg['video_sets']:
         video_names.append(file)
-    
-    flag = input("ATTENTION! You are about to overwrite your current config.yaml. If you did changes, "
-                 "back up your current version and compare to the updated version. Do you want to continue? (yes/no)")
-    
+
+    flag = 'yes'
+    if not force_update:
+        flag = input("ATTENTION! You are about to overwrite your current config.yaml. If you did changes, "
+                    "back up your current version and compare to the updated version. Do you want to continue? (yes/no)")
+
     if flag == 'yes':
         cfg_file,ruamelFile = create_config_template()
-        
+
         cfg_file['Project']=str(project)
         cfg_file['project_path']=str(project_path)+'/'
         cfg_file['test_fraction']=.1
@@ -248,11 +250,11 @@ def update_config(config):
         cfg_file['axis'] = 'None'
         cfg_file['egocentric_data'] = True
         cfg_file['parameterization'] = 'kmeans'
-        
+
         projconfigfile=os.path.join(str(project_path),'config.yaml')
         # Write dictionary to yaml  config file
         write_config(projconfigfile,cfg_file)
-        
+
         print("Your config.yaml has been updated.")
     else:
         print("No changes have been applied.")
