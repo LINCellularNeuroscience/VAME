@@ -366,7 +366,9 @@ def egocentric_alignment(config, pose_ref_index=[5,6], crop_size=(300,300), use_
     belly_Y_ind = pose_ref_index[0] * 2
     belly_X_ind = (pose_ref_index[0] * 2) + 1
 
-    if cfg['egocentric_data'] == True:
+    # if cfg['egocentric_data'] == True: # TODO check if is false, original is checking if true 
+    # but in line 54 of csv_to_npy.py file we have the inverse of it so the demo workflow will always trigger exception
+    if not cfg['egocentric_data']:
         raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
     
     # call function and save into your VAME data folder
