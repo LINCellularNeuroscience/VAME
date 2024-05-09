@@ -10,8 +10,9 @@ Also you will need two files to properly run the demo:
 - `video-1.csv`: the pose estimation results for the video file. You can use the video-1.csv file that is in the examples folder [video](/examples/video-1.csv)
 
 ## 2. Setting the demo variables
-To start the demo you must define 4 variables, being them:
+To start the demo you must define 4 variables. In order to do that, open the `demo.py` file and edit the following:
 
+**The values below are just examples. You must set the variables according to your needs.**
 ```
 working_directory = './' # The directory where the project will be saved
 project = 'first_vame_project' # The name you want for the project
@@ -19,4 +20,12 @@ videos =  ['./video-1.mp4'] # A list of paths to the videos file
 poses_estimations = ['./video-1.csv'] # A list of paths to the poses estimations files. **Important**: The name (without the extension) of the video file and the pose estimation file must be the same. E.g. `video-1.mp4` and `video-1.csv`
 ```
 
+## 3. Running the demo
+After setting the variables, you can run the demo by running the following code:
 
+```python
+python demo.py
+```
+The demo will create a project folder in the working directory with the name you defined in the `project` variable and a date suffix, e.g: `first_name-May-9-2024`.
+In this folder you can find a config file called `config.yaml` where you can set the parameters for the VAME algorithm. The videos and poses estimations files will be copied to the project videos folder. If everything is ok, the workflow will run and the logs will be displayed in your terminal. The image below shows the VAME workflow.
+![demo workflow](/Images/vame-workflow-diagram.jpg)
