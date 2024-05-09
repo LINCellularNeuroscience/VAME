@@ -16,7 +16,7 @@ We are focused on the expanding the analytical capabilities of VAME segmentation
 
 
 ## Authors and Code Contributors
-VAME was developed by Kevin Luxem and Pavol Bauer (Luxem et. al., 2022). The original VAME repository was deprecated, forked, and is now being maintained here at https://github.com/VAMETools/VAME.
+VAME was developed by Kevin Luxem and Pavol Bauer (Luxem et. al., 2022). The original VAME repository was deprecated, forked, and is now being maintained here at https://github.com/EthoML/VAME.
 
 The development of VAME is heavily inspired by [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut/). As such, the VAME project management codebase has been adapted from the DeepLabCut codebase. The DeepLabCut 2.0 toolbox is © A. & M.W. Mathis Labs [deeplabcut.org](http:\\deeplabcut.org), released under LGPL v3.0. The implementation of the VRAE model is partially adapted from the [Timeseries clustering](https://github.com/tejaslodaya/timeseries-clustering-vae) repository developed by [Tejas Lodaya](https://tejaslodaya.com).
 
