@@ -4,9 +4,10 @@ The first demo is a simple example of how to use the library.
 
 ## 1. Downloading the necessary resources:
 
-To run the demo you will need two files:
+To run the demo you will need vame package installed, follow the installation guide [here](/README.md#Installation) .
+Also you will need two files to properly run the demo:
 - `video-1.mp4`: A video file that will be used as input, for the demo you can download from [this link](https://drive.google.com/file/d/1w6OW9cN_-S30B7rOANvSaR9c3O5KeF0c/view)
-- `video-1.csv`: the pose estimation results for the video file. You can use the video-1.csv file that is in the examples folder [video](/examples/video-1.csv) 
+- `video-1.csv`: the pose estimation results for the video file. You can use the video-1.csv file that is in the examples folder [video](/examples/video-1.csv)
 
 ## 2. Setting the demo variables
 To start the demo you must define 4 variables, being them:
