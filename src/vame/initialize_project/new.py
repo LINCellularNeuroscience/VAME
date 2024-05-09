@@ -43,7 +43,8 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
 
     if project_path.exists():
         print('Project "{}" already exists!'.format(project_path))
-        return
+        projconfigfile = os.path.join(str(project_path),'config.yaml')
+        return projconfigfile
 
     video_path = project_path / 'videos'
     data_path = project_path / 'data'
