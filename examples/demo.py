@@ -18,42 +18,36 @@ project = 'second_vame'
 videos = ['./video-1.mp4']
 poses_estimations = ['./video-1.csv']
 
-# Initialize your project
-# Step 1.1:
+# Step 1.1: Initialize your project
 config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
 
-# # After the inital creation of your project you can always access the config.yaml file
-# # via specifying the path to your project
+# After the inital creation of your project you can always access the config.yaml file
+# via specifying the path to your project
 
-# # # As our config.yaml is sometimes still changing a little due to updates, we have here a small function
-# # # to update your config.yaml to the current state. Be aware that this will overwrite your current config.yaml
-# # # and make sure to back up your version if you did parameter changes!
+# As our config.yaml is sometimes still changing a little due to updates, we have here a small function
+# to update your config.yaml to the current state. Be aware that this will overwrite your current config.yaml
+# and make sure to back up your version if you did parameter changes!
 vame.update_config(config, force_update=True)
 
-# # # Step 1.2:
-# # # Align your behavior videos egocentric and create training dataset:
-# # # pose_ref_index: list of reference coordinate indices for alignment
-# # # Example: 0: snout, 1: forehand_left, 2: forehand_right, 3: hindleft, 4: hindright, 5: tail
-vame.egocentric_alignment(config, pose_ref_index=[0,5])
+# Step 1.2: Align your behavior videos egocentric and create training dataset
+# pose_ref_index: list of reference coordinate indices for alignment
+# Example: 0: snout, 1: forehand_left, 2: forehand_right, 3: hindleft, 4: hindright, 5: tail
+vame.egocentric_alignment(config, pose_ref_index=[0, 5])
 
-# # # # If your experiment is by design egocentrical (e.g. head-fixed experiment on treadmill etc)
-# # # # you can use the following to convert your .csv to a .npy array, ready to train vame on it
+# If your experiment is by design egocentrical (e.g. head-fixed experiment on treadmill etc)
+# you can use the following to convert your .csv to a .npy array, ready to train vame on it
 vame.csv_to_numpy(config)
 
-# # # # Step 1.3:
-# # # # create the training set for the VAME model
+# Step 1.3: create the training set for the VAME model
 vame.create_trainset(config, check_parameter=False, pose_ref_index=[0,5])
 
-# # # Step 2:
-# # # Train VAME:
+# Step 2: Train VAME
 vame.train_model(config)
 
-# # # Step 3:
-# # # Evaluate model
+# Step 3: Evaluate model
 vame.evaluate_model(config)
 
-# # # Step 4:
-# # # Segment motifs/pose
+# Step 4: Segment motifs/pose
 vame.pose_segmentation(config)
 
 
@@ -62,7 +56,7 @@ vame.pose_segmentation(config)
 # # The following are optional choices to create motif videos, communities/hierarchies of behavior,
 # # community videos
 
-# # OPTIONIAL: Create motif videos to get insights about the fine grained poses
+# # OPTIONAL: Create motif videos to get insights about the fine grained poses
 # vame.motif_videos(config, videoType='.mp4')
 
 # # OPTIONAL: Create behavioural hierarchies via community detection
