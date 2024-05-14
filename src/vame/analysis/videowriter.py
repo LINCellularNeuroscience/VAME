@@ -14,11 +14,25 @@ from pathlib import Path
 import numpy as np
 import cv2 as cv
 import tqdm
-
+from typing import Union
 from vame.util.auxiliary import read_config
 
 
-def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
+def get_cluster_vid(cfg: dict, path_to_file: str, file: str, n_cluster: int, videoType: str, flag: str) -> None:
+    """
+    Generate cluster videos.
+
+    Args:
+        cfg (dict): Configuration parameters.
+        path_to_file (str): Path to the file.
+        file (str): Name of the file.
+        n_cluster (int): Number of clusters.
+        videoType (str): Type of video.
+        flag (str): Flag indicating the type of video (motif or community).
+
+    Returns:
+        None - Generate cluster videos and save them to fs on project folder.
+    """
     param = cfg['parameterization']
     if flag == "motif":
         print("Motif videos getting created for "+file+" ...")
@@ -41,12 +55,12 @@ def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
         print('Cluster: %d' %(cluster))
         cluster_lbl = np.where(labels == cluster)
         cluster_lbl = cluster_lbl[0]
-        
+
         if flag == "motif":
             output = os.path.join(path_to_file,"cluster_videos",file+'-motif_%d.avi' %cluster)
         if flag == "community":
             output = os.path.join(path_to_file,"community_videos",file+'-community_%d.avi' %cluster)
-            
+
         video = cv.VideoWriter(output, cv.VideoWriter_fourcc('M','J','P','G'), fps, (int(width), int(height)))
 
         if len(cluster_lbl) < cfg['length_of_motif_video']:
@@ -64,14 +78,25 @@ def get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag):
     capture.release()
 
 
-def motif_videos(config, videoType='.mp4'):
+def motif_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
+    """
+    Generate motif videos.
+
+    Args:
+        config (Union[str, Path]): Path to the configuration file.
+        videoType (str, optional): Type of video. Default is '.mp4'.
+
+    Returns:
+        None - Generate motif videos and save them to filesystem on project cluster_videos folder.
+    """
+
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
     param = cfg['parameterization']
     flag = 'motif'
-    
+
     files = []
     if cfg['all_data'] == 'No':
         all_flag = input("Do you want to write motif videos for your entire dataset? \n"
@@ -101,18 +126,28 @@ def motif_videos(config, videoType='.mp4'):
             os.mkdir(os.path.join(path_to_file,"cluster_videos"))
 
         get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag)
-    
+
     print("All videos have been created!")
-    
-    
-def community_videos(config, videoType='.mp4'):
+
+
+def community_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
+    """
+    Generate community videos.
+
+    Args:
+        config (Union[str, Path]): Path to the configuration file.
+        videoType (str, optional): Type of video. Default is '.mp4'.
+
+    Returns:
+        None - Generate community videos and save them to filesystem on project community_videos folder.
+    """
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
     param = cfg['parameterization']
     flag = 'community'
-    
+
     files = []
     if cfg['all_data'] == 'No':
         all_flag = input("Do you want to write motif videos for your entire dataset? \n"
@@ -142,5 +177,5 @@ def community_videos(config, videoType='.mp4'):
             os.mkdir(os.path.join(path_to_file,"community_videos"))
 
         get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag)
-    
+
     print("All videos have been created!")

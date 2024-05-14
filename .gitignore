@@ -95,6 +95,7 @@ ENV/
 venv_docs/
 examples/sample_data
 
+
 # Spyder project settings
 .spyderproject
 .spyproject

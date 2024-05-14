@@ -15,35 +15,53 @@ import pandas as pd
 
 from pathlib import Path
 from vame.util.auxiliary import read_config
+from typing import Tuple
 
 
-#Helper function to return indexes of nans        
-def nan_helper(y):
-    return np.isnan(y), lambda z: z.nonzero()[0] 
 
-#Interpolates all nan values of given array
-def interpol(arr):
-        
+def nan_helper(y: np.ndarray) -> Tuple:
+    """
+    Identifies indices of NaN values in an array and provides a function to convert them to non-NaN indices.
+
+    Args:
+        y (np.ndarray): Input array containing NaN values.
+
+    Returns:
+        Tuple[np.ndarray, Union[np.ndarray, None]]: A tuple containing two elements:
+            - An array of boolean values indicating the positions of NaN values.
+            - A lambda function to convert NaN indices to non-NaN indices.
+    """
+    return np.isnan(y), lambda z: z.nonzero()[0]
+
+
+
+def interpol(arr: np.ndarray) -> np.ndarray:
+    """Interpolates all NaN values of a given array.
+
+    Args:
+        arr (np.ndarray): A numpy array with NaN values.
+
+    Return:
+        np.ndarray: A numpy array with interpolated NaN values.
+    """
+
     y = np.transpose(arr)
-     
+
     nans, x = nan_helper(y[0])
-    y[0][nans]= np.interp(x(nans), x(~nans), y[0][~nans])   
+    y[0][nans]= np.interp(x(nans), x(~nans), y[0][~nans])
     nans, x = nan_helper(y[1])
     y[1][nans]= np.interp(x(nans), x(~nans), y[1][~nans])
-    
+
     arr = np.transpose(y)
-    
+
     return arr
 
-def csv_to_numpy(config):
-    """
-    This is a function to convert your pose-estimation.csv file to a numpy array.
-
-    Note that this code is only useful for data which is a priori egocentric, i.e. head-fixed
+def csv_to_numpy(config: str) -> None:
+    """Converts a pose-estimation.csv file to a numpy array. Note that this code is only useful for data which is a priori egocentric, i.e. head-fixed
     or otherwise restrained animals.
 
-    example use:
-    vame.csv_to_npy('pathto/your/config/yaml', 'path/toYourFolderwithCSV/')
+    Raises:
+        ValueError: If the config.yaml file indicates that the data is not egocentric.
     """
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
@@ -62,24 +80,24 @@ def csv_to_numpy(config):
         data_mat = data_mat[:,1:]
 
         pose_list = []
-        
+
         # get the number of bodyparts, their x,y-position and the confidence from DeepLabCut
         for i in range(int(data_mat.shape[1]/3)):
             pose_list.append(data_mat[:,i*3:(i+1)*3])
-         
+
         # find low confidence and set them to NaN
         for i in pose_list:
             for j in i:
                 if j[2] <= confidence:
-                    j[0],j[1] = np.nan, np.nan        
-         
+                    j[0],j[1] = np.nan, np.nan
+
         # interpolate NaNs
         for i in pose_list:
              i = interpol(i)
-            
+
         positions = np.concatenate(pose_list, axis=1)
         final_positions = np.zeros((data_mat.shape[0], int(data_mat.shape[1]/3)*2))
-        
+
         jdx = 0
         idx = 0
         for i in range(int(data_mat.shape[1]/3)):

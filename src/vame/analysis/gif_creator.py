@@ -19,13 +19,40 @@ from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 from vame.util.auxiliary import read_config
 from vame.util.gif_pose_helper import get_animal_frames
+from typing import List, Tuple
 
 
-def create_video(path_to_file, file, embed, clabel, frames, start, length, max_lag, num_points): 
+def create_video(
+    path_to_file: str,
+    file: str,
+    embed: np.ndarray,
+    clabel: np.ndarray,
+    frames: List[np.ndarray],
+    start: int,
+    length: int,
+    max_lag: int,
+    num_points: int
+) -> None:
+    """Create video frames for the given embedding.
+
+    Args:
+        path_to_file (str): Path to the file.
+        file (str): File name.
+        embed (np.ndarray): Embedding array.
+        clabel (np.ndarray): Cluster labels.
+        frames (List[np.ndarray]): List of frames.
+        start (int): Starting index.
+        length (int): Length of the video.
+        max_lag (int): Maximum lag.
+        num_points (int): Number of points.
+
+    Returns:
+        None
+    """
     # set matplotlib colormap
     cmap = matplotlib.cm.gray
     cmap_reversed = matplotlib.cm.get_cmap('gray_r')
-    
+
     # this here generates every frame for your gif. The gif is lastly created by using ImageJ
     # the embed variable is my umap embedding, which is for the 2D case a 2xn dimensional vector
     fig = plt.figure()
@@ -48,18 +75,43 @@ def create_video(path_to_file, file, embed, clabel, frames, start, length, max_l
         frame = frames[i]
         ax2.imshow(frame, cmap=cmap_reversed)
         # ax2.set_title("Motif %d,\n Community: %s" % (lbl, motifs[lbl]), fontsize=10)
-        fig.savefig(os.path.join(path_to_file,"gif_frames",file+'gif_%d.png') %i) 
+        fig.savefig(os.path.join(path_to_file,"gif_frames",file+'gif_%d.png') %i)
 
 
-def gif(config, pose_ref_index, subtract_background=True, start=None, length=500, 
-        max_lag=30, label='community', file_format='.mp4', crop_size=(300,300)):
-    
+def gif(
+    config: str,
+    pose_ref_index: int,
+    subtract_background: bool = True,
+    start: int = None,
+    length: int = 500,
+    max_lag: int = 30,
+    label: str = 'community',
+    file_format: str = '.mp4',
+    crop_size: Tuple[int, int] = (300,300)
+) -> None:
+    """Create a GIF from the given configuration.
+
+    Args:
+        config (str): Path to the configuration file.
+        pose_ref_index (int): Pose reference index.
+        subtract_background (bool, optional): Whether to subtract background. Defaults to True.
+        start (int, optional): Starting index. Defaults to None.
+        length (int, optional): Length of the video. Defaults to 500.
+        max_lag (int, optional): Maximum lag. Defaults to 30.
+        label (str, optional): Label type. Defaults to 'community'.
+        file_format (str, optional): File format. Defaults to '.mp4'.
+        crop_size (Tuple[int, int], optional): Crop size. Defaults to (300,300).
+
+    Returns:
+        None
+    """
+
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
     param = cfg['parameterization']
-    
+
     files = []
     if cfg['all_data'] == 'No':
         all_flag = input("Do you want to write motif videos for your entire dataset? \n"
@@ -81,15 +133,15 @@ def gif(config, pose_ref_index, subtract_background=True, start=None, length=500
                 continue
     else:
         files.append(all_flag)
-        
+
 
     for file in files:
         path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"gif_frames")):
             os.mkdir(os.path.join(path_to_file,"gif_frames"))
-        
+
         embed = np.load(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'))
-        
+
         try:
             embed = np.load(os.path.join(path_to_file,"","community","","umap_embedding_"+file+".npy"))
             num_points = cfg['num_points']
@@ -97,36 +149,36 @@ def gif(config, pose_ref_index, subtract_background=True, start=None, length=500
                 num_points = embed.shape[0]
         except:
             print("Compute embedding for file %s" %file)
-            reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'], 
-                    random_state=cfg['random_state']) 
-            
+            reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'],
+                    random_state=cfg['random_state'])
+
             latent_vector = np.load(os.path.join(path_to_file,"",'latent_vector_'+file+'.npy'))
-            
+
             num_points = cfg['num_points']
             if num_points > latent_vector.shape[0]:
                 num_points = latent_vector.shape[0]
             print("Embedding %d data points.." %num_points)
-            
+
             embed = reducer.fit_transform(latent_vector[:num_points,:])
             np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
-        
+
         if label == "motif":
             umap_label = np.load(os.path.join(path_to_file,str(n_cluster)+"_" + param + "_label_"+file+'.npy'))
         elif label == "community":
             umap_label = np.load(os.path.join(path_to_file,"community","community_label_"+file+'.npy'))
         elif label == None:
             umap_label = None
-        
+
         if start == None:
             start = np.random.choice(embed[:num_points].shape[0]-length)
         else:
             start = start
-        
+
         frames = get_animal_frames(cfg, file, pose_ref_index, start, length, subtract_background, file_format, crop_size)
-        
+
         create_video(path_to_file, file, embed, umap_label, frames, start, length, max_lag, num_points)
-                   
-        
+
+
 
 
 
