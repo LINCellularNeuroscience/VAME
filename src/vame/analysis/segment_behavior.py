@@ -12,7 +12,7 @@ Licensed under GNU General Public License v3.0
 import os
 import numpy as np
 from pathlib import Path
-
+from typing import List, Tuple
 import torch
 import scipy.signal
 from sklearn import mixture
@@ -22,7 +22,17 @@ from vame.util.auxiliary import read_config
 from vame.model.rnn_vae import RNN_VAE
 
 
-def load_data(PROJECT_PATH, file, data):
+def load_data(PROJECT_PATH: str, file: str, data: str) -> np.ndarray:
+    """Load data for the given file.
+
+    Args:
+        PROJECT_PATH (str): Path to the project directory.
+        file (str): Name of the file.
+        data (str): Data to load.
+
+    Returns:
+        np.ndarray: Loaded data.
+    """
     X = np.load(os.path.join(PROJECT_PATH,"data",file,"",file+data+'.npy'))
     mean = np.load(os.path.join(PROJECT_PATH,"data","train",'seq_mean.npy'))
     std = np.load(os.path.join(PROJECT_PATH,"data","train",'seq_std.npy'))
@@ -30,18 +40,52 @@ def load_data(PROJECT_PATH, file, data):
     return X
 
 
-def kmeans_clustering(context, n_clusters):
+def kmeans_clustering(context: np.ndarray, n_clusters: int) -> np.ndarray:
+    """Perform k-Means clustering.
+
+    Args:
+        context (np.ndarray): Input data for clustering.
+        n_clusters (int): Number of clusters.
+
+    Returns:
+        np.ndarray: Cluster labels.
+    """
     kmeans = KMeans(init='k-means++',n_clusters=n_clusters, random_state=42,n_init=15).fit(context)
     return kmeans.predict(context)
 
 
-def gmm_clustering(context,n_components):
+def gmm_clustering(context: np.ndarray, n_components: int) -> np.ndarray:
+    """Perform Gaussian Mixture Model (GMM) clustering.
+
+    Args:
+        context (np.ndarray): Input data for clustering.
+        n_components (int): Number of components.
+
+    Returns:
+        np.ndarray: Cluster labels.
+    """
     GMM = mixture.GaussianMixture
     gmm = GMM(n_components=n_components,covariance_type='full').fit(context)
     return gmm.predict(context)
 
 
-def behavior_segmentation(config, model_name=None, cluster_method='kmeans', n_cluster=[30]):
+def behavior_segmentation(
+    config: str,
+    model_name: str = None,
+    cluster_method: str = 'kmeans',
+    n_cluster: List[int] = [30]
+) -> None:
+    """Perform behavior segmentation.
+
+    Args:
+        config (str): Path to the configuration file.
+        model_name (str, optional): Name of the model. Defaults to None.
+        cluster_method (str, optional): Clustering method. Defaults to 'kmeans'.
+        n_cluster (List[int], optional): List of number of clusters. Defaults to [30].
+
+    Returns:
+        None: Save data to the results directory.
+    """
 
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
@@ -85,7 +129,23 @@ def behavior_segmentation(config, model_name=None, cluster_method='kmeans', n_cl
     cluster_latent_space(cfg, files, z, z_logger, cluster_method, n_cluster, model_name)
 
 
-def temporal_quant(cfg, model_name, files, use_gpu):
+def temporal_quant(
+    cfg: dict,
+    model_name: str,
+    files: List[str],
+    use_gpu: bool
+) -> Tuple:
+    """Quantify the temporal latent space.
+
+    Args:
+        cfg (dict): Configuration dictionary.
+        model_name (str): Name of the model.
+        files (List[str]): List of file names.
+        use_gpu (bool): Whether to use GPU.
+
+    Returns:
+        Tuple: Tuple of latent space array and logger.
+    """
 
     SEED = 19
     ZDIMS = cfg['zdims']
@@ -173,7 +233,29 @@ def temporal_quant(cfg, model_name, files, use_gpu):
     return z_array, z_logger
 
 
-def cluster_latent_space(cfg, files, z_data, z_logger, cluster_method, n_cluster, model_name):
+def cluster_latent_space(
+    cfg: dict,
+    files: List[str],
+    z_data: np.ndarray,
+    z_logger: List[int],
+    cluster_method: str,
+    n_cluster: List[int],
+    model_name: str
+) -> None:
+    """Cluster the latent space.
+
+    Args:
+        cfg (dict): Configuration dictionary.
+        files (List[str]): List of file names.
+        z_data (np.ndarray): Latent space data.
+        z_logger (List[int]): Logger for the latent space.
+        cluster_method (str): Clustering method.
+        n_cluster (List[int]): List of number of clusters.
+        model_name (str): Name of the model.
+
+    Returns:
+        None -> Save data to the results directory.
+    """
 
     for cluster in n_cluster:
         if cluster_method == 'kmeans':
@@ -208,5 +290,5 @@ def cluster_latent_space(cfg, files, z_data, z_logger, cluster_method, n_cluster
                 np.save(save_data+cluster_method+'-'+str(cluster)+'/'+str(cluster)+'_km_label_'+file, labels)
                 np.save(save_data+cluster_method+'-'+str(cluster)+'/'+str(cluster)+'_gmm_label_'+file, labels)
                 np.save(save_data+cluster_method+'-'+str(cluster)+'/'+'latent_vector_'+file, z_latent)
-                
-            
+
+

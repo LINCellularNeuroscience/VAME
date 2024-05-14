@@ -16,18 +16,42 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from mpl_toolkits.mplot3d import Axes3D
-
+from typing import Optional, Union
 from vame.util.auxiliary import read_config
 
 
-def umap_vis(file, embed, num_points):        
+def umap_vis(file: str, embed: np.ndarray, num_points: int) -> None:
+    """
+    Visualize UMAP embedding without labels.
+
+    Args:
+        file (str): Name of the file (deprecated).
+        embed (np.ndarray): UMAP embedding.
+        num_points (int): Number of data points to visualize.
+
+    Returns:
+        None - Plot Visualization of UMAP embedding.
+    """
     fig = plt.figure(1)
     plt.scatter(embed[:num_points,0], embed[:num_points,1], s=2, alpha=.5)
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
-    
 
-def umap_label_vis(file, embed, label, n_cluster, num_points):
+
+def umap_label_vis(file: str, embed: np.ndarray, label: np.ndarray, n_cluster: int, num_points: int) -> None:
+    """
+    Visualize UMAP embedding with motif labels.
+
+    Args:
+        file (str): Name of the file (deprecated).
+        embed (np.ndarray): UMAP embedding.
+        label (np.ndarray): Motif labels.
+        n_cluster (int): Number of clusters.
+        num_points (int): Number of data points to visualize.
+
+    Returns:
+        None - Plot Visualization of UMAP embedding with motif labels.
+    """
     fig = plt.figure(1)
     plt.scatter(embed[:num_points,0], embed[:num_points,1],  c=label[:num_points], cmap='Spectral', s=2, alpha=.7)
     #plt.colorbar(boundaries=np.arange(n_cluster+1)-0.5).set_ticks(np.arange(n_cluster))
@@ -35,22 +59,44 @@ def umap_label_vis(file, embed, label, n_cluster, num_points):
     plt.grid(False)
 
 
-def umap_vis_comm(file, embed, community_label, num_points):
+def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num_points: int) -> None:
+    """
+    Visualize UMAP embedding with community labels.
+
+    Args:
+        file (str): Name of the file (deprecated).
+        embed (np.ndarray): UMAP embedding.
+        community_label (np.ndarray): Community labels.
+        num_points (int): Number of data points to visualize.
+
+    Returns:
+        None - Plot Visualization of UMAP embedding with community labels.
+    """
     num = np.unique(community_label).shape[0]
     fig = plt.figure(1)
     plt.scatter(embed[:num_points,0], embed[:num_points,1],  c=community_label[:num_points], cmap='Spectral', s=2, alpha=.7)
     #plt.colorbar(boundaries=np.arange(num+1)-0.5).set_ticks(np.arange(num))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
-    
 
-def visualization(config, label=None):
+
+def visualization(config: Union[str, Path], label: Optional[str] = None) -> None:
+    """
+    Visualize UMAP embeddings based on configuration settings.
+
+    Args:
+        config (Union[str, Path]): Path to the configuration file.
+        label (str, optional): Type of labels to visualize. Default is None.
+
+    Returns:
+        None - Plot Visualization of UMAP embeddings.
+    """
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
     param = cfg['parameterization']
-    
+
     files = []
     if cfg['all_data'] == 'No':
         all_flag = input("Do you want to write motif videos for your entire dataset? \n"
@@ -75,7 +121,7 @@ def visualization(config, label=None):
 
     for idx, file in enumerate(files):
         path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",param+'-'+str(n_cluster))
-        
+
         try:
             embed = np.load(os.path.join(path_to_file,"","community","","umap_embedding_"+file+".npy"))
             num_points = cfg['num_points']
@@ -85,21 +131,21 @@ def visualization(config, label=None):
             if not os.path.exists(os.path.join(path_to_file,"community")):
                 os.mkdir(os.path.join(path_to_file,"community"))
             print("Compute embedding for file %s" %file)
-            reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'], 
-                    random_state=cfg['random_state']) 
-            
+            reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'],
+                    random_state=cfg['random_state'])
+
             latent_vector = np.load(os.path.join(path_to_file,"",'latent_vector_'+file+'.npy'))
-            
+
             num_points = cfg['num_points']
             if num_points > latent_vector.shape[0]:
                 num_points = latent_vector.shape[0]
             print("Embedding %d data points.." %num_points)
-            
+
             embed = reducer.fit_transform(latent_vector[:num_points,:])
             np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
-        
+
         print("Visualizing %d data points.. " %num_points)
-        if label == None:                    
+        if label == None:
             umap_vis(file, embed, num_points)
 
         if label == 'motif':
@@ -108,7 +154,7 @@ def visualization(config, label=None):
 
         if label == "community":
             community_label = np.load(os.path.join(path_to_file,"","community","","community_label_"+file+".npy"))
-            umap_vis_comm(file, embed, community_label, num_points)                                    
+            umap_vis_comm(file, embed, community_label, num_points)
 
 
 

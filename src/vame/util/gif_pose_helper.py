@@ -19,8 +19,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-#Returns cropped image using rect tuple
-def crop_and_flip(rect, src, points, ref_index):
+def crop_and_flip(rect: tuple, src: np.ndarray, points: list, ref_index: list) -> tuple:
+    """
+    Crop and flip an image based on a rectangle and reference points.
+
+    Args:
+        rect (tuple): Tuple containing rectangle information (center, size, angle).
+        src (np.ndarray): Source image to crop and flip.
+        points (list): List of points to be aligned.
+        ref_index (list): Reference indices for alignment.
+
+    Returns:
+        tuple: Cropped and flipped image, shifted points.
+    """
     #Read out rect structures and convert
     center, size, theta = rect
     center, size = tuple(map(int, center)), tuple(map(int, size))
@@ -76,9 +87,18 @@ def crop_and_flip(rect, src, points, ref_index):
     return out, dlc_points_shifted
 
 
-def background(path_to_file,filename,file_format='.mp4',num_frames=1000):
+def background(path_to_file: str, filename: str, file_format: str = '.mp4', num_frames: int = 1000) -> np.ndarray:
     """
-    Compute background image from fixed camera
+    Compute background image from fixed camera.
+
+    Args:
+        path_to_file (str): Path to the directory containing the video files.
+        filename (str): Name of the video file.
+        file_format (str, optional): Format of the video file. Defaults to '.mp4'.
+        num_frames (int, optional): Number of frames to use for background computation. Defaults to 1000.
+
+    Returns:
+        np.ndarray: Background image.
     """
 
     capture = cv.VideoCapture(os.path.join(path_to_file,"videos",filename+file_format))
@@ -109,7 +129,18 @@ def background(path_to_file,filename,file_format='.mp4',num_frames=1000):
     return background
 
 
-def get_rotation_matrix(adjacent, opposite, crop_size=(300, 300)):
+def get_rotation_matrix(adjacent: float, opposite: float, crop_size: tuple = (300, 300)) -> np.ndarray:
+    """
+    Compute the rotation matrix based on the adjacent and opposite sides.
+
+    Args:
+        adjacent (float): Length of the adjacent side.
+        opposite (float): Length of the opposite side.
+        crop_size (tuple, optional): Size of the cropped area. Defaults to (300, 300).
+
+    Returns:
+        np.ndarray: Rotation matrix.
+    """
 
     tan_alpha = np.abs(opposite) / np.abs(adjacent)
     alpha = np.arctan(tan_alpha)
@@ -129,13 +160,29 @@ def get_rotation_matrix(adjacent, opposite, crop_size=(300, 300)):
     return rot_mat
 
 
-#Helper function to return indexes of nans
-def nan_helper(y):
+def nan_helper(y: np.ndarray) -> tuple:
+    """
+    Helper function to find indices of NaN values.
+
+    Args:
+        y (np.ndarray): Input array.
+
+    Returns:
+        tuple: Indices of NaN values.
+    """
     return np.isnan(y), lambda z: z.nonzero()[0]
 
 
-#Interpolates all nan values of given array
-def interpol(arr):
+def interpol(arr: np.ndarray) -> np.ndarray:
+    """
+    Interpolates NaN values in the given array.
+
+    Args:
+        arr (np.ndarray): Input array with NaN values.
+
+    Returns:
+        np.ndarray: Array with interpolated NaN values.
+    """
 
     y = np.transpose(arr)
 
@@ -149,7 +196,32 @@ def interpol(arr):
     return arr
 
 
-def get_animal_frames(cfg, filename, pose_ref_index, start, length, subtract_background, file_format='.mp4', crop_size=(300, 300)):
+def get_animal_frames(
+    cfg: dict,
+    filename: str,
+    pose_ref_index: list,
+    start: int,
+    length: int,
+    subtract_background: bool,
+    file_format: str = '.mp4',
+    crop_size: tuple = (300, 300)
+) -> list:
+    """
+    Extracts frames of an animal from a video file and returns them as a list.
+
+    Args:
+        cfg (dict): Configuration dictionary containing project information.
+        filename (str): Name of the video file.
+        pose_ref_index (list): List of reference coordinate indices for alignment.
+        start (int): Starting frame index.
+        length (int): Number of frames to extract.
+        subtract_background (bool): Whether to subtract background or not.
+        file_format (str, optional): Format of the video file. Defaults to '.mp4'.
+        crop_size (tuple, optional): Size of the cropped area. Defaults to (300, 300).
+
+    Returns:
+        list: List of extracted frames.
+    """
     path_to_file = cfg['project_path']
     time_window = cfg['time_window']
     lag = int(time_window / 2)
@@ -184,7 +256,7 @@ def get_animal_frames(cfg, filename, pose_ref_index, start, length, subtract_bac
 
     images = []
     points = []
-     
+
     for i in pose_list:
         for j in i:
             if j[2] <= 0.8:

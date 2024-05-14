@@ -21,10 +21,30 @@ Licensed under GNU Lesser General Public License v3.0
 import os
 from pathlib import Path
 import shutil
+from datetime import datetime as dt
+from vame.util import auxiliary
+from typing import List
 
-def init_new_project(project, videos, poses_estimations, working_directory=None, videotype='.mp4'):
-    from datetime import datetime as dt
-    from vame.util import auxiliary
+
+def init_new_project(
+    project: str,
+    videos: List[str],
+    poses_estimations: List[str],
+    working_directory: str = None,
+    videotype:str = '.mp4'
+) -> str:
+    """Creates a new VAME project with the given parameters.
+
+    Args:
+        project (str): Project name.
+        videos (List[str]): List of videos paths to be used in the project. E.g. ['./sample_data/Session001.mp4']
+        poses_estimations (List[str]): List of pose estimation files paths to be used in the project. E.g. ['./sample_data/pose estimation/Session001.csv']        working_directory (str, optional): _description_. Defaults to None.
+        videotype (str, optional): Video extension (.mp4 or .avi). Defaults to '.mp4'.
+
+    Returns:
+        projconfigfile (str): Path to the new vame project config file.
+    """
+
     date = dt.today()
     month = date.strftime("%B")
     day = date.day
@@ -103,7 +123,7 @@ def init_new_project(project, videos, poses_estimations, working_directory=None,
     for src, dst in zip(poses_estimations, [str(project_path)+'/videos/pose_estimation/'+Path(p).name for p in poses_estimations]):
         print('Copying ',src,' to ',dst)
         shutil.copy(os.fspath(src),os.fspath(dst))
-    
+
 
     cfg_file,ruamelFile = auxiliary.create_config_template()
     cfg_file
