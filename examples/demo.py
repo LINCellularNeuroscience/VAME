@@ -14,9 +14,14 @@ from pathlib import Path
 
 # These paths have to be set manually
 working_directory = './'
+# project = 'raw_project'
+# videos = ['./video-1.mp4']
+# poses_estimations = ['./video-1.csv']
+# croped data
 project = 'second_vame'
-videos = ['./video-1.mp4']
-poses_estimations = ['./video-1.csv']
+videos = ['./cropped_video.mp4']
+poses_estimations = ['./cropped_video.csv']
+ 
 
 # Step 1.1: Initialize your project
 config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
@@ -27,7 +32,7 @@ config = vame.init_new_project(project=project, videos=videos, poses_estimations
 # As our config.yaml is sometimes still changing a little due to updates, we have here a small function
 # to update your config.yaml to the current state. Be aware that this will overwrite your current config.yaml
 # and make sure to back up your version if you did parameter changes!
-vame.update_config(config, force_update=True)
+vame.update_config(config, force_update=False)
 
 # Step 1.2: Align your behavior videos egocentric and create training dataset
 # pose_ref_index: list of reference coordinate indices for alignment
@@ -41,13 +46,13 @@ vame.csv_to_numpy(config)
 # Step 1.3: create the training set for the VAME model
 vame.create_trainset(config, check_parameter=False, pose_ref_index=[0,5])
 
-# Step 2: Train VAME
+# # Step 2: Train VAME
 vame.train_model(config)
 
-# Step 3: Evaluate model
+# # Step 3: Evaluate model
 vame.evaluate_model(config)
 
-# Step 4: Segment motifs/pose
+# # Step 4: Segment motifs/pose
 vame.pose_segmentation(config)
 
 
