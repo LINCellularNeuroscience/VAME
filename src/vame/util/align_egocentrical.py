@@ -496,7 +496,7 @@ def egocentric_alignment(
 
         egocentric_time_series_shifted[y_shifted_indices, :] -= belly_Y_shift
         egocentric_time_series_shifted[x_shifted_indices, :] -= belly_X_shift
-
+        
         np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series_shifted) # save new shifted file
 #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
 
