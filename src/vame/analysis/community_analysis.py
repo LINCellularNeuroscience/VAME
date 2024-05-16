@@ -445,7 +445,7 @@ def get_cohort_community_labels(
 
     community_labels = np.zeros_like(labels)
     for i in range(num_comm):
-        clust = np.asarray()
+        clust = np.asarray(communities_all[i])
 
         for j in range(len(clust)):
             find_clust = np.where(labels == clust[j])[0]
