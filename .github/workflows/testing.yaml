@@ -34,8 +34,8 @@ jobs:
       - name: Install tests dependencies
         run: |
           python -m pip install -U pip
-          pip install .
-          pip install -r tests/requirements-tests.txt
+          pip install . --no-cache-dir
+          pip install -r tests/requirements-tests.txt --no-cache-dir
 
       - name: Run tests.
         run: pytest --cov=src/vame --cov-report=xml --cov-report=term-missing -v
