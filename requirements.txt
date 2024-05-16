@@ -43,7 +43,6 @@ pillow==10.3.0
 pluggy==1.5.0
 pynndescent==0.5.12
 pyparsing==3.1.2
-pytest==8.2.0
 pytest-shutil==1.7.0
 python-dateutil==2.9.0.post0
 pytz==2024.1
