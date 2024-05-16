@@ -9,9 +9,10 @@ def pytest_collection_modifyitems(items):
     We are using this because these are integration tests and we need to run them in a specific order to avoid errors.
     """
     MODULE_ORDER = [
-        "test_initialize_project", 
-        "test_util", 
-        "test_model"
+        "test_initialize_project",
+        "test_util",
+        "test_model",
+        "test_analysis"
     ]
     module_mapping = {item: item.module.__name__ for item in items}
     sorted_items = items.copy()
