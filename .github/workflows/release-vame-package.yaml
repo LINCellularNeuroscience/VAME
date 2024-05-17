@@ -1,44 +1,29 @@
-on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    branches:
-      - tests
+name: Upload Package to PyPI on release
 
-name: Create Release
+on:
+  release:
+    types: [published]
 
 jobs:
-  build:
-    name: Create Release
+  pypi-release:
+    name: Release VAME in pypi
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-
+    needs: github-release
     steps:
-      - name: Download all the dists
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
         with:
-          name: python-package-distributions
-          path: dist/
-      - name: Sign the dists with Sigstore
-        uses: sigstore/gh-action-sigstore-python@v2.1.1
-        with:
-          inputs: >-
-            ./dist/*.tar.gz
-            ./dist/*.whl
-      - name: Create GitHub Release
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+          pip install twine
+      - name: Build and publish to PyPI
+        run: |
+          python -m build
+          twine upload dist/*
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create
-          '${{ github.ref_name }}'
-          --repo '${{ github.repository }}'
-          --notes ""
-
-      - name: Upload artifact signatures to GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          gh release upload
-          '${{ github.ref_name }}' dist/**
-          --repo '${{ github.repository }}'
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
