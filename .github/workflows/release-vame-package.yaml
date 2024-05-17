@@ -1,0 +1,38 @@
+name: Deploy VAME package
+
+on:
+  push:
+    branches:
+      - tests
+  # workflow_run:
+  #   workflows: ["Run tests for VAME package"]
+  #   types:
+  #     - completed
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install -U pip
+          pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish package to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m pip install -U twine
+          twine upload --repository github dist/*
