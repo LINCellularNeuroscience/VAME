@@ -1,14 +1,11 @@
-name: Upload Package to PyPI on release
+name: Build and Release
 
 on:
   workflow_run:
-    workflows: ["Run tests for VAME package"]
+    workflows: [Testing]
+    branches: [main]
     types:
       - completed
-  push:
-    branches:
-      - dev # todo change to main
-
 jobs:
   pypi-release:
     name: Release VAME in pypi

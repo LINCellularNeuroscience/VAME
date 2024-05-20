@@ -1,4 +1,4 @@
-name: Run tests for VAME package
+name: Testing
 
 on:
   push:
