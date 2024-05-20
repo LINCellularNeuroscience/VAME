@@ -21,6 +21,7 @@ from typing import Tuple
 from vame.util.auxiliary import read_config
 from vame.model.dataloader import SEQUENCE_DATASET
 from vame.model.rnn_model import RNN_VAE, RNN_VAE_LEGACY
+from tqdm import tqdm
 
 # make sure torch uses cuda for GPU computing
 use_gpu = torch.cuda.is_available()
@@ -147,6 +148,7 @@ def gaussian(ins: torch.Tensor, is_training: bool, seq_len: int, std_n: float = 
         noise = Variable(ins.data.new(ins.size()).normal_(0, 1))
         return ins + (noise*emp_std)
     return ins
+
 
 
 def train(
@@ -481,8 +483,8 @@ def train_model(config: str) -> None:
         scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
 
     print("Start training... ")
-    for epoch in range(1,EPOCHS):
-        print("Epoch: %d" %epoch)
+    for epoch in tqdm(range(1,EPOCHS), desc="Training Model", unit="epoch"):
+        #print("Epoch: %d" %epoch)
         weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
                                                                          anneal_function, BETA, KL_START,
                                                                          ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
