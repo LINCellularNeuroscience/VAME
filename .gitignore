@@ -1,6 +1,7 @@
 # Sample files
-*.mp4
+examples/*.mp4
 examples/sample_data
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -99,7 +100,6 @@ celerybeat-schedule
 venv/
 ENV/
 venv_docs/
-
 
 # Spyder project settings
 .spyderproject

@@ -323,7 +323,8 @@ def draw_tree(T: nx.Graph) -> None:
     fig = plt.figure(2)
     nx.draw_networkx(T, pos)
     figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
+    #figManager.window.showMaximized()
+
 
 
 def traverse_tree(T: nx.Graph, root_node: str = None) -> str:

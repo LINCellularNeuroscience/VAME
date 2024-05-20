@@ -306,9 +306,9 @@ def create_community_bag(
         if cut_tree != None:
             community_bag =  traverse_tree_cutline(T,cutline=cut_tree)
             communities_all.append(community_bag)
-            draw_tree(T,usage)
+            draw_tree(T)
         else:
-            draw_tree(T,usage)
+            draw_tree(T)
             plt.pause(0.5)
             flag_1 = 'no'
             while flag_1 == 'no':
@@ -368,9 +368,9 @@ def create_cohort_community_bag(
     if cut_tree != None:
         community_bag =  traverse_tree_cutline(T,cutline=cut_tree)
         communities_all.append(community_bag)
-        draw_tree(T,usage_full)
+        draw_tree(T)
     else:
-        draw_tree(T,usage_full)
+        draw_tree(T)
         plt.pause(0.5)
         flag_1 = 'no'
         while flag_1 == 'no':
@@ -432,7 +432,7 @@ def get_cohort_community_labels(
     """Transform kmeans parameterized latent vector into communities. Get cohort community labels for given labels, and community bags.
 
     Args:
-        files (List[str]): List of file paths (deprecated).
+        files (List[str], deprecated): List of file paths.
         labels (List[np.ndarray]): List of label arrays.
         communities_all (List[List[List[int]]]): List of community bags.
 
@@ -446,6 +446,7 @@ def get_cohort_community_labels(
     community_labels = np.zeros_like(labels)
     for i in range(num_comm):
         clust = np.asarray(communities_all[i])
+
         for j in range(len(clust)):
             find_clust = np.where(labels == clust[j])[0]
             community_labels[find_clust] = i
@@ -560,6 +561,7 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
         _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
         _, usage_full = np.unique(augmented_label, return_counts=True)
         communities_all, trees = create_cohort_community_bag(files, labels, trans_mat_full, cut_tree, n_cluster)
+
         community_labels_all = get_cohort_community_labels(files, labels, communities_all)
         # community_bag = traverse_tree_cutline(trees, cutline=cut_tree)
 

@@ -1,5 +1,6 @@
 [project]
-name = "vame"
+name = "vame-py"
+version = '0.1.0'
 dynamic = ["dependencies"]
 description = "Variational Animal Motion Embedding."
 authors = [
@@ -8,7 +9,6 @@ authors = [
 ]
 requires-python = ">=3.11"
 keywords = ["vame", "auto-encoder"]
-version = '0.1.0'
 
 [project.urls]
 homepage = "https://github.com/EthoML/VAME/"
@@ -26,4 +26,12 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "src"
+]
+testpaths = [
+"tests"
+]
 
