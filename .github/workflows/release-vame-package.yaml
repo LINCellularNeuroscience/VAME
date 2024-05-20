@@ -1,14 +1,19 @@
 name: Upload Package to PyPI on release
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Run tests for VAME package"]
+    types:
+      - completed
+  push:
+    branches:
+      - dev # todo change to main
 
 jobs:
   pypi-release:
     name: Release VAME in pypi
     runs-on: ubuntu-latest
-    needs: github-release
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
