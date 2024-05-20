@@ -1,8 +1,7 @@
 # Sample files
 examples/*.mp4
 examples/sample_data
-examples/raw_project*
-exmaples/second_vame*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
