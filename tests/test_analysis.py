@@ -29,10 +29,6 @@ def test_motif_videos_files_exists(setup_project_and_train_model):
     parametrization = setup_project_and_train_model['config_data']['parameterization']
 
     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "cluster_videos"
-    # all_paths = []
-    # for i in range(n_cluster):
-    #     cluster_video_path = save_base_path / f"{file}-motif_{i}.avi"
-    #     all_paths.append(cluster_video_path)
 
     assert len(list(save_base_path.glob("*.avi"))) == n_cluster
 
