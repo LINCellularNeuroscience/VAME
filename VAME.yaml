@@ -4,27 +4,9 @@
 # update:  conda env update -f VAME.yaml
 name: vame
 channels:
-  - pytorch
   - defaults
 dependencies:
   - python=3.11
   - pip
-  - torchvision
-  - jupyter
-  - nb_conda
   - pip:
-      - pytest-shutil
-      - scipy
-      - numpy
-      - matplotlib
-      - pathlib
-      - pandas
-      - ruamel.yaml
-      - scikit-learn
-      - pyyaml
-      - opencv-python-headless
-      - h5py
-      - umap-learn
-      - networkx
-      - tqdm
-      - hmmlearn
+      - -r requirements.txt
