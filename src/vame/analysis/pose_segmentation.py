@@ -164,21 +164,21 @@ def get_motif_usage(label: np.ndarray) -> np.ndarray:
     return motif_usage
 
 
-def same_parameterization(
+def same_parametrization(
     cfg: dict,
     files: List[str],
     latent_vector_files: List[np.ndarray],
     states: int,
-    parameterization: str
+    parametrization: str
 ) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
-    """Apply the same parameterization to all animals.
+    """Apply the same parametrization to all animals.
 
     Args:
         cfg (dict): Configuration dictionary.
         files (List[str]): List of file names.
         latent_vector_files (List[np.ndarray]): List of latent vector arrays.
         states (int): Number of states.
-        parameterization (str): Parameterization method.
+        parametrization (str): parametrization method.
 
     Returns:
         Tuple: Tuple of labels, cluster centers, and motif usages.
@@ -192,22 +192,22 @@ def same_parameterization(
 
     latent_vector_cat = np.concatenate(latent_vector_files, axis=0)
 
-    if parameterization == "kmeans":
-        print("Using kmeans as parameterization!")
+    if parametrization == "kmeans":
+        print("Using kmeans as parametrization!")
         kmeans = KMeans(init='k-means++', n_clusters=states, random_state=42, n_init=20).fit(latent_vector_cat)
         clust_center = kmeans.cluster_centers_
         label = kmeans.predict(latent_vector_cat)
 
-    elif parameterization == "hmm":
+    elif parametrization == "hmm":
         if cfg['hmm_trained'] == False:
-            print("Using a HMM as parameterization!")
+            print("Using a HMM as parametrization!")
             hmm_model = hmm.GaussianHMM(n_components=states, covariance_type="full", n_iter=100)
             hmm_model.fit(latent_vector_cat)
             label = hmm_model.predict(latent_vector_cat)
             save_data = os.path.join(cfg['project_path'], "results", "")
             with open(save_data+"hmm_trained.pkl", "wb") as file: pickle.dump(hmm_model, file)
         else:
-            print("Using a pretrained HMM as parameterization!")
+            print("Using a pretrained HMM as parametrization!")
             save_data = os.path.join(cfg['project_path'], "results", "")
             with open(save_data+"hmm_trained.pkl", "rb") as file:
                 hmm_model = pickle.load(file)
@@ -217,7 +217,7 @@ def same_parameterization(
     for i, file in enumerate(files):
         file_len = latent_vector_files[i].shape[0]
         labels.append(label[idx:idx+file_len])
-        if parameterization == "kmeans":
+        if parametrization == "kmeans":
             cluster_centers.append(clust_center)
 
         motif_usage = get_motif_usage(label[idx:idx+file_len])
@@ -227,13 +227,13 @@ def same_parameterization(
     return labels, cluster_centers, motif_usages
 
 
-def individual_parameterization(
+def individual_parametrization(
     cfg: dict,
     files: List[str],
     latent_vector_files: List[np.ndarray],
     cluster: int
 ) -> Tuple:
-    """Apply individual parameterization to each animal.
+    """Apply individual parametrization to each animal.
 
     Args:
         cfg (dict): Configuration dictionary.
@@ -278,7 +278,7 @@ def pose_segmentation(config: str) -> None:
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
     fixed = cfg['egocentric_data']
-    parameterization = cfg['parameterization']
+    parametrization = cfg['parametrization']
 
     print('Pose segmentation for VAME model: %s \n' %model_name)
 
@@ -287,7 +287,7 @@ def pose_segmentation(config: str) -> None:
         behavior_segmentation(config, model_name=model_name, cluster_method='kmeans', n_cluster=n_cluster)
 
     else:
-        ind_param = cfg['individual_parameterization']
+        ind_param = cfg['individual_parametrization']
 
         for folders in cfg['video_sets']:
             if not os.path.exists(os.path.join(cfg['project_path'],"results",folders,model_name,"")):
@@ -327,27 +327,27 @@ def pose_segmentation(config: str) -> None:
             print("CUDA is not working! Attempting to use the CPU...")
             torch.device("cpu")
 
-        if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parameterization+'-'+str(n_cluster),"")):
+        if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
             new = True
             # print("Hello1")
             model = load_model(cfg, model_name, fixed)
             latent_vectors = embedd_latent_vectors(cfg, files, model, fixed)
 
             if ind_param == False:
-                print("For all animals the same parameterization of latent vectors is applied for %d cluster" %n_cluster)
-                labels, cluster_center, motif_usages = same_parameterization(cfg, files, latent_vectors, n_cluster, parameterization)
+                print("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
+                labels, cluster_center, motif_usages = same_parametrization(cfg, files, latent_vectors, n_cluster, parametrization)
             else:
-                print("Individual parameterization of latent vectors for %d cluster" %n_cluster)
-                labels, cluster_center, motif_usages = individual_parameterization(cfg, files, latent_vectors, n_cluster)
+                print("Individual parametrization of latent vectors for %d cluster" %n_cluster)
+                labels, cluster_center, motif_usages = individual_parametrization(cfg, files, latent_vectors, n_cluster)
 
         else:
             print('\n'
                   'For model %s a latent vector embedding already exists. \n'
-                  'Parameterization of latent vector with %d k-Means cluster' %(model_name, n_cluster))
+                  'parametrization of latent vector with %d k-Means cluster' %(model_name, n_cluster))
 
-            if os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parameterization+'-'+str(n_cluster),"")):
-                flag = input('WARNING: A parameterization for the chosen cluster size of the model already exists! \n'
-                            'Do you want to continue? A new parameterization will be computed! (yes/no) ')
+            if os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
+                flag = input('WARNING: A parametrization for the chosen cluster size of the model already exists! \n'
+                            'Do you want to continue? A new parametrization will be computed! (yes/no) ')
             else:
                 flag = 'yes'
 
@@ -355,34 +355,34 @@ def pose_segmentation(config: str) -> None:
                 new = True
                 latent_vectors = []
                 for file in files:
-                    path_to_latent_vector = os.path.join(cfg['project_path'],"results",file,model_name, parameterization+'-'+str(n_cluster),"")
+                    path_to_latent_vector = os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")
                     latent_vector = np.load(os.path.join(path_to_latent_vector,'latent_vector_'+file+'.npy'))
                     latent_vectors.append(latent_vector)
 
                 if ind_param == False:
-                    print("For all animals the same parameterization of latent vectors is applied for %d cluster" %n_cluster)
-                    labels, cluster_center, motif_usages = same_parameterization(cfg, files, latent_vectors, n_cluster, parameterization)
+                    print("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
+                    labels, cluster_center, motif_usages = same_parametrization(cfg, files, latent_vectors, n_cluster, parametrization)
                 else:
-                    print("Individual parameterization of latent vectors for %d cluster" %n_cluster)
-                    labels, cluster_center, motif_usages = individual_parameterization(cfg, files, latent_vectors, n_cluster)
+                    print("Individual parametrization of latent vectors for %d cluster" %n_cluster)
+                    labels, cluster_center, motif_usages = individual_parametrization(cfg, files, latent_vectors, n_cluster)
 
             else:
-                print('No new parameterization has been calculated.')
+                print('No new parametrization has been calculated.')
                 new = False
 
         # print("Hello2")
         if new == True:
             for idx, file in enumerate(files):
-                print(os.path.join(cfg['project_path'],"results",file,"",model_name,parameterization+'-'+str(n_cluster),""))
-                if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,parameterization+'-'+str(n_cluster),"")):
+                print(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
+                if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")):
                     try:
-                        os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,parameterization+'-'+str(n_cluster),""))
+                        os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
                     except OSError as error:
                         print(error)
 
-                save_data = os.path.join(cfg['project_path'],"results",file,model_name,parameterization+'-'+str(n_cluster),"")
-                np.save(os.path.join(save_data,str(n_cluster)+'_' + parameterization + '_label_'+file), labels[idx])
-                if parameterization=="kmeans":
+                save_data = os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")
+                np.save(os.path.join(save_data,str(n_cluster)+'_' + parametrization + '_label_'+file), labels[idx])
+                if parametrization=="kmeans":
                     np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
                 np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
                 np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])

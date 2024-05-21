@@ -36,6 +36,7 @@ def umap_vis(file: str, embed: np.ndarray, num_points: int) -> None:
     plt.scatter(embed[:num_points,0], embed[:num_points,1], s=2, alpha=.5)
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
+    return fig
 
 
 def umap_label_vis(file: str, embed: np.ndarray, label: np.ndarray, n_cluster: int, num_points: int) -> None:
@@ -50,13 +51,14 @@ def umap_label_vis(file: str, embed: np.ndarray, label: np.ndarray, n_cluster: i
         num_points (int): Number of data points to visualize.
 
     Returns:
-        None - Plot Visualization of UMAP embedding with motif labels.
+        fig - Plot figure of UMAP visualization embedding with motif labels.
     """
     fig = plt.figure(1)
     plt.scatter(embed[:num_points,0], embed[:num_points,1],  c=label[:num_points], cmap='Spectral', s=2, alpha=.7)
     #plt.colorbar(boundaries=np.arange(n_cluster+1)-0.5).set_ticks(np.arange(n_cluster))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
+    return fig
 
 
 def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num_points: int) -> None:
@@ -70,7 +72,7 @@ def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num
         num_points (int): Number of data points to visualize.
 
     Returns:
-        None - Plot Visualization of UMAP embedding with community labels.
+        fig - Plot figure of UMAP visualization embedding with community labels.
     """
     num = np.unique(community_label).shape[0]
     fig = plt.figure(1)
@@ -78,6 +80,7 @@ def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num
     #plt.colorbar(boundaries=np.arange(num+1)-0.5).set_ticks(np.arange(num))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
+    return fig
 
 
 def visualization(config: Union[str, Path], label: Optional[str] = None) -> None:
@@ -95,7 +98,7 @@ def visualization(config: Union[str, Path], label: Optional[str] = None) -> None
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
-    param = cfg['parameterization']
+    param = cfg['parametrization']
 
     files = []
     if cfg['all_data'] == 'No':
@@ -146,15 +149,18 @@ def visualization(config: Union[str, Path], label: Optional[str] = None) -> None
 
         print("Visualizing %d data points.. " %num_points)
         if label == None:
-            umap_vis(file, embed, num_points)
+            output_figure = umap_vis(file, embed, num_points)
+            return output_figure
 
         if label == 'motif':
             motif_label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
-            umap_label_vis(file, embed, motif_label, n_cluster, num_points)
+            output_figure = umap_label_vis(file, embed, motif_label, n_cluster, num_points)
+            return output_figure
 
         if label == "community":
             community_label = np.load(os.path.join(path_to_file,"","community","","community_label_"+file+".npy"))
-            umap_vis_comm(file, embed, community_label, num_points)
+            output_figure = umap_vis_comm(file, embed, community_label, num_points)
+            return output_figure
 
 
 

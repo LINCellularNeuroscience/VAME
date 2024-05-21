@@ -110,7 +110,7 @@ def gif(
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
-    param = cfg['parameterization']
+    param = cfg['parametrization']
 
     files = []
     if cfg['all_data'] == 'No':

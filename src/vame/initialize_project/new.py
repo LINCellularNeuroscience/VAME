@@ -168,7 +168,7 @@ def init_new_project(
     cfg_file['noise'] = False
     cfg_file['scheduler_step_size'] = 100
     cfg_file['legacy'] = False
-    cfg_file['individual_parameterization'] = False
+    cfg_file['individual_parametrization'] = False
     cfg_file['random_state_kmeans'] = 42
     cfg_file['n_init_kmeans'] = 15
     cfg_file['model_name']='VAME'
@@ -187,7 +187,7 @@ def init_new_project(
     cfg_file['beta_norm'] = False
     cfg_file['n_layers'] = 1
     cfg_file['axis'] = None
-    cfg_file['parameterization'] = 'hmm'
+    cfg_file['parametrization'] = 'hmm'
     cfg_file['hmm_trained'] = False
 
     projconfigfile=os.path.join(str(project_path),'config.yaml')

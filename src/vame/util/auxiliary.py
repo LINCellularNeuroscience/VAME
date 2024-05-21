@@ -81,10 +81,10 @@ def create_config_template() -> Tuple[dict, ruamel.yaml.YAML]:
     softplus:
     \n
 # Segmentation:
-    parameterization:
+    parametrization:
     hmm_trained: False
     load_data:
-    individual_parameterization:
+    individual_parametrization:
     random_state_kmeans:
     n_init_kmeans:
     \n
@@ -249,7 +249,7 @@ def update_config(config: str, force_update: bool = False) -> None:
         cfg_file['noise'] = False
         cfg_file['scheduler_step_size'] = 100
         cfg_file['legacy'] = False
-        cfg_file['individual_parameterization'] = False
+        cfg_file['individual_parametrization'] = False
         cfg_file['random_state_kmeans'] = 42
         cfg_file['n_init_kmeans'] = 15
         cfg_file['model_name']='VAME'
@@ -270,7 +270,7 @@ def update_config(config: str, force_update: bool = False) -> None:
         cfg_file['n_layers'] = 1
         cfg_file['axis'] = 'None'
         cfg_file['egocentric_data'] = True
-        cfg_file['parameterization'] = 'kmeans'
+        cfg_file['parametrization'] = 'kmeans'
 
         projconfigfile=os.path.join(str(project_path),'config.yaml')
         # Write dictionary to yaml  config file

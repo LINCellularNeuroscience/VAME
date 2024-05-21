@@ -207,7 +207,7 @@ def get_labels(cfg: dict, files: List[str], model_name: str, n_cluster: int, par
         files (List[str]): List of video files paths.
         model_name (str): Model name.
         n_cluster (int): Number of clusters.
-        parametrization (str): Parameterization.
+        parametrization (str): parametrization.
 
     Returns:
         List[np.ndarray]: List of cluster labels for each file.
@@ -238,7 +238,7 @@ def get_community_label(cfg: dict, files: List[str], model_name: str, n_cluster:
         files (List[str]): List of files paths.
         model_name (str): Model name.
         n_cluster (int): Number of clusters.
-        parametrization (str): Parameterization.
+        parametrization (str): parametrization.
 
     Returns:
         np.ndarray: Array of community labels.
@@ -457,7 +457,7 @@ def get_cohort_community_labels(
     return community_labels_all
 
 
-def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parameterization: str) -> np.ndarray:
+def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parametrization: str) -> np.ndarray:
     """Perform UMAP embedding for given file and parameters.
 
     Args:
@@ -465,7 +465,7 @@ def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parame
         file (str): File path.
         model_name (str): Model name.
         n_cluster (int): Number of clusters.
-        parameterization (str): Parameterization.
+        parametrization (str): parametrization.
 
     Returns:
         np.ndarray: UMAP embedding.
@@ -475,7 +475,7 @@ def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parame
 
     print("UMAP calculation for file %s" %file)
 
-    folder = os.path.join(cfg['project_path'],"results",file,model_name, parameterization +'-'+str(n_cluster),"")
+    folder = os.path.join(cfg['project_path'],"results",file,model_name, parametrization +'-'+str(n_cluster),"")
     latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
 
     num_points = cfg['num_points']
@@ -531,7 +531,7 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
-    parameterization = cfg['parameterization']
+    parametrization = cfg['parametrization']
 
     files = []
     if cfg['all_data'] == 'No':
@@ -556,7 +556,7 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
         files.append(all_flag)
 
     if cohort==True:
-        labels = get_community_label(cfg, files, model_name, n_cluster, parameterization)
+        labels = get_community_label(cfg, files, model_name, n_cluster, parametrization)
         augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
         _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
         _, usage_full = np.unique(augmented_label, return_counts=True)
@@ -567,25 +567,25 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
 
         np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
         np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
-        np.save(os.path.join(cfg['project_path'],"cohort_" + parameterization + "_label"+'.npy'), labels)
+        np.save(os.path.join(cfg['project_path'],"cohort_" + parametrization + "_label"+'.npy'), labels)
         np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
 
         with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
             pickle.dump(communities_all, fp)
 
         if show_umap == True:
-            embed = umap_embedding(cfg, files, model_name, n_cluster, parameterization)
+            embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
             umap_vis(cfg, files, embed, community_labels_all)
 
     # Work in Progress
     elif cohort == False:
-        labels = get_labels(cfg, files, model_name, n_cluster, parameterization)
+        labels = get_labels(cfg, files, model_name, n_cluster, parametrization)
         transition_matrices = compute_transition_matrices(files, labels, n_cluster)
         communities_all, trees = create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster)
         community_labels_all = get_community_labels(files, labels, communities_all)
 
         for idx, file in enumerate(files):
-            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parameterization + '-'+str(n_cluster),"")
+            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization + '-'+str(n_cluster),"")
             if not os.path.exists(os.path.join(path_to_file,"community")):
                 os.mkdir(os.path.join(path_to_file,"community"))
 
@@ -596,7 +596,7 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
                 pickle.dump(communities_all[idx], fp)
 
             if show_umap == True:
-                embed = umap_embedding(cfg, file, model_name, n_cluster, parameterization)
+                embed = umap_embedding(cfg, file, model_name, n_cluster, parametrization)
                 umap_vis(cfg, files, embed, community_labels_all[idx])
 
 

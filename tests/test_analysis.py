@@ -1,6 +1,7 @@
 from pathlib import Path
 import vame
 import pytest
+from matplotlib.figure import Figure
 
 
 def test_pose_segmentation_files_exists(setup_project_and_train_model):
@@ -10,7 +11,7 @@ def test_pose_segmentation_files_exists(setup_project_and_train_model):
     file = setup_project_and_train_model['config_data']['video_sets'][0]
     model_name = setup_project_and_train_model['config_data']['model_name']
     n_cluster = setup_project_and_train_model['config_data']['n_cluster']
-    parametrization = setup_project_and_train_model['config_data']['parameterization']
+    parametrization = setup_project_and_train_model['config_data']['parametrization']
 
     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}"
     latent_vector_path = save_base_path / f"latent_vector_{file}.npy"
@@ -26,7 +27,7 @@ def test_motif_videos_files_exists(setup_project_and_train_model):
     file = setup_project_and_train_model['config_data']['video_sets'][0]
     model_name = setup_project_and_train_model['config_data']['model_name']
     n_cluster = setup_project_and_train_model['config_data']['n_cluster']
-    parametrization = setup_project_and_train_model['config_data']['parameterization']
+    parametrization = setup_project_and_train_model['config_data']['parametrization']
 
     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "cluster_videos"
 
@@ -41,7 +42,7 @@ def test_community_files_exists(setup_project_and_train_model):
         cut_tree=2
     )
     project_path = setup_project_and_train_model['config_data']['project_path']
-    parametrization = setup_project_and_train_model['config_data']['parameterization']
+    parametrization = setup_project_and_train_model['config_data']['parametrization']
 
     cohort_path = Path(project_path) /  "cohort_transition_matrix.npy"
     community_path = Path(project_path) /  "cohort_community_label.npy"
@@ -54,14 +55,6 @@ def test_community_files_exists(setup_project_and_train_model):
     assert cohort_community_bag_path.exists()
 
 
-
-# def test_community_videos_files_exists(setup_project_and_train_model):
-#     vame.community_videos(setup_project_and_train_model['config_path'])
-#     project_path = setup_project_and_train_model['config_data']['project_path']
-#     file = setup_project_and_train_model['config_data']['video_sets'][0]
-#     model_name = setup_project_and_train_model['config_data']['model_name']
-#     n_cluster = setup_project_and_train_model['config_data']['n_cluster']
-#     parametrization = setup_project_and_train_model['config_data']['parameterization']
-
-#     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "community_videos"
-#     assert len(list(save_base_path.glob("*.avi"))) == n_cluster
+def test_visualization_output_type(setup_project_and_train_model):
+    fig = vame.visualization(setup_project_and_train_model['config_path'], label=None)
+    assert isinstance(fig, Figure)

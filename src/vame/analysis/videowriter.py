@@ -33,7 +33,7 @@ def get_cluster_vid(cfg: dict, path_to_file: str, file: str, n_cluster: int, vid
     Returns:
         None - Generate cluster videos and save them to fs on project folder.
     """
-    param = cfg['parameterization']
+    param = cfg['parametrization']
     if flag == "motif":
         print("Motif videos getting created for "+file+" ...")
         labels = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
@@ -94,7 +94,7 @@ def motif_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
-    param = cfg['parameterization']
+    param = cfg['parametrization']
     flag = 'motif'
 
     files = []
@@ -145,7 +145,7 @@ def community_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
-    param = cfg['parameterization']
+    param = cfg['parametrization']
     flag = 'community'
 
     files = []
