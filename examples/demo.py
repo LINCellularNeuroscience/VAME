@@ -14,14 +14,10 @@ from pathlib import Path
 
 # These paths have to be set manually
 working_directory = './'
-# project = 'raw_project'
-# videos = ['./video-1.mp4']
-# poses_estimations = ['./video-1.csv']
-# croped data
-project = 'second_vame'
-videos = ['./cropped_video.mp4']
-poses_estimations = ['./cropped_video.csv']
- 
+project = 'my-vame-project'
+videos = ['./video-1.mp4']
+poses_estimations = ['./video-1.csv']
+
 
 # Step 1.1: Initialize your project
 config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
