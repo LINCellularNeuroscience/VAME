@@ -33,7 +33,7 @@ def test_motif_videos_files_exists(setup_project_and_train_model):
 
     assert len(list(save_base_path.glob("*.avi"))) == n_cluster
 
-@pytest.mark.skip(reason="The method is not working yet.")
+#@pytest.mark.skip(reason="The method is not working yet.")
 def test_community_files_exists(setup_project_and_train_model):
     # Check if the files are created
     vame.community(
