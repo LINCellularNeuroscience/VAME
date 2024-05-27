@@ -24,7 +24,7 @@ def pytest_collection_modifyitems(items):
     items[:] = sorted_items
 
 @fixture(scope='session')
-def setup_project():
+def setup_project(request):
     project = 'test_project'
     videos = ['./tests/tests_project_sample_data/cropped_video.mp4']
     poses_estimations = ['./tests/tests_project_sample_data/cropped_video.csv']
@@ -33,9 +33,13 @@ def setup_project():
     # Initialize project
     config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
 
+    egocentric_aligned = False
+    if hasattr(request, 'param'):
+        egocentric_aligned = request.param.get('egocentric_aligned', False)
+
     # Override config values with test values to speed up tests
     config_values = read_config(config)
-    config_values['egocentric_data'] = True
+    config_values['egocentric_data'] = egocentric_aligned
     config_values['max_epochs'] = 10
     config_values['batch_size'] = 10
     write_config(config, config_values)
@@ -52,6 +56,7 @@ def setup_project():
 
     # Clean up
     shutil.rmtree(Path(config).parent)
+
 
 @fixture(scope='session')
 def setup_project_and_create_train_dataset(setup_project):
