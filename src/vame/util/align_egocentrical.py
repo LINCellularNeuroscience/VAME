@@ -478,10 +478,8 @@ def egocentric_alignment(
     belly_Y_ind = pose_ref_index[0] * 2
     belly_X_ind = (pose_ref_index[0] * 2) + 1
 
-    # if cfg['egocentric_data'] == True: # TODO check if is false, original is checking if true
-    # but in line 54 of csv_to_npy.py file we have the inverse of it so the demo workflow will always trigger exception
-    if not cfg['egocentric_data']:
-        raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
+    if cfg['egocentric_data']:
+        raise ValueError("The config.yaml indicates that the data is egocentric. Please check the parameter egocentric_data")
 
     # call function and save into your VAME data folder
     for file in filename:
@@ -496,7 +494,7 @@ def egocentric_alignment(
 
         egocentric_time_series_shifted[y_shifted_indices, :] -= belly_Y_shift
         egocentric_time_series_shifted[x_shifted_indices, :] -= belly_X_shift
-        
+
         np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series_shifted) # save new shifted file
 #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
 
