@@ -572,7 +572,6 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
         np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
         np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
         np.save(os.path.join(cfg['project_path'],"cohort_" + parametrization + "_label"+'.npy'), labels)
-        communities_all = np.array(communities_all, dtype=object)
         np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
 
         with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
