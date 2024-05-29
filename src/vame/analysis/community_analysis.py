@@ -367,7 +367,7 @@ def create_cohort_community_bag(
 
     if cut_tree != None:
         community_bag =  traverse_tree_cutline(T,cutline=cut_tree)
-        communities_all.append(community_bag)
+        communities_all = community_bag
         draw_tree(T)
     else:
         draw_tree(T)
@@ -440,18 +440,19 @@ def get_cohort_community_labels(
         List[np.ndarray]: List of cohort community labels for each file.
     """
     community_labels_all = []
-    community_labels = np.zeros_like(labels) # (720,)
-    for k, file in enumerate(files):
-        num_comm = len(communities_all[k])
-        for i in range(num_comm):
-            clust = np.asarray(communities_all[k][i])
 
-            for j in range(len(clust)):
-                find_clust = np.where(labels == clust[j])[0]
-                community_labels[find_clust] = i
+    num_comm = len(communities_all)
 
-        community_labels = np.int64(scipy.signal.medfilt(community_labels, 7))
-        community_labels_all.append(community_labels)
+    community_labels = np.zeros_like(labels)
+    for i in range(num_comm):
+        clust = np.asarray(communities_all[i])
+
+        for j in range(len(clust)):
+            find_clust = np.where(labels == clust[j])[0]
+            community_labels[find_clust] = i
+
+    community_labels = np.int64(scipy.signal.medfilt(community_labels, 7))
+    community_labels_all.append(community_labels)
 
     return community_labels_all
 
@@ -571,6 +572,7 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
         np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
         np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
         np.save(os.path.join(cfg['project_path'],"cohort_" + parametrization + "_label"+'.npy'), labels)
+        communities_all = np.array(communities_all, dtype=object)
         np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
 
         with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
