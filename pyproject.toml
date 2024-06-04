@@ -1,0 +1,37 @@
+[project]
+name = "vame-py"
+version = '0.1.0'
+dynamic = ["dependencies"]
+description = "Variational Animal Motion Embedding."
+authors = [
+    {name = "K. Luxem & "},
+    {name = "P. Bauer"}
+]
+requires-python = ">=3.11"
+keywords = ["vame", "auto-encoder"]
+
+[project.urls]
+homepage = "https://github.com/EthoML/VAME/"
+repository = "https://github.com/EthoML/VAME/"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "src"
+]
+testpaths = [
+"tests"
+]
+
