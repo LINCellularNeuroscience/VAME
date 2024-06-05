@@ -1,11 +1,16 @@
 name: Build and Release
 
 on:
+  push:
+    branches:
+      - main
+
   workflow_run:
-    workflows: [Testing]
+    workflows: ["Testing"]
     branches: [main]
     types:
       - completed
+
 jobs:
   pypi-release:
     name: Release VAME in pypi
