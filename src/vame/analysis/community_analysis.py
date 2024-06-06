@@ -367,7 +367,7 @@ def create_cohort_community_bag(
 
     if cut_tree != None:
         community_bag =  traverse_tree_cutline(T,cutline=cut_tree)
-        communities_all.append(community_bag)
+        communities_all = community_bag
         draw_tree(T)
     else:
         draw_tree(T)
@@ -564,6 +564,10 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
 
         community_labels_all = get_cohort_community_labels(files, labels, communities_all)
         # community_bag = traverse_tree_cutline(trees, cutline=cut_tree)
+
+        # convert communities_all to dtype object numpy array because communities_all is an inhomogeneous list
+        # TODO check if this type is right or it should be homogeneous
+        communities_all = np.array(communities_all, dtype=object)
 
         np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
         np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
