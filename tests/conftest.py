@@ -29,7 +29,8 @@ def init_project(
     videos: list,
     poses_estimations: list,
     working_directory: str,
-    egocentric_data: bool = False
+    egocentric_data: bool = False,
+    legacy: bool = False
 ):
     config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
 
@@ -38,6 +39,7 @@ def init_project(
     config_values['egocentric_data'] = egocentric_data
     config_values['max_epochs'] = 10
     config_values['batch_size'] = 10
+    config_values['legacy'] = legacy
     write_config(config, config_values)
 
     project_data = {
@@ -48,6 +50,22 @@ def init_project(
         "pose_ref_index": [0, 5]
     }
     return config, project_data
+
+@fixture(scope='session')
+def setup_legacy_project_not_aligned_data():
+    project = 'test_project_legacy'
+    videos = ['./tests/tests_project_sample_data/cropped_video.mp4']
+    poses_estimations = ['./tests/tests_project_sample_data/cropped_video.csv']
+    working_directory = './tests'
+
+    # Initialize project
+    config, project_data = init_project(project, videos, poses_estimations, working_directory, egocentric_data=False, legacy=True)
+
+    yield project_data
+
+    # Clean up
+    shutil.rmtree(Path(config).parent)
+
 
 @fixture(scope='session')
 def setup_project_not_aligned_data():
@@ -92,6 +110,13 @@ def setup_project_and_align_egocentric(setup_project_not_aligned_data):
     vame.egocentric_alignment(config_path, pose_ref_index=setup_project_not_aligned_data["pose_ref_index"])
     return setup_project_not_aligned_data
 
+@fixture(scope='session')
+def setup_legacy_project_and_train_model(setup_legacy_project_not_aligned_data):
+    config_path = setup_legacy_project_not_aligned_data['config_path']
+    vame.egocentric_alignment(config_path, pose_ref_index=setup_legacy_project_not_aligned_data["pose_ref_index"])
+    vame.create_trainset(config_path, check_parameter=False, pose_ref_index=setup_legacy_project_not_aligned_data["pose_ref_index"])
+    vame.train_model(config_path)
+    return setup_legacy_project_not_aligned_data
 
 @fixture(scope='function')
 def setup_project_and_check_param_aligned_dataset(setup_project_and_align_egocentric):
