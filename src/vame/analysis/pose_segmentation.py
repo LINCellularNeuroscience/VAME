@@ -283,7 +283,7 @@ def pose_segmentation(config: str) -> None:
     print('Pose segmentation for VAME model: %s \n' %model_name)
 
     if legacy == True:
-        from .segment_behavior import behavior_segmentation
+        from vame.legacy.segment_behavior import behavior_segmentation
         behavior_segmentation(config, model_name=model_name, cluster_method='kmeans', n_cluster=n_cluster)
 
     else:
