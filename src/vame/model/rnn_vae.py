@@ -20,7 +20,8 @@ from pathlib import Path
 from typing import Tuple
 from vame.util.auxiliary import read_config
 from vame.model.dataloader import SEQUENCE_DATASET
-from vame.model.rnn_model import RNN_VAE, RNN_VAE_LEGACY
+from vame.model.rnn_model import RNN_VAE
+from vame.legacy.rnn_model import RNN_VAE_LEGACY
 from tqdm import tqdm
 
 # make sure torch uses cuda for GPU computing
