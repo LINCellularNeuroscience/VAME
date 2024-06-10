@@ -103,6 +103,7 @@ def test_visualization_output_type(setup_project_and_train_model):
 
 
 @pytest.mark.parametrize("mode", ["sampling", "reconstruction", "motifs"])
+@pytest.mark.skip("Skipping tests in github because require cuda.")
 def test_generative_model(setup_project_and_train_model, mode):
     # skipping mode=centers by now because it requires a cluster_center.npy file which is created only with parametrization = "kmeans"
     generative_figure = vame.generative_model(
