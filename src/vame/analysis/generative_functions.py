@@ -56,12 +56,12 @@ def random_generative_samples_motif(
         image_sample = model.decoder(decoder_inputs, tensor_sample)
         recon_sample = image_sample.cpu().detach().numpy()
 
-
         fig, axs = plt.subplots(2,5)
         for i in range(5):
             axs[0,i].plot(recon_sample[i,...])
             axs[1,i].plot(recon_sample[i+5,...])
         plt.suptitle('Generated samples for motif '+str(j))
+        return fig
 
 def random_generative_samples(cfg: dict, model: torch.nn.Module, latent_vector: np.ndarray) -> None:
     """Generate random generative samples.
@@ -94,6 +94,7 @@ def random_generative_samples(cfg: dict, model: torch.nn.Module, latent_vector: 
         axs[0,i].plot(recon_sample[i,...])
         axs[1,i].plot(recon_sample[i+5,...])
     plt.suptitle('Generated samples')
+    return fig
 
 
 def random_reconstruction_samples(cfg: dict, model: torch.nn.Module, latent_vector: np.ndarray) -> None:
@@ -123,6 +124,7 @@ def random_reconstruction_samples(cfg: dict, model: torch.nn.Module, latent_vect
         axs[0,i].plot(recon_sample[i,...])
         axs[1,i].plot(recon_sample[i+5,...])
     plt.suptitle('Reconstructed samples')
+    return fig
 
 
 def visualize_cluster_center(cfg: dict, model: torch.nn.Module, cluster_center: np.ndarray) -> None:
@@ -157,6 +159,7 @@ def visualize_cluster_center(cfg: dict, model: torch.nn.Module, cluster_center: 
             axs[k,i].plot(recon_sample[idx,...])
             axs[k,i].set_title("Cluster %d" %idx)
             idx +=1
+    return fig
 
 
 def load_model(cfg: dict, model_name: str) -> torch.nn.Module:
@@ -197,7 +200,7 @@ def load_model(cfg: dict, model_name: str) -> torch.nn.Module:
     return model
 
 
-def generative_model(config: str, mode: str = "sampling") -> None:
+def generative_model(config: str, mode: str = "sampling") -> plt.Figure:
     """Generative model.
 
     Args:
@@ -205,7 +208,7 @@ def generative_model(config: str, mode: str = "sampling") -> None:
         mode (str, optional): Mode for generating samples. Defaults to "sampling".
 
     Returns:
-        None
+        plt.Figure: Plot of generated samples.
     """
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
@@ -243,28 +246,17 @@ def generative_model(config: str, mode: str = "sampling") -> None:
 
         if mode == "sampling":
             latent_vector = np.load(os.path.join(path_to_file,'latent_vector_'+file+'.npy'))
-            random_generative_samples(cfg, model, latent_vector)
+            return random_generative_samples(cfg, model, latent_vector)
 
         if mode == "reconstruction":
             latent_vector = np.load(os.path.join(path_to_file,'latent_vector_'+file+'.npy'))
-            random_reconstruction_samples(cfg, model, latent_vector)
+            return random_reconstruction_samples(cfg, model, latent_vector)
 
         if mode == "centers":
             cluster_center = np.load(os.path.join(path_to_file,'cluster_center_'+file+'.npy'))
-            visualize_cluster_center(cfg, model, cluster_center)
+            return visualize_cluster_center(cfg, model, cluster_center)
 
         if mode == "motifs":
             latent_vector = np.load(os.path.join(path_to_file,'latent_vector_'+file+'.npy'))
             labels = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_' + parametrization + '_label_'+file+'.npy'))
-            random_generative_samples_motif(cfg, model, latent_vector,labels,n_cluster)
-
-
-
-
-
-
-
-
-
-
-
+            return random_generative_samples_motif(cfg, model, latent_vector,labels,n_cluster)
