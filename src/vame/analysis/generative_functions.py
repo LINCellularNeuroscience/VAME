@@ -49,7 +49,12 @@ def random_generative_samples_motif(
         density_sample = gm.sample(10)
 
         # generate image via model decoder
-        tensor_sample = torch.from_numpy(density_sample[0]).type('torch.FloatTensor').cuda()
+        tensor_sample = torch.from_numpy(density_sample[0]).type('torch.FloatTensor')
+        if torch.cuda.is_available():
+            tensor_sample = tensor_sample.cuda()
+        else:
+            tensor_sample = tensor_sample.cpu()
+
         decoder_inputs = tensor_sample.unsqueeze(2).repeat(1, 1, time_window)
         decoder_inputs = decoder_inputs.permute(0,2,1)
 
@@ -82,7 +87,12 @@ def random_generative_samples(cfg: dict, model: torch.nn.Module, latent_vector: 
     density_sample = gm.sample(10)
 
     # generate image via model decoder
-    tensor_sample = torch.from_numpy(density_sample[0]).type('torch.FloatTensor').cuda()
+    tensor_sample = torch.from_numpy(density_sample[0]).type('torch.FloatTensor')
+    if torch.cuda.is_available():
+        tensor_sample = tensor_sample.cuda()
+    else:
+        tensor_sample = tensor_sample.cpu()
+
     decoder_inputs = tensor_sample.unsqueeze(2).repeat(1, 1, time_window)
     decoder_inputs = decoder_inputs.permute(0,2,1)
 
@@ -112,7 +122,12 @@ def random_reconstruction_samples(cfg: dict, model: torch.nn.Module, latent_vect
     time_window = cfg['time_window']
 
     rnd = np.random.choice(latent_vector.shape[0], 10)
-    tensor_sample = torch.from_numpy(latent_vector[rnd]).type('torch.FloatTensor').cuda()
+    tensor_sample = torch.from_numpy(latent_vector[rnd]).type('torch.FloatTensor')
+    if torch.cuda.is_available():
+        tensor_sample = tensor_sample.cuda()
+    else:
+        tensor_sample = tensor_sample.cpu()
+
     decoder_inputs = tensor_sample.unsqueeze(2).repeat(1, 1, time_window)
     decoder_inputs = decoder_inputs.permute(0,2,1)
 
@@ -142,7 +157,11 @@ def visualize_cluster_center(cfg: dict, model: torch.nn.Module, cluster_center: 
     time_window = cfg['time_window']
     animal_centers = cluster_center
 
-    tensor_sample = torch.from_numpy(animal_centers).type('torch.FloatTensor').cuda()
+    tensor_sample = torch.from_numpy(animal_centers).type('torch.FloatTensor')
+    if torch.cuda.is_available():
+        tensor_sample = tensor_sample.cuda()
+    else:
+        tensor_sample = tensor_sample.cpu()
     decoder_inputs = tensor_sample.unsqueeze(2).repeat(1, 1, time_window)
     decoder_inputs = decoder_inputs.permute(0,2,1)
 
@@ -190,9 +209,14 @@ def load_model(cfg: dict, model_name: str) -> torch.nn.Module:
     softplus = cfg['softplus']
 
     print('Load model... ')
+
     model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
                             hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                            dropout_rec, dropout_pred, softplus).cuda()
+                            dropout_rec, dropout_pred, softplus)
+    if torch.cuda.is_available():
+        model = model.cuda()
+    else:
+        model = model.cpu()
 
     model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',model_name+'_'+cfg['Project']+'.pkl')))
     model.eval()
