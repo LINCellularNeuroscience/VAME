@@ -1,18 +1,42 @@
 import vame
 from pathlib import Path
 import os
+import pytest
 
 
-def test_create_train_dataset_output_files_exists(setup_project_and_create_train_dataset):
+@pytest.mark.parametrize(
+    'fixture',
+    [
+        'setup_project_and_create_train_aligned_dataset',
+        'setup_project_and_create_train_fixed_dataset'
+    ]
+)
+def test_create_train_dataset_output_files_exists(request, fixture):
     """
     Test if the create_trainset function creates the correct output files.
     """
-    project_path = setup_project_and_create_train_dataset['config_data']['project_path']
+    fixture_value = request.getfixturevalue(fixture)
+    project_path = fixture_value['config_data']['project_path']
     train_data_path = os.path.join(project_path, "data", "train", "test_seq.npy")
     test_data_path = os.path.join(project_path, "data", "train", "test_seq.npy")
 
     assert os.path.exists(train_data_path)
     assert os.path.exists(test_data_path)
+
+
+@pytest.mark.parametrize(
+    'fixture',
+    [
+        'setup_project_and_check_param_aligned_dataset',
+        'setup_project_and_check_param_fixed_dataset'
+    ]
+)
+def test_create_check_param_train_dataset(request, fixture):
+    """
+    Test if the create_trainset executes without errors when check_parameter is set to True.
+    """
+    request.getfixturevalue(fixture)
+    assert True
 
 
 def test_train_model_losses_files_exists(setup_project_and_train_model):
