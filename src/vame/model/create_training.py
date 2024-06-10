@@ -57,8 +57,8 @@ def plot_check_parameter(
     num_frames: int,
     X_true: List[np.ndarray],
     X_med: np.ndarray,
-    anchor_1: int,
-    anchor_2: int
+    anchor_1: int | None = None,
+    anchor_2: int | None = None
 ) -> None:
     """
     Plot the check parameter - z-scored data and the filtered data.

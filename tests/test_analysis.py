@@ -38,7 +38,34 @@ def test_community_files_exists(setup_project_and_train_model):
     vame.community(
         setup_project_and_train_model['config_path'],
         show_umap=False,
-        cut_tree=2
+        cut_tree=2,
+        cohort=False
+    )
+    project_path = setup_project_and_train_model['config_data']['project_path']
+    file = setup_project_and_train_model['config_data']['video_sets'][0]
+    model_name = setup_project_and_train_model['config_data']['model_name']
+    n_cluster = setup_project_and_train_model['config_data']['n_cluster']
+    parametrization = setup_project_and_train_model['config_data']['parametrization']
+
+    save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / 'community'
+
+    transition_matrix_path = save_base_path / f"transition_matrix_{file}.npy"
+    community_label_path = save_base_path / f"community_label_{file}.npy"
+    hierarchy_path = save_base_path / f"hierarchy{file}.pkl"
+
+    assert transition_matrix_path.exists()
+    assert community_label_path.exists()
+    assert hierarchy_path.exists()
+
+
+#@pytest.mark.skip(reason="The method is not working yet.")
+def test_cohort_community_files_exists(setup_project_and_train_model):
+    # Check if the files are created
+    vame.community(
+        setup_project_and_train_model['config_path'],
+        show_umap=False,
+        cut_tree=2,
+        cohort=True
     )
     project_path = setup_project_and_train_model['config_data']['project_path']
     parametrization = setup_project_and_train_model['config_data']['parametrization']
@@ -54,6 +81,48 @@ def test_community_files_exists(setup_project_and_train_model):
     assert cohort_community_bag_path.exists()
 
 
+def test_community_videos_files_exists(setup_project_and_train_model):
+
+    vame.community_videos(
+        config=setup_project_and_train_model['config_path']
+    )
+    file = setup_project_and_train_model['config_data']['video_sets'][0]
+    model_name = setup_project_and_train_model['config_data']['model_name']
+    n_cluster = setup_project_and_train_model['config_data']['n_cluster']
+    parametrization = setup_project_and_train_model['config_data']['parametrization']
+    project_path = setup_project_and_train_model['config_data']['project_path']
+
+    save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "community_videos"
+
+    assert len(list(save_base_path.glob("*.avi"))) == n_cluster
+
+
 def test_visualization_output_type(setup_project_and_train_model):
     fig = vame.visualization(setup_project_and_train_model['config_path'], label=None)
     assert isinstance(fig, Figure)
+
+
+@pytest.mark.parametrize("mode", ["sampling", "reconstruction", "motifs"])
+@pytest.mark.skip("Skipping tests in github because require cuda.")
+def test_generative_model(setup_project_and_train_model, mode):
+    # skipping mode=centers by now because it requires a cluster_center.npy file which is created only with parametrization = "kmeans"
+    generative_figure = vame.generative_model(
+        config=setup_project_and_train_model['config_path'],
+        mode=mode
+    )
+    assert isinstance(generative_figure, Figure)
+
+
+@pytest.mark.skip(reason="The method is too heavy and being killed.")
+def test_gif(setup_project_and_train_model):
+    vame.gif(
+        config=setup_project_and_train_model['config_path'],
+        pose_ref_index=[0,5],
+        subtract_background=True,
+        start=None,
+        length=500,
+        max_lag=30,
+        label="community",
+        file_format='.mp4',
+        crop_size=(300,300)
+    )
