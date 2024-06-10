@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - fix/conditional-cuda-gm #todo remove
 
 
 jobs:
