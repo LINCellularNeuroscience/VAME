@@ -19,7 +19,7 @@ from typing import Dict, List, Tuple
 
 def hierarchy_pos(
     G: nx.Graph,
-    root: str = None,
+    root: str | None = None,
     width: float = 0.5,
     vert_gap: float = 0.2,
     vert_loc: float = 0,
@@ -163,9 +163,6 @@ def graph_to_tree(
         reduction = 1
 
     for i in range(n_cluster-reduction):
-
-#        max_tr = np.max(trans_mat_temp) #merge function
-#        nodes = np.where(max_tr == trans_mat_temp)
         nodes = merge_func(trans_mat_temp, n_cluster, motif_norm_temp, merge_sel)
 
         if np.size(nodes) >= 2:
@@ -222,7 +219,6 @@ def graph_to_tree(
             motif_norm_temp[nodes[1]] = new_motif
 
     merge = np.array(merging_nodes)
-#    merge = np.concatenate((merge),axis=1).T
 
     T = nx.Graph()
 
@@ -273,19 +269,15 @@ def graph_to_tree(
                 T.add_edge(node_dict[merge[i,1]], new_node)
             else:
                 T.add_edge(temp_node, new_node)
-#            node_dict[merge[i,1]] = new_node
 
             if leaf_idx[idx-1] == 1:
                 temp_node = new_node
                 node_dict[merge[i,1]] = new_node
             else:
                 new_node_2 = 'h_'+str(merge[i,0])+'_'+str(i)
-#                temp_node = 'h_'+str(merge[i,0])+'_'+str(i)
                 T.add_edge(node_dict[merge[i,1]], new_node_2)
-#                node_dict[merge[i,0]] = temp_node
                 node_dict[merge[i,1]] = new_node
                 node_dict[merge[i,0]] = new_node_2
-#                temp_node = new_node
 
         elif leaf_idx[idx-1] == 0:
             new_node = 'h_'+str(merge[i,0])+'_'+str(i)
@@ -327,7 +319,7 @@ def draw_tree(T: nx.Graph) -> None:
 
 
 
-def traverse_tree(T: nx.Graph, root_node: str = None) -> str:
+def traverse_tree(T: nx.Graph, root_node: str | None = None) -> str:
     # TODO duplicated function def
     """
     Traverse a tree and return the traversal sequence.
@@ -405,7 +397,7 @@ def _traverse_tree(T: nx.Graph, node: List[str], traverse_preorder: str, travers
 
     return traverse_preorder
 
-def traverse_tree(T: nx.Graph, root_node: str = None) -> str:
+def traverse_tree(T: nx.Graph, root_node: str | None = None) -> str:
     # TODO duplicated function def
     """
     Traverse a tree and return the traversal sequence.
@@ -484,7 +476,7 @@ def _traverse_tree_cutline(
     return  community_bag
 
 
-def traverse_tree_cutline(T: nx.Graph, root_node: str = None, cutline: int = 2) -> List[List[str]]:
+def traverse_tree_cutline(T: nx.Graph, root_node: str | None = None, cutline: int = 2) -> List[List[str]]:
     """
     Traverse a tree with a cutline and return the community bags.
 

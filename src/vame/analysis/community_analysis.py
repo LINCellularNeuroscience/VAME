@@ -94,38 +94,6 @@ def consecutive(data: np.ndarray, stepsize: int = 1) -> List[np.ndarray]:
     data = data[:]
     return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
 
-# def find_zero_labels(motif_usage, n_cluster):
-#     cons = consecutive(motif_usage[0])
-#     if len(cons) != 1:
-#         usage_list = list(motif_usage[1])
-
-#         if 0 not in cons[0]:
-#             first_id = cons[0][0]
-#             for k in range(first_id):
-#                 usage_list.insert(k,0)
-
-#         for i in range(len(cons)-1):
-#             a = cons[i+1][0]
-#             b = cons[i][-1]
-#             d = (a-b)-1
-#             for j in range(1,d+1):
-#                 index = cons[i][-1]+j
-#                 usage_list.insert(index,0)
-#         if len(usage_list) < n_cluster:
-#             usage_list.insert(n_cluster,0)
-
-#     elif cons[0][-1] != n_cluster:
-#         # diff = n_cluster - cons[0][-1]
-#         usage_list = list(motif_usage[1])
-#         usage_list.insert(n_cluster-1,0)
-
-#     if len(usage_list) < n_cluster:
-#         for k in range(len(usage_list), n_cluster):
-#             usage_list.insert(k,0)
-
-#     usage = np.array(usage_list)
-#     return usage
-
 # New find_zero_labels 8/8/2022 KL
 
 
@@ -515,7 +483,7 @@ def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.n
     plt.grid(False)
 
 
-def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tree: int = None) -> None:
+def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tree: int | None = None) -> None:
     """Perform community analysis.
 
     Args:

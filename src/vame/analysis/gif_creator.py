@@ -82,7 +82,7 @@ def gif(
     config: str,
     pose_ref_index: int,
     subtract_background: bool = True,
-    start: int = None,
+    start: int | None = None,
     length: int = 500,
     max_lag: int = 30,
     label: str = 'community',
