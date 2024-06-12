@@ -456,7 +456,7 @@ def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parame
     return embed
 
 
-def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.ndarray) -> None:
+def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.ndarray, save_path: str | None) -> None:
     """Create plotly visualizaton of UMAP embedding.
 
     Args:
@@ -464,6 +464,7 @@ def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.n
         file (str): File path.
         embed (np.ndarray): UMAP embedding.
         community_labels_all (np.ndarray): Community labels.
+        save_path: Path to save the plot. If None it will not save the plot.
 
     Returns:
         None
@@ -482,8 +483,19 @@ def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.n
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
 
+    if save_path is not None:
+        plt.savefig(save_path)
+        return
+    plt.show()
 
-def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tree: int | None = None) -> None:
+
+def community(
+    config: str,
+    cohort: bool = True,
+    show_umap: bool = False,
+    cut_tree: int | None = None,
+    save_umap_figure: bool = True
+) -> None:
     """Perform community analysis.
 
     Args:
@@ -534,7 +546,6 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
         # community_bag = traverse_tree_cutline(trees, cutline=cut_tree)
 
         # convert communities_all to dtype object numpy array because communities_all is an inhomogeneous list
-        # TODO check if this type is right or it should be homogeneous
         communities_all = np.array(communities_all, dtype=object)
 
         np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
@@ -547,6 +558,7 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
 
         if show_umap == True:
             embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
+            # TODO fix umap vis for cohort and add save path
             umap_vis(cfg, files, embed, community_labels_all)
 
     # Work in Progress
@@ -569,7 +581,10 @@ def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tre
 
             if show_umap == True:
                 embed = umap_embedding(cfg, file, model_name, n_cluster, parametrization)
-                umap_vis(cfg, files, embed, community_labels_all[idx])
+                umap_save_path = None
+                if save_umap_figure:
+                    umap_save_path = os.path.join(path_to_file, "community", file + "_umap.png")
+                umap_vis(cfg, files, embed, community_labels_all[idx], save_path=umap_save_path)
 
 
 
