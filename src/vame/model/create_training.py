@@ -17,9 +17,13 @@ import scipy.signal
 from scipy.stats import iqr
 import matplotlib.pyplot as plt
 from typing import List, Optional, Tuple
-
+import sys
+from vame.logging.redirect_stream import StreamToLogger
+from vame.logging.logger import get_configured_logger
 from vame.util.auxiliary import read_config
+from datetime import datetime
 
+logger = get_configured_logger(__name__)
 
 def nan_helper(y: np.ndarray) -> Tuple:
     """
@@ -370,7 +374,8 @@ def traindata_fixed(
 def create_trainset(
     config: str,
     pose_ref_index: Optional[List] = None,
-    check_parameter: bool =False
+    check_parameter: bool =False,
+    redirect_logs_to_file: bool = False
 ) -> None:
     """Creates a training dataset for the VAME model.
 
@@ -379,10 +384,21 @@ def create_trainset(
         pose_ref_index (Optional[List], optional): List of reference coordinate indices for alignment. Defaults to None.
         check_parameter (bool, optional): If True, the function will plot the z-scored data and the filtered data. Defaults to False.
     """
+
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     legacy = cfg['legacy']
     fixed = cfg['egocentric_data']
+
+    original_stdout = sys.stdout
+    if redirect_logs_to_file:
+        log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_path = Path(cfg['project_path']) / 'logs' / 'datasets' / f'create_trainset-{log_filename_datetime}.log'
+        if not log_path.parent.exists():
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+
+        sys.stdout = StreamToLogger(filename=log_path)
+
 
     if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
         os.mkdir(os.path.join(cfg['project_path'],'data','train',""))
@@ -412,3 +428,8 @@ def create_trainset(
 
     if check_parameter == False:
         print("A training and test set has been created. Next step: vame.train_model()")
+
+
+    if redirect_logs_to_file:
+        sys.stdout = original_stdout
+        logger.info(f"Logs have been saved to {log_path}")
