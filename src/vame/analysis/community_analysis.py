@@ -478,7 +478,7 @@ def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.n
     num = np.unique(community_labels_all)
 
     fig = plt.figure(1)
-    plt.scatter(embed[:,0], embed[:,1],  c=community_labels_all[0, :num_points], cmap='Spectral', s=2, alpha=1)
+    plt.scatter(embed[:,0], embed[:,1],  c=community_labels_all[:num_points], cmap='Spectral', s=2, alpha=1)
     plt.colorbar(boundaries=np.arange(np.max(num)+2)-0.5).set_ticks(np.arange(np.max(num)+1))
     plt.gca().set_aspect('equal', 'datalim')
     plt.grid(False)
