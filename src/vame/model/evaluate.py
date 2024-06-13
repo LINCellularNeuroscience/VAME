@@ -20,6 +20,9 @@ from typing import Optional
 from vame.util.auxiliary import read_config
 from vame.model.rnn_vae import RNN_VAE
 from vame.model.dataloader import SEQUENCE_DATASET
+from datetime import datetime
+from vame.logging.redirect_stream import StreamToLogger
+
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:
@@ -215,43 +218,53 @@ def eval_temporal(
         # pass #note, loading of losses needs to be adapted for CPU use #TODO
 
 
-def evaluate_model(config: str, use_snapshots: bool = False) -> None:
+def evaluate_model(config: str, use_snapshots: bool = False, save_logs: bool = False) -> None:
     """Evaluate the trained model.
 
     Args:
         config (str): Path to config file.
         use_snapshots (bool, optional): Whether to plot for all snapshots or only the best model. Defaults to False.
     """
-    config_file = Path(config).resolve()
-    cfg = read_config(config_file)
-    #legacy = cfg['legacy']
-    model_name = cfg['model_name']
-    fixed = cfg['egocentric_data']
+    try:
+        redirect_stream = StreamToLogger()
+        config_file = Path(config).resolve()
+        cfg = read_config(config_file)
+        if save_logs:
+            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_path = Path(cfg['project_path']) / 'logs' / 'model' / 'evaluation' / f'evaluate_model-{log_filename_datetime}.log'
+            redirect_stream.add_file_handler(log_path)
+        #legacy = cfg['legacy']
+        model_name = cfg['model_name']
+        fixed = cfg['egocentric_data']
 
-    if not os.path.exists(os.path.join(cfg['project_path'],"model","evaluate")):
-        os.mkdir(os.path.join(cfg['project_path'],"model","evaluate"))
+        if not os.path.exists(os.path.join(cfg['project_path'],"model","evaluate")):
+            os.mkdir(os.path.join(cfg['project_path'],"model","evaluate"))
 
-    use_gpu = torch.cuda.is_available()
-    if use_gpu:
-        print("Using CUDA")
-        print('GPU active:',torch.cuda.is_available())
-        print('GPU used:',torch.cuda.get_device_name(0))
-    else:
-        torch.device("cpu")
-        print("CUDA is not working, or a GPU is not found; using CPU!")
+        use_gpu = torch.cuda.is_available()
+        if use_gpu:
+            print("Using CUDA")
+            print('GPU active:',torch.cuda.is_available())
+            print('GPU used:',torch.cuda.get_device_name(0))
+        else:
+            torch.device("cpu")
+            print("CUDA is not working, or a GPU is not found; using CPU!")
 
-    print("\n\nEvaluation of %s model. \n" %model_name)
-    if not use_snapshots:
-        eval_temporal(cfg, use_gpu, model_name, fixed)#suffix=suffix
-    elif use_snapshots:
-        snapshots=os.listdir(os.path.join(cfg['project_path'],'model','best_model','snapshots'))
-        for snap in snapshots:
-            fullpath = os.path.join(cfg['project_path'],"model","best_model","snapshots",snap)
-            epoch=snap.split('_')[-1]
-            eval_temporal(cfg, use_gpu, model_name, fixed, snapshot=fullpath, suffix='snapshot'+str(epoch))
-            #eval_temporal(cfg, use_gpu, model_name, legacy=legacy, suffix='bestModel')
+        print("\n\nEvaluation of %s model. \n" %model_name)
+        if not use_snapshots:
+            eval_temporal(cfg, use_gpu, model_name, fixed)#suffix=suffix
+        elif use_snapshots:
+            snapshots=os.listdir(os.path.join(cfg['project_path'],'model','best_model','snapshots'))
+            for snap in snapshots:
+                fullpath = os.path.join(cfg['project_path'],"model","best_model","snapshots",snap)
+                epoch=snap.split('_')[-1]
+                eval_temporal(cfg, use_gpu, model_name, fixed, snapshot=fullpath, suffix='snapshot'+str(epoch))
+                #eval_temporal(cfg, use_gpu, model_name, legacy=legacy, suffix='bestModel')
 
-    print("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
-          "OPTIONS:\n"
-          "- vame.pose_segmentation() to identify behavioral motifs.\n"
-          "- re-run the model for further fine tuning. Check again with vame.evaluate_model()")
+        print("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
+            "OPTIONS:\n"
+            "- vame.pose_segmentation() to identify behavioral motifs.\n"
+            "- re-run the model for further fine tuning. Check again with vame.evaluate_model()")
+    except Exception as e:
+        redirect_stream.logger.exception(f"An error occurred during model evaluation: {e}")
+    finally:
+        redirect_stream.stop()
