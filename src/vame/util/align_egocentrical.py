@@ -13,7 +13,8 @@ import numpy as np
 import pandas as pd
 import tqdm
 from typing import Tuple, List
-
+from datetime import datetime
+from vame.logging.redirect_stream import StreamToLogger
 from pathlib import Path
 from vame.util.auxiliary import read_config
 
@@ -444,7 +445,8 @@ def egocentric_alignment(
     crop_size: tuple = (300,300),
     use_video: bool = False,
     video_format: str = '.mp4',
-    check_video: bool =False
+    check_video: bool = False,
+    save_logs: bool = False
 ) -> None:
     """Aligns egocentric data for VAME training
 
@@ -463,40 +465,54 @@ def egocentric_alignment(
     # pose_ref_index changed in this script from [0,5] to                                                                                                                                         [5,6] on 2/7/2024 PN
     """ Happy aligning """
     #config parameters
-    config_file = Path(config).resolve()
-    cfg = read_config(config_file)
 
-    path_to_file = cfg['project_path']
-    filename = cfg['video_sets']
-    confidence = cfg['pose_confidence']
-    num_features = cfg['num_features']
-    video_format=video_format
-    crop_size=crop_size
+    try:
+        redirect_stream = StreamToLogger()
+        config_file = Path(config).resolve()
+        cfg = read_config(config_file)
 
-    y_shifted_indices = np.arange(0, num_features, 2)
-    x_shifted_indices = np.arange(1, num_features, 2)
-    belly_Y_ind = pose_ref_index[0] * 2
-    belly_X_ind = (pose_ref_index[0] * 2) + 1
+        if save_logs:
+            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_path = Path(cfg['project_path']) / 'logs' / 'align_egocentrical' / f'egocentric_alignment-{log_filename_datetime}.log'
+            redirect_stream.add_file_handler(log_path)
 
-    if cfg['egocentric_data']:
-        raise ValueError("The config.yaml indicates that the data is egocentric. Please check the parameter egocentric_data")
+        path_to_file = cfg['project_path']
+        filename = cfg['video_sets']
+        confidence = cfg['pose_confidence']
+        num_features = cfg['num_features']
+        video_format=video_format
+        crop_size=crop_size
 
-    # call function and save into your VAME data folder
-    for file in filename:
-        print("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
-        egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size,
-                                                   confidence, use_video=use_video, check_video=check_video)
+        y_shifted_indices = np.arange(0, num_features, 2)
+        x_shifted_indices = np.arange(1, num_features, 2)
+        belly_Y_ind = pose_ref_index[0] * 2
+        belly_X_ind = (pose_ref_index[0] * 2) + 1
 
-        # Shifiting section added 2/29/2024 PN
-        egocentric_time_series_shifted = egocentric_time_series
-        belly_Y_shift = egocentric_time_series[belly_Y_ind,:]
-        belly_X_shift = egocentric_time_series[belly_X_ind,:]
+        if cfg['egocentric_data']:
+            raise ValueError("The config.yaml indicates that the data is egocentric. Please check the parameter egocentric_data")
 
-        egocentric_time_series_shifted[y_shifted_indices, :] -= belly_Y_shift
-        egocentric_time_series_shifted[x_shifted_indices, :] -= belly_X_shift
+        # call function and save into your VAME data folder
+        for file in filename:
+            print("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
+            egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size,
+                                                    confidence, use_video=use_video, check_video=check_video)
 
-        np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series_shifted) # save new shifted file
-#        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
+            # Shifiting section added 2/29/2024 PN
+            egocentric_time_series_shifted = egocentric_time_series
+            belly_Y_shift = egocentric_time_series[belly_Y_ind,:]
+            belly_X_shift = egocentric_time_series[belly_X_ind,:]
 
-    print("Your data is now ine right format and you can call vame.create_trainset()")
+            egocentric_time_series_shifted[y_shifted_indices, :] -= belly_Y_shift
+            egocentric_time_series_shifted[x_shifted_indices, :] -= belly_X_shift
+
+            np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series_shifted) # save new shifted file
+    #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
+
+        print("Your data is now ine right format and you can call vame.create_trainset()")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise e
+    finally:
+        if save_logs:
+            redirect_stream.stop()
 

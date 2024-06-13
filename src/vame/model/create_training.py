@@ -384,50 +384,50 @@ def create_trainset(
         check_parameter (bool, optional): If True, the function will plot the z-scored data and the filtered data. Defaults to False.
     """
 
-    config_file = Path(config).resolve()
-    cfg = read_config(config_file)
-    legacy = cfg['legacy']
-    fixed = cfg['egocentric_data']
+    try:
+        redirect_stream = StreamToLogger()
+        config_file = Path(config).resolve()
+        cfg = read_config(config_file)
+        legacy = cfg['legacy']
+        fixed = cfg['egocentric_data']
 
-    if save_logs:
-        log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_path = Path(cfg['project_path']) / 'logs' / 'datasets' / f'create_trainset-{log_filename_datetime}.log'
-        if not log_path.parent.exists():
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-        redirect_stream = StreamToLogger(filename=log_path)
-        redirect_stream.start()
+        if save_logs:
+            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_path = Path(cfg['project_path']) / 'logs' / 'datasets' / f'create_trainset-{log_filename_datetime}.log'
+            redirect_stream.add_file_handler(log_path)
 
 
-    if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
-        os.mkdir(os.path.join(cfg['project_path'],'data','train',""))
+        if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
+            os.mkdir(os.path.join(cfg['project_path'],'data','train',""))
 
-    files = []
-    if cfg['all_data'] == 'No':
-        for file in cfg['video_sets']:
-            use_file = input("Do you want to train on " + file + "? yes/no: ")
-            if use_file == 'yes':
+        files = []
+        if cfg['all_data'] == 'No':
+            for file in cfg['video_sets']:
+                use_file = input("Do you want to train on " + file + "? yes/no: ")
+                if use_file == 'yes':
+                    files.append(file)
+                if use_file == 'no':
+                    continue
+        else:
+            for file in cfg['video_sets']:
                 files.append(file)
-            if use_file == 'no':
-                continue
-    else:
-        for file in cfg['video_sets']:
-            files.append(file)
 
-    print("Creating training dataset...")
-    if cfg['robust'] == True:
-        print("Using robust setting to eliminate outliers! IQR factor: %d" %cfg['iqr_factor'])
+        print("Creating training dataset...")
+        if cfg['robust'] == True:
+            print("Using robust setting to eliminate outliers! IQR factor: %d" %cfg['iqr_factor'])
 
-    if fixed == False:
-        print("Creating trainset from the vame.egocentrical_alignment() output ")
-        traindata_aligned(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
-    else:
-        print("Creating trainset from the vame.csv_to_numpy() output ")
-        traindata_fixed(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter,  pose_ref_index)
+        if fixed == False:
+            print("Creating trainset from the vame.egocentrical_alignment() output ")
+            traindata_aligned(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
+        else:
+            print("Creating trainset from the vame.csv_to_numpy() output ")
+            traindata_fixed(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter,  pose_ref_index)
 
-    if check_parameter == False:
-        print("A training and test set has been created. Next step: vame.train_model()")
+        if check_parameter == False:
+            print("A training and test set has been created. Next step: vame.train_model()")
 
-
-    if save_logs:
-        redirect_stream.logger.info(f"Logs have been saved to {log_path}")
+    except Exception as e:
+        redirect_stream.logger.exception(f"An error occurred: {e}")
+        raise e
+    finally:
         redirect_stream.stop()
