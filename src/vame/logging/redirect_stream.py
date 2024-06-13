@@ -77,5 +77,5 @@ class StreamToLogger:
         if self.file_handler:
             self.file_handler.close()
             self.logger.removeHandler(self.file_handler)
-        self.logger.info(f'Logs saved to {self.file_path}')
+            self.logger.info(f'Logs saved to {self.file_path}')
         self.logger.removeHandler(self.console_handler)

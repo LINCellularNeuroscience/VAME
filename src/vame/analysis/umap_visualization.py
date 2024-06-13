@@ -83,7 +83,10 @@ def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num
     return fig
 
 
-def visualization(config: Union[str, Path], label: Optional[str] = None) -> None:
+def visualization(
+    config: Union[str, Path],
+    label: Optional[str] = None
+) -> None:
     """
     Visualize UMAP embeddings based on configuration settings.
 
@@ -150,16 +153,22 @@ def visualization(config: Union[str, Path], label: Optional[str] = None) -> None
         print("Visualizing %d data points.. " %num_points)
         if label == None:
             output_figure = umap_vis(file, embed, num_points)
+            fig_path = os.path.join(path_to_file,"community","umap_vis_label_none_"+file+".png")
+            plt.savefig(fig_path)
             return output_figure
 
         if label == 'motif':
             motif_label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
             output_figure = umap_label_vis(file, embed, motif_label, n_cluster, num_points)
+            fig_path = os.path.join(path_to_file,"community","umap_vis_motif_"+file+".png")
+            plt.savefig(fig_path)
             return output_figure
 
         if label == "community":
             community_label = np.load(os.path.join(path_to_file,"","community","","community_label_"+file+".npy"))
             output_figure = umap_vis_comm(file, embed, community_label, num_points)
+            fig_path = os.path.join(path_to_file,"community","umap_vis_community_"+file+".png")
+            plt.savefig(fig_path)
             return output_figure
 
 
