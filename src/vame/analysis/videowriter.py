@@ -167,7 +167,7 @@ def motif_videos(
     finally:
         redirect_stream.stop()
 
-def community_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
+def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_logs: bool = False) -> None:
     """
     Generate community videos.
 
@@ -178,41 +178,56 @@ def community_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
     Returns:
         None - Generate community videos and save them to filesystem on project community_videos folder.
     """
-    config_file = Path(config).resolve()
-    cfg = read_config(config_file)
-    model_name = cfg['model_name']
-    n_cluster = cfg['n_cluster']
-    param = cfg['parametrization']
-    flag = 'community'
+    try:
+        redirect_stream = StreamToLogger()
+        tqdm_logger_stream = None
+        config_file = Path(config).resolve()
+        cfg = read_config(config_file)
 
-    files = []
-    if cfg['all_data'] == 'No':
-        all_flag = input("Do you want to write motif videos for your entire dataset? \n"
-                    "If you only want to use a specific dataset type filename: \n"
-                    "yes/no/filename ")
-    else:
-        all_flag = 'yes'
+        if save_logs:
+            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'community_analysis' / f'community_videos-{log_filename_datetime}.log'
+            redirect_stream.add_file_handler(log_path)
+            tqdm_logger_stream = redirect_stream
+        model_name = cfg['model_name']
+        n_cluster = cfg['n_cluster']
+        param = cfg['parametrization']
+        flag = 'community'
 
-    if all_flag == 'yes' or all_flag == 'Yes':
-        for file in cfg['video_sets']:
-            files.append(file)
+        files = []
+        if cfg['all_data'] == 'No':
+            all_flag = input("Do you want to write motif videos for your entire dataset? \n"
+                        "If you only want to use a specific dataset type filename: \n"
+                        "yes/no/filename ")
+        else:
+            all_flag = 'yes'
 
-    elif all_flag == 'no' or all_flag == 'No':
-        for file in cfg['video_sets']:
-            use_file = input("Do you want to quantify " + file + "? yes/no: ")
-            if use_file == 'yes':
+        if all_flag == 'yes' or all_flag == 'Yes':
+            for file in cfg['video_sets']:
                 files.append(file)
-            if use_file == 'no':
-                continue
-    else:
-        files.append(all_flag)
 
-    print("Cluster size is: %d " %n_cluster)
-    for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
-        if not os.path.exists(os.path.join(path_to_file,"community_videos")):
-            os.mkdir(os.path.join(path_to_file,"community_videos"))
+        elif all_flag == 'no' or all_flag == 'No':
+            for file in cfg['video_sets']:
+                use_file = input("Do you want to quantify " + file + "? yes/no: ")
+                if use_file == 'yes':
+                    files.append(file)
+                if use_file == 'no':
+                    continue
+        else:
+            files.append(all_flag)
 
-        get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag)
+        print("Cluster size is: %d " %n_cluster)
+        for file in files:
+            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
+            if not os.path.exists(os.path.join(path_to_file,"community_videos")):
+                os.mkdir(os.path.join(path_to_file,"community_videos"))
 
-    print("All videos have been created!")
+            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, tqdm_logger_stream=tqdm_logger_stream)
+
+        print("All videos have been created!")
+
+    except Exception as e:
+        redirect_stream.logger.exception(f"Error in community_videos: {e}")
+        raise e
+    finally:
+        redirect_stream.stop()

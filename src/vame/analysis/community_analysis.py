@@ -21,6 +21,8 @@ import matplotlib.pyplot as plt
 from vame.util.auxiliary import read_config
 from vame.analysis.tree_hierarchy import graph_to_tree, draw_tree, traverse_tree_cutline
 from typing import List, Tuple
+from datetime import datetime
+from vame.logging.redirect_stream import StreamToLogger
 
 
 def get_adjacency_matrix(labels: np.ndarray, n_cluster: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -494,7 +496,8 @@ def community(
     cohort: bool = True,
     show_umap: bool = False,
     cut_tree: int | None = None,
-    save_umap_figure: bool = True
+    save_umap_figure: bool = True,
+    save_logs: bool = False
 ) -> None:
     """Perform community analysis.
 
@@ -507,85 +510,95 @@ def community(
     Returns:
         None
     """
-    config_file = Path(config).resolve()
-    cfg = read_config(config_file)
-    model_name = cfg['model_name']
-    n_cluster = cfg['n_cluster']
-    parametrization = cfg['parametrization']
+    try:
+        redirect_stream = redirect_stream = StreamToLogger()
+        config_file = Path(config).resolve()
+        cfg = read_config(config_file)
+        if save_logs:
+                log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+                log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'community_analysis' / f'community-{log_filename_datetime}.log'
+                redirect_stream.add_file_handler(log_path)
+        model_name = cfg['model_name']
+        n_cluster = cfg['n_cluster']
+        parametrization = cfg['parametrization']
 
-    files = []
-    if cfg['all_data'] == 'No':
-        all_flag = input("Do you want to write motif videos for your entire dataset? \n"
-                     "If you only want to use a specific dataset type filename: \n"
-                     "yes/no/filename ")
-    else:
-        all_flag = 'yes'
+        files = []
+        if cfg['all_data'] == 'No':
+            all_flag = input("Do you want to write motif videos for your entire dataset? \n"
+                        "If you only want to use a specific dataset type filename: \n"
+                        "yes/no/filename ")
+        else:
+            all_flag = 'yes'
 
-    if all_flag == 'yes' or all_flag == 'Yes':
-        for file in cfg['video_sets']:
-            files.append(file)
-
-    elif all_flag == 'no' or all_flag == 'No':
-        for file in cfg['video_sets']:
-            use_file = input("Do you want to quantify " + file + "? yes/no: ")
-            if use_file == 'yes':
+        if all_flag == 'yes' or all_flag == 'Yes':
+            for file in cfg['video_sets']:
                 files.append(file)
-            if use_file == 'no':
-                continue
-    else:
-        files.append(all_flag)
 
-    if cohort==True:
-        labels = get_community_label(cfg, files, model_name, n_cluster, parametrization)
-        augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
-        _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
-        _, usage_full = np.unique(augmented_label, return_counts=True)
-        communities_all, trees = create_cohort_community_bag(files, labels, trans_mat_full, cut_tree, n_cluster)
+        elif all_flag == 'no' or all_flag == 'No':
+            for file in cfg['video_sets']:
+                use_file = input("Do you want to quantify " + file + "? yes/no: ")
+                if use_file == 'yes':
+                    files.append(file)
+                if use_file == 'no':
+                    continue
+        else:
+            files.append(all_flag)
 
-        community_labels_all = get_cohort_community_labels(files, labels, communities_all)
-        # community_bag = traverse_tree_cutline(trees, cutline=cut_tree)
+        if cohort==True:
+            labels = get_community_label(cfg, files, model_name, n_cluster, parametrization)
+            augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
+            _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
+            _, usage_full = np.unique(augmented_label, return_counts=True)
+            communities_all, trees = create_cohort_community_bag(files, labels, trans_mat_full, cut_tree, n_cluster)
 
-        # convert communities_all to dtype object numpy array because communities_all is an inhomogeneous list
-        communities_all = np.array(communities_all, dtype=object)
+            community_labels_all = get_cohort_community_labels(files, labels, communities_all)
+            # community_bag = traverse_tree_cutline(trees, cutline=cut_tree)
 
-        np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
-        np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
-        np.save(os.path.join(cfg['project_path'],"cohort_" + parametrization + "_label"+'.npy'), labels)
-        np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
+            # convert communities_all to dtype object numpy array because communities_all is an inhomogeneous list
+            communities_all = np.array(communities_all, dtype=object)
 
-        with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
-            pickle.dump(communities_all, fp)
+            np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
+            np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
+            np.save(os.path.join(cfg['project_path'],"cohort_" + parametrization + "_label"+'.npy'), labels)
+            np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
 
-        if show_umap == True:
-            embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
-            # TODO fix umap vis for cohort and add save path
-            umap_vis(cfg, files, embed, community_labels_all)
-
-    # Work in Progress
-    elif cohort == False:
-        labels = get_labels(cfg, files, model_name, n_cluster, parametrization)
-        transition_matrices = compute_transition_matrices(files, labels, n_cluster)
-        communities_all, trees = create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster)
-        community_labels_all = get_community_labels(files, labels, communities_all)
-
-        for idx, file in enumerate(files):
-            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization + '-'+str(n_cluster),"")
-            if not os.path.exists(os.path.join(path_to_file,"community")):
-                os.mkdir(os.path.join(path_to_file,"community"))
-
-            np.save(os.path.join(path_to_file,"community","transition_matrix_"+file+'.npy'),transition_matrices[idx])
-            np.save(os.path.join(path_to_file,"community","community_label_"+file+'.npy'), community_labels_all[idx])
-
-            with open(os.path.join(path_to_file,"community","hierarchy"+file+".pkl"), "wb") as fp:   #Pickling
-                pickle.dump(communities_all[idx], fp)
+            with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
+                pickle.dump(communities_all, fp)
 
             if show_umap == True:
-                embed = umap_embedding(cfg, file, model_name, n_cluster, parametrization)
-                umap_save_path = None
-                if save_umap_figure:
-                    umap_save_path = os.path.join(path_to_file, "community", file + "_umap.png")
-                umap_vis(cfg, files, embed, community_labels_all[idx], save_path=umap_save_path)
+                embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
+                # TODO fix umap vis for cohort and add save path
+                umap_vis(cfg, files, embed, community_labels_all)
 
+        # Work in Progress
+        elif cohort == False:
+            labels = get_labels(cfg, files, model_name, n_cluster, parametrization)
+            transition_matrices = compute_transition_matrices(files, labels, n_cluster)
+            communities_all, trees = create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster)
+            community_labels_all = get_community_labels(files, labels, communities_all)
+
+            for idx, file in enumerate(files):
+                path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization + '-'+str(n_cluster),"")
+                if not os.path.exists(os.path.join(path_to_file,"community")):
+                    os.mkdir(os.path.join(path_to_file,"community"))
+
+                np.save(os.path.join(path_to_file,"community","transition_matrix_"+file+'.npy'),transition_matrices[idx])
+                np.save(os.path.join(path_to_file,"community","community_label_"+file+'.npy'), community_labels_all[idx])
+
+                with open(os.path.join(path_to_file,"community","hierarchy"+file+".pkl"), "wb") as fp:   #Pickling
+                    pickle.dump(communities_all[idx], fp)
+
+                if show_umap == True:
+                    embed = umap_embedding(cfg, file, model_name, n_cluster, parametrization)
+                    umap_save_path = None
+                    if save_umap_figure:
+                        umap_save_path = os.path.join(path_to_file, "community", file + "_umap.png")
+                    umap_vis(cfg, files, embed, community_labels_all[idx], save_path=umap_save_path)
+    except Exception as e:
+        redirect_stream.logger.exception(f"Error in community_analysis: {e}")
+        raise e
+    finally:
+        redirect_stream.stop()
 
 
 
