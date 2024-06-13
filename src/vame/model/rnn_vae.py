@@ -364,7 +364,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
         cfg = read_config(config_file)
         if save_logs:
             log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'model' / f'train_model-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'model' / 'training'/ f'train_model-{log_filename_datetime}.log'
             redirect_stream.add_file_handler(log_path)
 
         legacy = cfg['legacy']
