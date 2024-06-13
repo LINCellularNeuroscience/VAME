@@ -46,7 +46,7 @@ def get_cluster_vid(
     """
 
     if output_video_type == '.mp4':
-        codec = cv.VideoWriter_fourcc(*'mp4v')
+        codec = cv.VideoWriter_fourcc(*'avc1')
     elif output_video_type == '.avi':
         codec = cv.VideoWriter_fourcc('M','J','P','G')
     else:
