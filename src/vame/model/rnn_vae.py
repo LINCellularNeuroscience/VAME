@@ -360,12 +360,14 @@ def train_model(config: str, save_logs: bool = False) -> None:
     """
     try:
         redirect_stream = StreamToLogger()
+        tqdm_logger_stream = None
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
             log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
             log_path = Path(cfg['project_path']) / 'logs' / 'model' / 'training'/ f'train_model-{log_filename_datetime}.log'
             redirect_stream.add_file_handler(log_path)
+            tqdm_logger_stream = redirect_stream
 
         legacy = cfg['legacy']
         model_name = cfg['model_name']
@@ -493,7 +495,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
             scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
 
         print("Start training... ")
-        for epoch in tqdm(range(1,EPOCHS), desc="Training Model", unit="epoch"):
+        for epoch in tqdm(range(1,EPOCHS), desc="Training Model", unit="epoch", file=tqdm_logger_stream):
             #print("Epoch: %d" %epoch)
             weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
                                                                             anneal_function, BETA, KL_START,

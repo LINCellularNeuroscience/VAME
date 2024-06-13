@@ -1,15 +1,34 @@
-from dataclasses import dataclass
 import logging
 import sys
 from pathlib import Path
 
 
-@dataclass
-class StreamToLogger:
-    file_path: str | None = None
-    log_level: int = logging.INFO
+class TqdmLogFormatter:
+    def __init__(self, logger):
+        self._logger = logger
 
-    def __post_init__(self):
+    def __enter__(self):
+        self.__original_formatters = list()
+
+        for handler in self._logger.handlers:
+            self.__original_formatters.append(handler.formatter)
+            handler.terminator = ''
+            formatter = logging.Formatter( '%(message)s')
+            handler.setFormatter(formatter)
+
+        return self._logger
+
+    def __exit__(self, *args):
+        for handler, formatter in zip(self._logger.handlers, self.__original_formatters):
+            handler.terminator = '\n'
+            handler.setFormatter(formatter)
+
+
+class StreamToLogger:
+    def __init__(self, file_path: str | None = None, log_level: int = logging.INFO):
+        self.file_path = file_path
+        self.log_level = log_level
+
         self.original_stdout = sys.stdout
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.log_level)
@@ -42,8 +61,8 @@ class StreamToLogger:
         self.logger.addHandler(self.file_handler)
 
     def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self.logger.log(self.log_level, line.rstrip())
+        with TqdmLogFormatter(self.logger) as logger:
+            logger.info(buf)
 
     def flush(self):
         if self.file_handler:
@@ -56,7 +75,7 @@ class StreamToLogger:
     def stop(self):
         sys.stdout = self.original_stdout
         if self.file_handler:
-            self.logger.info(f'Logs saved to {self.file_path}')
             self.file_handler.close()
             self.logger.removeHandler(self.file_handler)
+        self.logger.info(f'Logs saved to {self.file_path}')
         self.logger.removeHandler(self.console_handler)
