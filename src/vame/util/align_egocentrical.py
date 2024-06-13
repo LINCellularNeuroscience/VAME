@@ -513,6 +513,5 @@ def egocentric_alignment(
         print(f"An error occurred: {e}")
         raise e
     finally:
-        if save_logs:
-            redirect_stream.stop()
+        redirect_stream.stop()
 

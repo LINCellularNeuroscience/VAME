@@ -511,13 +511,13 @@ def community(
         None
     """
     try:
-        redirect_stream = redirect_stream = StreamToLogger()
+        redirect_stream = StreamToLogger()
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-                log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-                log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'community_analysis' / f'community-{log_filename_datetime}.log'
-                redirect_stream.add_file_handler(log_path)
+            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'community_analysis' / f'community-{log_filename_datetime}.log'
+            redirect_stream.add_file_handler(log_path)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
         parametrization = cfg['parametrization']
