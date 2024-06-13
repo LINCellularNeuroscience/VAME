@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 import logging
 import sys
-
+from pathlib import Path
 
 
 @dataclass
 class StreamToLogger:
     file_path: str | None = None
     log_level: int = logging.INFO
-    linebuf: str = ''
 
     def __post_init__(self):
         self.original_stdout = sys.stdout
@@ -34,6 +33,8 @@ class StreamToLogger:
 
     def add_file_handler(self, file_path: str):
         self.file_path = file_path
+        if not Path(self.file_path).exists():
+            Path(self.file_path).parent.mkdir(parents=True, exist_ok=True)
         self.file_handler = logging.FileHandler(file_path)
         self.file_handler.setLevel(self.log_level)
         formatter = logging.Formatter('%(message)s')
