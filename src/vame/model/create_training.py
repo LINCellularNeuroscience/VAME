@@ -19,11 +19,10 @@ import matplotlib.pyplot as plt
 from typing import List, Optional, Tuple
 import sys
 from vame.logging.redirect_stream import StreamToLogger
-from vame.logging.logger import get_configured_logger
 from vame.util.auxiliary import read_config
 from datetime import datetime
 
-logger = get_configured_logger(__name__)
+
 
 def nan_helper(y: np.ndarray) -> Tuple:
     """
@@ -375,7 +374,7 @@ def create_trainset(
     config: str,
     pose_ref_index: Optional[List] = None,
     check_parameter: bool =False,
-    redirect_logs_to_file: bool = False
+    save_logs: bool = False
 ) -> None:
     """Creates a training dataset for the VAME model.
 
@@ -390,14 +389,13 @@ def create_trainset(
     legacy = cfg['legacy']
     fixed = cfg['egocentric_data']
 
-    original_stdout = sys.stdout
-    if redirect_logs_to_file:
+    if save_logs:
         log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_path = Path(cfg['project_path']) / 'logs' / 'datasets' / f'create_trainset-{log_filename_datetime}.log'
         if not log_path.parent.exists():
             log_path.parent.mkdir(parents=True, exist_ok=True)
-
-        sys.stdout = StreamToLogger(filename=log_path)
+        redirect_stream = StreamToLogger(filename=log_path)
+        redirect_stream.start()
 
 
     if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
@@ -430,6 +428,6 @@ def create_trainset(
         print("A training and test set has been created. Next step: vame.train_model()")
 
 
-    if redirect_logs_to_file:
-        sys.stdout = original_stdout
-        logger.info(f"Logs have been saved to {log_path}")
+    if save_logs:
+        redirect_stream.logger.info(f"Logs have been saved to {log_path}")
+        redirect_stream.stop()
