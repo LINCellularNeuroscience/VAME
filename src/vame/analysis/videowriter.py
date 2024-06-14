@@ -64,10 +64,7 @@ def get_cluster_vid(
     if capture.isOpened():
         width  = capture.get(cv.CAP_PROP_FRAME_WIDTH)
         height = capture.get(cv.CAP_PROP_FRAME_HEIGHT)
-#        print('width, height:', width, height)
-
         fps = 25#capture.get(cv.CAP_PROP_FPS)
-#        print('fps:', fps)
 
     cluster_start = cfg['time_window'] / 2
 
@@ -75,6 +72,9 @@ def get_cluster_vid(
         print('Cluster: %d' %(cluster))
         cluster_lbl = np.where(labels == cluster)
         cluster_lbl = cluster_lbl[0]
+        if not cluster_lbl.size:
+            print('Cluster is empty')
+            continue
 
         if flag == "motif":
             output = os.path.join(path_to_file,"cluster_videos",file+f'-motif_%d{output_video_type}' %cluster)
