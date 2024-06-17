@@ -2,7 +2,6 @@ import logging
 import sys
 from pathlib import Path
 
-
 class TqdmLogFormatter:
     def __init__(self, logger):
         self._logger = logger
@@ -13,7 +12,7 @@ class TqdmLogFormatter:
         for handler in self._logger.handlers:
             self.__original_formatters.append(handler.formatter)
             handler.terminator = ''
-            formatter = logging.Formatter( '%(message)s')
+            formatter = logging.Formatter('%(message)s')
             handler.setFormatter(formatter)
 
         return self._logger
@@ -22,7 +21,6 @@ class TqdmLogFormatter:
         for handler, formatter in zip(self._logger.handlers, self.__original_formatters):
             handler.terminator = '\n'
             handler.setFormatter(formatter)
-
 
 class StreamToLogger:
     def __init__(self, file_path: str | None = None, log_level: int = logging.INFO):
@@ -36,21 +34,29 @@ class StreamToLogger:
         if self.logger.hasHandlers():
             self.logger.handlers.clear()
 
-        # File handler for logging to file
+        self.add_console_handler()
+
         self.file_handler = None
         if self.file_path is not None:
             self.add_file_handler(self.file_path)
 
-        # Stream handler for logging to console
+        self.start()
+
+    def add_console_handler(self):
         self.console_handler = logging.StreamHandler(sys.stdout)
         self.console_handler.setLevel(self.log_level)
         console_formatter = logging.Formatter('%(message)s')
         self.console_handler.setFormatter(console_formatter)
         self.logger.addHandler(self.console_handler)
 
-        self.start()
+    def remove_console_handler(self):
+        if self.console_handler:
+            self.console_handler.close()
+            self.logger.removeHandler(self.console_handler)
+            self.console_handler = None
 
     def add_file_handler(self, file_path: str):
+        self.remove_console_handler()
         self.file_path = file_path
         if not Path(self.file_path).exists():
             Path(self.file_path).parent.mkdir(parents=True, exist_ok=True)
@@ -67,7 +73,6 @@ class StreamToLogger:
     def flush(self):
         if self.file_handler:
             self.file_handler.flush()
-        self.console_handler.flush()
 
     def start(self):
         sys.stdout = self
@@ -77,5 +82,5 @@ class StreamToLogger:
         if self.file_handler:
             self.file_handler.close()
             self.logger.removeHandler(self.file_handler)
-            self.logger.info(f'Logs saved to {self.file_path}')
-        self.logger.removeHandler(self.console_handler)
+        if self.console_handler:
+            self.remove_console_handler()
