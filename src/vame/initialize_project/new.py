@@ -25,6 +25,8 @@ from datetime import datetime as dt
 from vame.util import auxiliary
 from typing import List
 from vame.schemas.project import ProjectSchema
+from vame.schemas.states import VAMEPipelineStatesSchema
+import json
 
 
 
@@ -136,6 +138,13 @@ def init_new_project(
     projconfigfile=os.path.join(str(project_path), 'config.yaml')
     # Write dictionary to yaml  config file
     auxiliary.write_config(projconfigfile, cfg_data)
+
+    vame_pipeline_default_schema = VAMEPipelineStatesSchema()
+    vame_pipeline_default_schema_path = Path(project_path) / 'states/states.json'
+    if not vame_pipeline_default_schema_path.parent.exists():
+        vame_pipeline_default_schema_path.parent.mkdir(parents=True)
+    with open(vame_pipeline_default_schema_path, 'w') as f:
+        json.dump(vame_pipeline_default_schema.model_dump(), f, indent=4)
 
     print('A VAME project has been created. \n')
     print('Now its time to prepare your data for VAME. '

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 
 
@@ -89,3 +89,5 @@ class ProjectSchema(BaseModel):
 
     # Legacy mode
     legacy: bool = Field(default=False, title='Legacy mode')
+
+    model_config: ConfigDict = ConfigDict(protected_namespaces=())

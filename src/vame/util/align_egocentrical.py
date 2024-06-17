@@ -16,6 +16,7 @@ from typing import Tuple, List
 
 from pathlib import Path
 from vame.util.auxiliary import read_config
+from vame.schemas.states import EgocentricAlignmentFunctionSchema, save_state
 
 #Returns cropped image using rect tuple
 def crop_and_flip(
@@ -438,13 +439,14 @@ def alignment(
     return time_series, frames
 
 
+@save_state(model=EgocentricAlignmentFunctionSchema)
 def egocentric_alignment(
     config: str,
     pose_ref_index: list = [5,6],
     crop_size: tuple = (300,300),
     use_video: bool = False,
     video_format: str = '.mp4',
-    check_video: bool =False
+    check_video: bool = False
 ) -> None:
     """Aligns egocentric data for VAME training
 
