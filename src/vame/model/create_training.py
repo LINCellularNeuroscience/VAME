@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from typing import List, Optional, Tuple
 
 from vame.util.auxiliary import read_config
+from vame.schemas.states import CreateTrainsetFunctionSchema, save_state
 
 
 def nan_helper(y: np.ndarray) -> Tuple:
@@ -367,6 +368,7 @@ def traindata_fixed(
         print('Lenght of test data: %d' %len(z_test.T))
 
 
+@save_state(model=CreateTrainsetFunctionSchema)
 def create_trainset(
     config: str,
     pose_ref_index: Optional[List] = None,

@@ -8,6 +8,7 @@ from enum import Enum
 class StatesEnum(str, Enum):
     success = 'success'
     failed = 'failed'
+    running = 'running'
 
 
 class BaseStateSchema(BaseModel):
@@ -24,11 +25,28 @@ class EgocentricAlignmentFunctionSchema(BaseStateSchema):
     check_video: bool = Field(title='Check video', default=False)
 
 
+class CsvToNumpyFunctionSchema(BaseStateSchema):
+    ...
+
+
+class CreateTrainsetFunctionSchema(BaseStateSchema):
+    pose_ref_index: Optional[list] = Field(title='Pose reference index', default=None)
+    check_parameter: bool = Field(title='Check parameter', default=False)
+
+
+class TrainModelFunctionSchema(BaseStateSchema):
+    ...
+
+
+class EvaluateModelFunctionSchema(BaseStateSchema):
+    use_snapshots: bool = Field(title='Use snapshots', default=False)
 
 class VAMEPipelineStatesSchema(BaseModel):
     egocentric_alignment: Optional[EgocentricAlignmentFunctionSchema | Dict] = Field(title='Egocentric alignment', default={})
-    csv_to_numpy: Optional[dict] = Field(title='CSV to numpy', default={})
-
+    csv_to_numpy: Optional[CsvToNumpyFunctionSchema | Dict] = Field(title='CSV to numpy', default={})
+    create_trainset: Optional[CreateTrainsetFunctionSchema | Dict] = Field(title='Create trainset', default={})
+    train_model: Optional[TrainModelFunctionSchema | Dict] = Field(title='Train model', default={})
+    evaluate_model: Optional[EvaluateModelFunctionSchema | Dict] = Field(title='Evaluate model', default={})
 
 def _save_state(model: BaseModel, function_name: str, state: StatesEnum) -> None:
     """
@@ -73,6 +91,7 @@ def save_state(model: BaseModel):
                 kwargs_dict[attribute_names[i]] = arg
             # Validate function args and kwargs using the Pydantic model.
             kwargs_model = model(**kwargs_dict)
+            _save_state(kwargs_model, function_name, state=StatesEnum.running)
             try:
                 func_output = func(*args, **kwargs)
                 _save_state(kwargs_model, function_name, state=StatesEnum.success)

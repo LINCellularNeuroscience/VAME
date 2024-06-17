@@ -22,6 +22,9 @@ from vame.util.auxiliary import read_config
 from vame.model.dataloader import SEQUENCE_DATASET
 from vame.model.rnn_model import RNN_VAE, RNN_VAE_LEGACY
 from tqdm import tqdm
+from vame.schemas.states import TrainModelFunctionSchema, save_state
+
+
 
 # make sure torch uses cuda for GPU computing
 use_gpu = torch.cuda.is_available()
@@ -349,6 +352,7 @@ def test(
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
 
 
+@save_state(model=TrainModelFunctionSchema)
 def train_model(config: str) -> None:
     """Train Variational Autoencoder using the configuration file values.
 
