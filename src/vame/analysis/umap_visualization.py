@@ -14,10 +14,9 @@ import umap
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-from mpl_toolkits.mplot3d import Axes3D
 from typing import Optional, Union
 from vame.util.auxiliary import read_config
+from vame.schemas.states import VisualizationFunctionSchema, save_state
 
 
 def umap_vis(file: str, embed: np.ndarray, num_points: int) -> None:
@@ -82,7 +81,7 @@ def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num
     plt.grid(False)
     return fig
 
-
+@save_state(model=VisualizationFunctionSchema)
 def visualization(config: Union[str, Path], label: Optional[str] = None) -> None:
     """
     Visualize UMAP embeddings based on configuration settings.

@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from vame.util.auxiliary import read_config
 from vame.analysis.tree_hierarchy import graph_to_tree, draw_tree, traverse_tree_cutline
 from typing import List, Tuple
-
+from vame.schemas.states import save_state, CommunityFunctionSchema
 
 def get_adjacency_matrix(labels: np.ndarray, n_cluster: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Calculate the adjacency matrix, transition matrix, and temporal matrix.
@@ -515,6 +515,7 @@ def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.n
     plt.grid(False)
 
 
+@save_state(model=CommunityFunctionSchema)
 def community(config: str, cohort: bool = True, show_umap: bool = False, cut_tree: int = None) -> None:
     """Perform community analysis.
 

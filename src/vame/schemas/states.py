@@ -10,6 +10,11 @@ class StatesEnum(str, Enum):
     failed = 'failed'
     running = 'running'
 
+class GenerativeModelModeEnum(str, Enum):
+    sampling = 'sampling'
+    reconstruction = 'reconstruction'
+    centers = 'centers'
+    motifs = 'motifs'
 
 class BaseStateSchema(BaseModel):
     config: str = Field(title='Configuration file path')
@@ -41,12 +46,43 @@ class TrainModelFunctionSchema(BaseStateSchema):
 class EvaluateModelFunctionSchema(BaseStateSchema):
     use_snapshots: bool = Field(title='Use snapshots', default=False)
 
+
+class PoseSegmentationFunctionSchema(BaseStateSchema):
+    ...
+
+class MotifVideosFunctionSchema(BaseStateSchema):
+    videoType: str = Field(title='Type of video', default='.mp4')
+
+
+class CommunityFunctionSchema(BaseStateSchema):
+    cohort: bool = Field(title='Cohort', default=True)
+    show_umap: bool = Field(title='Show UMAP', default=False)
+    cut_tree: int | None = Field(title='Cut tree', default=None)
+
+
+class CommunityVideosFunctionSchema(BaseStateSchema):
+    videoType: str = Field(title='Type of video', default='.mp4')
+
+
+class VisualizationFunctionSchema(BaseStateSchema):
+    label: Optional[str] = Field(title='Type of labels to visualize', default=None)
+
+class GenerativeModelFunctionSchema(BaseStateSchema):
+    mode: GenerativeModelModeEnum = Field(title='Mode for generating samples', default=GenerativeModelModeEnum.sampling)
+
 class VAMEPipelineStatesSchema(BaseModel):
     egocentric_alignment: Optional[EgocentricAlignmentFunctionSchema | Dict] = Field(title='Egocentric alignment', default={})
     csv_to_numpy: Optional[CsvToNumpyFunctionSchema | Dict] = Field(title='CSV to numpy', default={})
     create_trainset: Optional[CreateTrainsetFunctionSchema | Dict] = Field(title='Create trainset', default={})
     train_model: Optional[TrainModelFunctionSchema | Dict] = Field(title='Train model', default={})
     evaluate_model: Optional[EvaluateModelFunctionSchema | Dict] = Field(title='Evaluate model', default={})
+    pose_segmentation: Optional[PoseSegmentationFunctionSchema | Dict] = Field(title='Pose segmentation', default={})
+    motif_videos: Optional[MotifVideosFunctionSchema | Dict] = Field(title='Motif videos', default={})
+    community: Optional[CommunityFunctionSchema | Dict] = Field(title='Community', default={})
+    community_videos: Optional[CommunityVideosFunctionSchema | Dict] = Field(title='Community videos', default={})
+    visualization: Optional[VisualizationFunctionSchema | Dict] = Field(title='Visualization', default={})
+    generative_model: Optional[GenerativeModelFunctionSchema | Dict] = Field(title='Generative model', default={})
+
 
 def _save_state(model: BaseModel, function_name: str, state: StatesEnum) -> None:
     """
@@ -98,6 +134,6 @@ def save_state(model: BaseModel):
                 return func_output
             except Exception as e:
                 _save_state(kwargs_model, function_name, state=StatesEnum.failed)
-                return func_output
+                raise e
         return wrapper
     return decorator

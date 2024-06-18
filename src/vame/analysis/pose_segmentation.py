@@ -19,7 +19,7 @@ from typing import List, Tuple
 
 from hmmlearn import hmm
 from sklearn.cluster import KMeans
-
+from vame.schemas.states import save_state, PoseSegmentationFunctionSchema
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
 
@@ -262,7 +262,7 @@ def individual_parametrization(
 
     return labels, cluster_centers, motif_usages
 
-
+@save_state(model=PoseSegmentationFunctionSchema)
 def pose_segmentation(config: str) -> None:
     """Perform pose segmentation using the VAME model.
 

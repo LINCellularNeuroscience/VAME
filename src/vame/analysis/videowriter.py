@@ -16,7 +16,7 @@ import cv2 as cv
 import tqdm
 from typing import Union
 from vame.util.auxiliary import read_config
-
+from vame.schemas.states import save_state, MotifVideosFunctionSchema, CommunityVideosFunctionSchema
 
 def get_cluster_vid(cfg: dict, path_to_file: str, file: str, n_cluster: int, videoType: str, flag: str) -> None:
     """
@@ -77,8 +77,11 @@ def get_cluster_vid(cfg: dict, path_to_file: str, file: str, n_cluster: int, vid
         video.release()
     capture.release()
 
-
-def motif_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
+@save_state(model=MotifVideosFunctionSchema)
+def motif_videos(
+    config: Union[str, Path],
+    videoType: str = '.mp4'
+) -> None:
     """
     Generate motif videos.
 
@@ -129,7 +132,7 @@ def motif_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
 
     print("All videos have been created!")
 
-
+@save_state(model=CommunityVideosFunctionSchema)
 def community_videos(config: Union[str, Path], videoType: str = '.mp4') -> None:
     """
     Generate community videos.
