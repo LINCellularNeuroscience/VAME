@@ -32,6 +32,9 @@ def umap_vis(file: str, embed: np.ndarray, num_points: int) -> None:
     Returns:
         None - Plot Visualization of UMAP embedding.
     """
+    plt.cla()
+    plt.clf()
+    plt.close('all')
     fig = plt.figure(1)
     plt.scatter(embed[:num_points,0], embed[:num_points,1], s=2, alpha=.5)
     plt.gca().set_aspect('equal', 'datalim')
@@ -151,7 +154,7 @@ def visualization(
             np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
 
         print("Visualizing %d data points.. " %num_points)
-        if label == None:
+        if label is None:
             output_figure = umap_vis(file, embed, num_points)
             fig_path = os.path.join(path_to_file,"community","umap_vis_label_none_"+file+".png")
             output_figure.savefig(fig_path)
