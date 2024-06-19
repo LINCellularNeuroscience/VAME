@@ -230,8 +230,7 @@ def evaluate_model(config: str, use_snapshots: bool = False, save_logs: bool = F
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'model' / 'evaluation' / f'evaluate_model-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'evaluate_model.log'
             redirect_stream.add_file_handler(log_path)
         #legacy = cfg['legacy']
         model_name = cfg['model_name']

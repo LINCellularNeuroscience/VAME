@@ -19,7 +19,6 @@ from typing import List, Tuple
 
 from hmmlearn import hmm
 from sklearn.cluster import KMeans
-from datetime import datetime
 from vame.logging.redirect_stream import StreamToLogger
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
@@ -278,8 +277,7 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'pose_segmantation' / f'pose_segmentation-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'pose_segmentation.log'
             redirect_stream.add_file_handler(log_path)
         legacy = cfg['legacy']
         model_name = cfg['model_name']

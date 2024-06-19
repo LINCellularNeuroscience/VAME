@@ -60,7 +60,7 @@ class StreamToLogger:
         self.file_path = file_path
         if not Path(self.file_path).exists():
             Path(self.file_path).parent.mkdir(parents=True, exist_ok=True)
-        self.file_handler = logging.FileHandler(file_path)
+        self.file_handler = logging.FileHandler(file_path, mode='w')
         self.file_handler.setLevel(self.log_level)
         formatter = logging.Formatter('%(message)s')
         self.file_handler.setFormatter(formatter)

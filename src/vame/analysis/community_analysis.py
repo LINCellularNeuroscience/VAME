@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 from vame.util.auxiliary import read_config
 from vame.analysis.tree_hierarchy import graph_to_tree, draw_tree, traverse_tree_cutline
 from typing import List, Tuple
-from datetime import datetime
 from vame.logging.redirect_stream import StreamToLogger
 
 
@@ -515,8 +514,7 @@ def community(
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'community_analysis' / f'community-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'community.log'
             redirect_stream.add_file_handler(log_path)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']

@@ -17,7 +17,6 @@ import tqdm
 from typing import Union
 from vame.util.auxiliary import read_config
 from vame.logging.redirect_stream import StreamToLogger
-from datetime import datetime
 import imageio
 
 
@@ -128,8 +127,7 @@ def motif_videos(
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'motif_videos' / f'motif_videos-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'motif_videos.log'
             redirect_stream.add_file_handler(log_path)
             tqdm_logger_stream = redirect_stream
         model_name = cfg['model_name']
@@ -192,8 +190,7 @@ def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_log
         cfg = read_config(config_file)
 
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'community_analysis' / f'community_videos-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'community_videos.log'
             redirect_stream.add_file_handler(log_path)
             tqdm_logger_stream = redirect_stream
         model_name = cfg['model_name']

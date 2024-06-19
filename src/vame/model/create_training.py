@@ -17,10 +17,8 @@ import scipy.signal
 from scipy.stats import iqr
 import matplotlib.pyplot as plt
 from typing import List, Optional, Tuple
-import sys
 from vame.logging.redirect_stream import StreamToLogger
 from vame.util.auxiliary import read_config
-from datetime import datetime
 
 
 
@@ -392,8 +390,7 @@ def create_trainset(
         fixed = cfg['egocentric_data']
 
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'datasets' / f'create_trainset-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'create_trainset.log'
             redirect_stream.add_file_handler(log_path)
 
 

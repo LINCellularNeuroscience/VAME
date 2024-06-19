@@ -472,8 +472,7 @@ def egocentric_alignment(
         cfg = read_config(config_file)
 
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'align_egocentrical' / f'egocentric_alignment-{log_filename_datetime}.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'egocentric_alignment.log'
             redirect_stream.add_file_handler(log_path)
 
         path_to_file = cfg['project_path']
