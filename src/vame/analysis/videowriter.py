@@ -18,6 +18,7 @@ from typing import Union
 from vame.util.auxiliary import read_config
 from vame.logging.redirect_stream import StreamToLogger
 from datetime import datetime
+import imageio
 
 
 def get_cluster_vid(
@@ -45,11 +46,7 @@ def get_cluster_vid(
         None - Generate cluster videos and save them to fs on project folder.
     """
 
-    if output_video_type == '.mp4':
-        codec = cv.VideoWriter_fourcc(*'mp4v')
-    elif output_video_type == '.avi':
-        codec = cv.VideoWriter_fourcc('M','J','P','G')
-    else:
+    if output_video_type not in ['.mp4', '.avi']:
         raise ValueError("Output video type must be either '.avi' or '.mp4'.")
 
     param = cfg['parametrization']
@@ -81,7 +78,12 @@ def get_cluster_vid(
         if flag == "community":
             output = os.path.join(path_to_file,"community_videos",file+f'-community_%d{output_video_type}' %cluster)
 
-        video = cv.VideoWriter(output, codec, fps, (int(width), int(height)))
+        if output_video_type == '.avi':
+            codec = cv.VideoWriter_fourcc("M", "J", "P", "G")
+            video_writer = cv.VideoWriter(output, codec, fps, (int(width), int(height)))
+        elif output_video_type == '.mp4':
+            video_writer = imageio.get_writer(output, fps=fps, codec='h264', macro_block_size=None)
+
 
         if len(cluster_lbl) < cfg['length_of_motif_video']:
             vid_length = len(cluster_lbl)
@@ -92,9 +94,14 @@ def get_cluster_vid(
             idx = cluster_lbl[num]
             capture.set(1,idx+cluster_start)
             ret, frame = capture.read()
-            video.write(frame)
-
-        video.release()
+            if output_video_type == '.avi':
+                video_writer.write(frame)
+            elif output_video_type == '.mp4':
+                video_writer.append_data(frame)
+        if output_video_type == '.avi':
+            video_writer.release()
+        elif output_video_type == '.mp4':
+            video_writer.close()
     capture.release()
 
 
