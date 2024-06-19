@@ -21,8 +21,11 @@ import matplotlib.pyplot as plt
 from vame.util.auxiliary import read_config
 from vame.analysis.tree_hierarchy import graph_to_tree, draw_tree, traverse_tree_cutline
 from typing import List, Tuple
-from datetime import datetime
-from vame.logging.redirect_stream import StreamToLogger
+from vame.logging.logger import VameLogger
+
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 def get_adjacency_matrix(labels: np.ndarray, n_cluster: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -112,7 +115,7 @@ def find_zero_labels(motif_usage: Tuple[np.ndarray, np.ndarray], n_cluster: int)
     cons = consecutive(motif_usage[0])
     usage_list = list(motif_usage[1])
     if len(cons) != 1: #if missing motif is in the middle of the list
-        print("Go")
+        logger.info("Go")
         if 0 not in cons[0]:
             first_id = cons[0][0]
             for k in range(first_id):
@@ -158,7 +161,7 @@ def augment_motif_timeseries(label: np.ndarray, n_cluster: int) -> Tuple[np.ndar
     motif_usage = np.unique(augmented_label, return_counts=True)
     augmented_usage = find_zero_labels(motif_usage, n_cluster)
     zero_motifs = np.where(augmented_usage == 0)[0]
-    print("Zero motifs: ", zero_motifs)
+    logger.info(f"Zero motifs: {zero_motifs}")
 
     idx = -1
     for i in range(len(zero_motifs)):
@@ -284,7 +287,7 @@ def create_community_bag(
             while flag_1 == 'no':
                 cutline = int(input("Where do you want to cut the Tree? 0/1/2/3/..."))
                 community_bag =  traverse_tree_cutline(T,cutline=cutline)
-                print(community_bag)
+                logger.info(community_bag)
                 flag_2 = input('\nAre all motifs in the list? (yes/no/restart)')
                 if flag_2 == 'no':
                     while flag_2 == 'no':
@@ -296,7 +299,7 @@ def create_community_bag(
                         if add == "end":
                             motif_idx = int(input('Which motif number? '))
                             community_bag.append([motif_idx])
-                        print(community_bag)
+                        logger.info(community_bag)
                         flag_2 = input('\nAre all motifs in the list? (yes/no/restart)')
                 if flag_2 == "restart":
                     continue
@@ -346,7 +349,7 @@ def create_cohort_community_bag(
         while flag_1 == 'no':
             cutline = int(input("Where do you want to cut the Tree? 0/1/2/3/..."))
             community_bag =  traverse_tree_cutline(T,cutline=cutline)
-            print(community_bag)
+            logger.info(community_bag)
             flag_2 = input('\nAre all motifs in the list? (yes/no/restart)')
             if flag_2 == 'no':
                 while flag_2 == 'no':
@@ -358,7 +361,7 @@ def create_cohort_community_bag(
                     if add == "end":
                         motif_idx = int(input('Which motif number? '))
                         community_bag.append([motif_idx])
-                        print(community_bag)
+                        logger.info(community_bag)
                     flag_2 = input('\nAre all motifs in the list? (yes/no/restart)')
             if flag_2 == "restart":
                 continue
@@ -443,7 +446,7 @@ def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parame
     reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'],
                         random_state=cfg['random_state'])
 
-    print("UMAP calculation for file %s" %file)
+    logger.info("UMAP calculation for file %s" %file)
 
     folder = os.path.join(cfg['project_path'],"results",file,model_name, parametrization +'-'+str(n_cluster),"")
     latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
@@ -451,7 +454,7 @@ def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parame
     num_points = cfg['num_points']
     if num_points > latent_vector.shape[0]:
         num_points = latent_vector.shape[0]
-    print("Embedding %d data points.." %num_points)
+    logger.info("Embedding %d data points.." %num_points)
 
     embed = reducer.fit_transform(latent_vector[:num_points,:])
 
@@ -475,7 +478,7 @@ def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.n
     community_labels_all = np.asarray(community_labels_all)
     if num_points > community_labels_all.shape[0]:
         num_points = community_labels_all.shape[0]
-    print("Embedding %d data points.." %num_points)
+    logger.info("Embedding %d data points.." %num_points)
 
     num = np.unique(community_labels_all)
 
@@ -511,13 +514,11 @@ def community(
         None
     """
     try:
-        redirect_stream = StreamToLogger()
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'community_analysis' / f'community-{log_filename_datetime}.log'
-            redirect_stream.add_file_handler(log_path)
+            log_path = Path(cfg['project_path']) / 'logs' / 'community.log'
+            logger_config.add_file_handler(log_path)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
         parametrization = cfg['parametrization']
@@ -544,7 +545,7 @@ def community(
         else:
             files.append(all_flag)
 
-        if cohort==True:
+        if cohort:
             labels = get_community_label(cfg, files, model_name, n_cluster, parametrization)
             augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
             _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
@@ -565,13 +566,13 @@ def community(
             with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
                 pickle.dump(communities_all, fp)
 
-            if show_umap == True:
+            if show_umap:
                 embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
                 # TODO fix umap vis for cohort and add save path
                 umap_vis(cfg, files, embed, community_labels_all)
 
         # Work in Progress
-        elif cohort == False:
+        elif not cohort:
             labels = get_labels(cfg, files, model_name, n_cluster, parametrization)
             transition_matrices = compute_transition_matrices(files, labels, n_cluster)
             communities_all, trees = create_community_bag(files, labels, transition_matrices, cut_tree, n_cluster)
@@ -588,17 +589,17 @@ def community(
                 with open(os.path.join(path_to_file,"community","hierarchy"+file+".pkl"), "wb") as fp:   #Pickling
                     pickle.dump(communities_all[idx], fp)
 
-                if show_umap == True:
+                if show_umap:
                     embed = umap_embedding(cfg, file, model_name, n_cluster, parametrization)
                     umap_save_path = None
                     if save_umap_figure:
                         umap_save_path = os.path.join(path_to_file, "community", file + "_umap.png")
                     umap_vis(cfg, files, embed, community_labels_all[idx], save_path=umap_save_path)
     except Exception as e:
-        redirect_stream.logger.exception(f"Error in community_analysis: {e}")
+        logger.exception(f"Error in community_analysis: {e}")
         raise e
     finally:
-        redirect_stream.stop()
+        logger_config.remove_file_handler()
 
 
 

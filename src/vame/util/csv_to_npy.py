@@ -16,8 +16,11 @@ import pandas as pd
 from pathlib import Path
 from vame.util.auxiliary import read_config
 from typing import Tuple
-from datetime import datetime
-from vame.logging.redirect_stream import StreamToLogger
+from vame.logging.logger import VameLogger
+
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 def nan_helper(y: np.ndarray) -> Tuple:
@@ -65,19 +68,18 @@ def csv_to_numpy(config: str, save_logs=False) -> None:
         ValueError: If the config.yaml file indicates that the data is not egocentric.
     """
     try:
-        redirect_stream = StreamToLogger()
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
 
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'util' / f'csv_to_numpy-{log_filename_datetime}.log'
-            redirect_stream.add_file_handler(log_path)
+            log_path = Path(cfg['project_path']) / 'logs' / 'csv_to_numpy.log'
+            logger_config.add_file_handler(log_path)
+
 
         path_to_file = cfg['project_path']
         filename = cfg['video_sets']
         confidence = cfg['pose_confidence']
-        if cfg['egocentric_data'] == False:
+        if not cfg['egocentric_data']:
             raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
 
         for file in filename:
@@ -114,11 +116,10 @@ def csv_to_numpy(config: str, save_logs=False) -> None:
 
             # save the final_positions array with np.save()
             np.save(os.path.join(path_to_file,'data',file,file+"-PE-seq.npy"), final_positions.T)
-            print("conversion from DeepLabCut csv to numpy complete...")
+            logger.info("conversion from DeepLabCut csv to numpy complete...")
 
-        print("Your data is now in right format and you can call vame.create_trainset()")
+        logger.info("Your data is now in right format and you can call vame.create_trainset()")
     except Exception as e:
-        redirect_stream.logger.exception(f"An error occurred during the conversion: {e}")
+        logger.exception(f"{e}")
         raise e
-    finally:
-        redirect_stream.stop()
+

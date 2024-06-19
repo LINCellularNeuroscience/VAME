@@ -13,10 +13,11 @@ import torch
 from torch.utils.data.dataset import Dataset
 import numpy as np
 import os
+from vame.logging.logger import VameLogger
 
 
 class SEQUENCE_DATASET(Dataset):
-    def __init__(self, path_to_file: str, data: str, train: bool, temporal_window: int) -> None:
+    def __init__(self, path_to_file: str, data: str, train: bool, temporal_window: int, **kwargs) -> None:
         """Initialize the Sequence Dataset.
 
         Args:
@@ -28,6 +29,9 @@ class SEQUENCE_DATASET(Dataset):
         Returns:
             None
         """
+        self.logger_config = kwargs.get('logger_config', VameLogger(__name__))
+        self.logger = self.logger_config.logger
+
         self.temporal_window = temporal_window
         self.X = np.load(path_to_file+data)
         if self.X.shape[0] > self.X.shape[1]:
@@ -36,7 +40,7 @@ class SEQUENCE_DATASET(Dataset):
         self.data_points = len(self.X[0,:])
 
         if train and not os.path.exists(os.path.join(path_to_file,'seq_mean.npy')):
-            print("Compute mean and std for temporal dataset.")
+            self.logger.info("Compute mean and std for temporal dataset.")
             self.mean = np.mean(self.X)
             self.std = np.std(self.X)
             np.save(path_to_file+'seq_mean.npy', self.mean)
@@ -46,9 +50,9 @@ class SEQUENCE_DATASET(Dataset):
             self.std = np.load(path_to_file+'seq_std.npy')
 
         if train:
-            print('Initialize train data. Datapoints %d' %self.data_points)
+            self.logger.info('Initialize train data. Datapoints %d' %self.data_points)
         else:
-            print('Initialize test data. Datapoints %d' %self.data_points)
+            self.logger.info('Initialize test data. Datapoints %d' %self.data_points)
 
     def __len__(self) -> int:
         """Return the number of data points.

@@ -16,9 +16,13 @@ import cv2 as cv
 import tqdm
 from typing import Union
 from vame.util.auxiliary import read_config
-from vame.logging.redirect_stream import StreamToLogger
 from datetime import datetime
 import imageio
+from vame.logging.logger import VameLogger, TqdmToLogger
+
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 def get_cluster_vid(
@@ -28,8 +32,8 @@ def get_cluster_vid(
     n_cluster: int,
     videoType: str,
     flag: str,
-    output_video_type: str = '.mp4',
-    tqdm_logger_stream:  StreamToLogger | None = None
+    output_video_type: str = ".mp4",
+    tqdm_logger_stream: TqdmToLogger | None = None,
 ) -> None:
     """
     Generate cluster videos.
@@ -51,10 +55,10 @@ def get_cluster_vid(
 
     param = cfg['parametrization']
     if flag == "motif":
-        print("Motif videos getting created for "+file+" ...")
+        logger.info("Motif videos getting created for "+file+" ...")
         labels = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
     if flag == "community":
-        print("Community videos getting created for "+file+" ...")
+        logger.info("Community videos getting created for "+file+" ...")
         labels = np.load(os.path.join(path_to_file,"community",'community_label_'+file+'.npy'))
     capture = cv.VideoCapture(os.path.join(cfg['project_path'],"videos",file+videoType))
 
@@ -66,11 +70,11 @@ def get_cluster_vid(
     cluster_start = cfg['time_window'] / 2
 
     for cluster in range(n_cluster):
-        print('Cluster: %d' %(cluster))
+        logger.info('Cluster: %d' %(cluster))
         cluster_lbl = np.where(labels == cluster)
         cluster_lbl = cluster_lbl[0]
         if not cluster_lbl.size:
-            print('Cluster is empty')
+            logger.info('Cluster is empty')
             continue
 
         if flag == "motif":
@@ -123,15 +127,13 @@ def motif_videos(
         None - Generate motif videos and save them to filesystem on project cluster_videos folder.
     """
     try:
-        redirect_stream = StreamToLogger()
         tqdm_logger_stream = None
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'motif_videos' / f'motif_videos-{log_filename_datetime}.log'
-            redirect_stream.add_file_handler(log_path)
-            tqdm_logger_stream = redirect_stream
+            log_path = Path(cfg['project_path']) / 'logs' / 'motif_videos.log'
+            logger_config.add_file_handler(log_path)
+            tqdm_logger_stream = TqdmToLogger(logger=logger)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
         param = cfg['parametrization']
@@ -159,7 +161,7 @@ def motif_videos(
         else:
             files.append(all_flag)
 
-        print("Cluster size is: %d " %n_cluster)
+        logger.info("Cluster size is: %d " %n_cluster)
         for file in files:
             path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
             if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
@@ -167,12 +169,12 @@ def motif_videos(
 
             get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, output_video_type=output_video_type, tqdm_logger_stream=tqdm_logger_stream)
 
-        print("All videos have been created!")
+        logger.info("All videos have been created!")
     except Exception as e:
-        redirect_stream.logger.exception(f"Error in motif_videos: {e}")
+        logger.exception(f"Error in motif_videos: {e}")
         raise e
     finally:
-        redirect_stream.stop()
+        logger_config.remove_file_handler()
 
 def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_logs: bool = False) -> None:
     """

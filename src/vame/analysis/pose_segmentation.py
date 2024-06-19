@@ -20,9 +20,13 @@ from typing import List, Tuple
 from hmmlearn import hmm
 from sklearn.cluster import KMeans
 from datetime import datetime
-from vame.logging.redirect_stream import StreamToLogger
+from vame.logging.logger import VameLogger
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
+
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 def load_model(cfg: dict, model_name: str, fixed: bool) -> RNN_VAE:
@@ -48,7 +52,7 @@ def load_model(cfg: dict, model_name: str, fixed: bool) -> RNN_VAE:
     TEMPORAL_WINDOW = cfg['time_window']*2
     FUTURE_STEPS = cfg['prediction_steps']
     NUM_FEATURES = cfg['num_features']
-    if fixed == False:
+    if not fixed:
         NUM_FEATURES = NUM_FEATURES - 2
     hidden_size_layer_1 = cfg['hidden_size_layer_1']
     hidden_size_layer_2 = cfg['hidden_size_layer_2']
@@ -90,7 +94,7 @@ def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bo
     project_path = cfg['project_path']
     temp_win = cfg['time_window']
     num_features = cfg['num_features']
-    if fixed == False:
+    if not fixed:
         num_features = num_features - 2
 
     use_gpu = torch.cuda.is_available()
@@ -102,7 +106,7 @@ def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bo
     latent_vector_files = []
 
     for file in files:
-        print('Embedding of latent vector for file %s' %file)
+        logger.info('Embedding of latent vector for file %s' %file)
         data = np.load(os.path.join(project_path,'data',file,file+'-PE-seq-clean.npy'))
         latent_vector_list = []
         with torch.no_grad():
@@ -194,21 +198,21 @@ def same_parametrization(
     latent_vector_cat = np.concatenate(latent_vector_files, axis=0)
 
     if parametrization == "kmeans":
-        print("Using kmeans as parametrization!")
+        logger.info("Using kmeans as parametrization!")
         kmeans = KMeans(init='k-means++', n_clusters=states, random_state=42, n_init=20).fit(latent_vector_cat)
         clust_center = kmeans.cluster_centers_
         label = kmeans.predict(latent_vector_cat)
 
     elif parametrization == "hmm":
-        if cfg['hmm_trained'] == False:
-            print("Using a HMM as parametrization!")
+        if not cfg['hmm_trained']:
+            logger.info("Using a HMM as parametrization!")
             hmm_model = hmm.GaussianHMM(n_components=states, covariance_type="full", n_iter=100)
             hmm_model.fit(latent_vector_cat)
             label = hmm_model.predict(latent_vector_cat)
             save_data = os.path.join(cfg['project_path'], "results", "")
             with open(save_data+"hmm_trained.pkl", "wb") as file: pickle.dump(hmm_model, file)
         else:
-            print("Using a pretrained HMM as parametrization!")
+            logger.info("Using a pretrained HMM as parametrization!")
             save_data = os.path.join(cfg['project_path'], "results", "")
             with open(save_data+"hmm_trained.pkl", "rb") as file:
                 hmm_model = pickle.load(file)
@@ -252,7 +256,7 @@ def individual_parametrization(
     cluster_centers = []
     motif_usages = []
     for i, file in enumerate(files):
-        print(file)
+        logger.info(f'Processing file: {file}')
         kmeans = KMeans(init='k-means++', n_clusters=cluster, random_state=random_state, n_init=n_init).fit(latent_vector_files[i])
         clust_center = kmeans.cluster_centers_
         label = kmeans.predict(latent_vector_files[i])
@@ -274,22 +278,20 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
         None
     """
     try:
-        redirect_stream = StreamToLogger()
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
-            log_filename_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_path = Path(cfg['project_path']) / 'logs' / 'analysis' / 'pose_segmantation' / f'pose_segmentation-{log_filename_datetime}.log'
-            redirect_stream.add_file_handler(log_path)
+            log_path = Path(cfg['project_path']) / 'logs' / 'pose_segmentation.log'
+            logger_config.add_file_handler(log_path)
         legacy = cfg['legacy']
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
         fixed = cfg['egocentric_data']
         parametrization = cfg['parametrization']
 
-        print('Pose segmentation for VAME model: %s \n' %model_name)
+        logger.info('Pose segmentation for VAME model: %s \n' %model_name)
 
-        if legacy == True:
+        if legacy:
             from .segment_behavior import behavior_segmentation
             behavior_segmentation(config, model_name=model_name, cluster_method='kmeans', n_cluster=n_cluster)
 
@@ -327,11 +329,11 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
 
             use_gpu = torch.cuda.is_available()
             if use_gpu:
-                print("Using CUDA")
-                print('GPU active:',torch.cuda.is_available())
-                print('GPU used:',torch.cuda.get_device_name(0))
+                logger.info("Using CUDA")
+                logger.info('GPU active: {}'.format(torch.cuda.is_available()))
+                logger.info('GPU used: {}'.format(torch.cuda.get_device_name(0)))
             else:
-                print("CUDA is not working! Attempting to use the CPU...")
+                logger.info("CUDA is not working! Attempting to use the CPU...")
                 torch.device("cpu")
 
             if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
@@ -340,15 +342,15 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
                 model = load_model(cfg, model_name, fixed)
                 latent_vectors = embedd_latent_vectors(cfg, files, model, fixed)
 
-                if ind_param == False:
-                    print("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
+                if not ind_param:
+                    logger.info("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
                     labels, cluster_center, motif_usages = same_parametrization(cfg, files, latent_vectors, n_cluster, parametrization)
                 else:
-                    print("Individual parametrization of latent vectors for %d cluster" %n_cluster)
+                    logger.info("Individual parametrization of latent vectors for %d cluster" %n_cluster)
                     labels, cluster_center, motif_usages = individual_parametrization(cfg, files, latent_vectors, n_cluster)
 
             else:
-                print('\n'
+                logger.info('\n'
                     'For model %s a latent vector embedding already exists. \n'
                     'parametrization of latent vector with %d k-Means cluster' %(model_name, n_cluster))
 
@@ -366,26 +368,26 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
                         latent_vector = np.load(os.path.join(path_to_latent_vector,'latent_vector_'+file+'.npy'))
                         latent_vectors.append(latent_vector)
 
-                    if ind_param == False:
-                        print("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
+                    if not ind_param:
+                        logger.info("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
                         labels, cluster_center, motif_usages = same_parametrization(cfg, files, latent_vectors, n_cluster, parametrization)
                     else:
-                        print("Individual parametrization of latent vectors for %d cluster" %n_cluster)
+                        logger.info("Individual parametrization of latent vectors for %d cluster" %n_cluster)
                         labels, cluster_center, motif_usages = individual_parametrization(cfg, files, latent_vectors, n_cluster)
 
                 else:
-                    print('No new parametrization has been calculated.')
+                    logger.info('No new parametrization has been calculated.')
                     new = False
 
             # print("Hello2")
-            if new == True:
+            if new:
                 for idx, file in enumerate(files):
-                    print(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
+                    logger.info(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
                     if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")):
                         try:
                             os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
                         except OSError as error:
-                            print(error)
+                            logger.error(error)
 
                     save_data = os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")
                     np.save(os.path.join(save_data,str(n_cluster)+'_' + parametrization + '_label_'+file), labels[idx])
@@ -395,11 +397,11 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
                     np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
 
 
-                print("You succesfully extracted motifs with VAME! From here, you can proceed running vame.motif_videos() ")
+                logger.info("You succesfully extracted motifs with VAME! From here, you can proceed running vame.motif_videos() ")
                     # "to get an idea of the behavior captured by VAME. This will leave you with short snippets of certain movements."
                     # "To get the full picture of the spatiotemporal dynamic we recommend applying our community approach afterwards.")
     except Exception as e:
-        redirect_stream.logger.exception(f"An error occurred during pose segmentation: {e}")
+        logger.exception(f"An error occurred during pose segmentation: {e}")
     finally:
-        redirect_stream.stop()
+        logger_config.remove_file_handler()
 
