@@ -19,8 +19,7 @@ from typing import List, Tuple
 
 from hmmlearn import hmm
 from sklearn.cluster import KMeans
-from datetime import datetime
-from vame.logging.logger import VameLogger
+from vame.logging.logger import VameLogger, TqdmToLogger
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
 
@@ -79,7 +78,7 @@ def load_model(cfg: dict, model_name: str, fixed: bool) -> RNN_VAE:
     return model
 
 
-def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bool) -> List[np.ndarray]:
+def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bool, tqdm_stream: TqdmToLogger | None) -> List[np.ndarray]:
     """Embed latent vectors for the given files using the VAME model.
 
     Args:
@@ -87,6 +86,7 @@ def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bo
         files (List[str]): List of files names.
         model (RNN_VAE): VAME model.
         fixed (bool): Whether the model is fixed.
+        tqdm_stream (TqdmToLogger): TQDM Stream to redirect the tqdm output to logger.
 
     Returns:
         List[np.ndarray]: List of latent vectors for each file.
@@ -110,7 +110,7 @@ def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bo
         data = np.load(os.path.join(project_path,'data',file,file+'-PE-seq-clean.npy'))
         latent_vector_list = []
         with torch.no_grad():
-            for i in tqdm.tqdm(range(data.shape[1] - temp_win)):
+            for i in tqdm.tqdm(range(data.shape[1] - temp_win), file=tqdm_stream):
             # for i in tqdm.tqdm(range(10000)):
                 data_sample_np = data[:,i:temp_win+i].T
                 data_sample_np = np.reshape(data_sample_np, (1, temp_win, num_features))
@@ -280,9 +280,11 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
     try:
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
+        tqdm_stream = None
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'pose_segmentation.log'
             logger_config.add_file_handler(log_path)
+            tqdm_stream = TqdmToLogger(logger)
         legacy = cfg['legacy']
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
@@ -340,7 +342,7 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
                 new = True
                 # print("Hello1")
                 model = load_model(cfg, model_name, fixed)
-                latent_vectors = embedd_latent_vectors(cfg, files, model, fixed)
+                latent_vectors = embedd_latent_vectors(cfg, files, model, fixed, tqdm_stream=tqdm_stream)
 
                 if not ind_param:
                     logger.info("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
