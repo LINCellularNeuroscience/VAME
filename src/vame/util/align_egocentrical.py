@@ -13,10 +13,13 @@ import numpy as np
 import pandas as pd
 import tqdm
 from typing import Tuple, List
-from datetime import datetime
-from vame.logging.redirect_stream import StreamToLogger
+from vame.logging.logger import VameLogger, TqdmToLogger
 from pathlib import Path
 from vame.util.auxiliary import read_config
+
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 #Returns cropped image using rect tuple
 def crop_and_flip(
@@ -185,7 +188,7 @@ def background(path_to_file: str, filename: str, video_format: str = '.mp4', num
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         frames[...,i] = gray
 
-    print('Finishing up!')
+    logger.info('Finishing up!')
     medFrame = np.median(frames,2)
     background = scipy.ndimage.median_filter(medFrame, (5,5))
 
@@ -206,7 +209,8 @@ def align_mouse(
     pose_flip_ref: Tuple[int, int],
     bg: np.ndarray,
     frame_count: int,
-    use_video: bool = True
+    use_video: bool = True,
+    tqdm_stream: TqdmToLogger = None
 ) -> Tuple[List[np.ndarray],List[List[np.ndarray]], np.ndarray]:
     """
     Align the mouse in the video frames.
@@ -246,7 +250,7 @@ def align_mouse(
         if not capture.isOpened():
             raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
 
-    for idx in tqdm.tqdm(range(frame_count), disable=not True, desc='Align frames'):
+    for idx in tqdm.tqdm(range(frame_count), disable=not True, file=tqdm_stream, desc='Align frames'):
 
         if use_video:
             #Read frame
@@ -255,8 +259,8 @@ def align_mouse(
                 frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
                 frame = frame - bg
                 frame[frame <= 0] = 0
-            except:
-                print("Couldn't find a frame in capture.read(). #Frame: %d" %idx)
+            except Exception:
+                logger.info("Couldn't find a frame in capture.read(). #Frame: %d" %idx)
                 continue
         else:
             frame=np.zeros((1,1))
@@ -377,7 +381,8 @@ def alignment(
     crop_size: Tuple[int, int],
     confidence: float,
     use_video: bool = False,
-    check_video: bool = False
+    check_video: bool = False,
+    tqdm_stream: TqdmToLogger = None
 ) -> Tuple[np.ndarray, List[np.ndarray]]:
     """
     Perform alignment of egocentric data.
@@ -430,8 +435,20 @@ def alignment(
         frame_count = len(data) # Change this to an abitrary number if you first want to test the code
 
 
-    frames, n, time_series = align_mouse(path_to_file, filename, video_format, crop_size, pose_list, pose_ref_index,
-                                         confidence, pose_flip_ref, bg, frame_count, use_video)
+    frames, n, time_series = align_mouse(
+        path_to_file,
+        filename,
+        video_format,
+        crop_size,
+        pose_list,
+        pose_ref_index,
+        confidence,
+        pose_flip_ref,
+        bg,
+        frame_count,
+        use_video,
+        tqdm_stream,
+    )
 
     if check_video:
         play_aligned_video(frames, n, frame_count)
@@ -467,14 +484,15 @@ def egocentric_alignment(
     #config parameters
 
     try:
-        redirect_stream = StreamToLogger()
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
-
+        tqdm_stream = None
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'egocentric_alignment.log'
-            redirect_stream.add_file_handler(log_path)
+            logger_config.add_file_handler(log_path)
+            tqdm_stream = TqdmToLogger(logger=logger)
 
+        logger.info('Starting egocentric alignment')
         path_to_file = cfg['project_path']
         filename = cfg['video_sets']
         confidence = cfg['pose_confidence']
@@ -492,9 +510,9 @@ def egocentric_alignment(
 
         # call function and save into your VAME data folder
         for file in filename:
-            print("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
+            logger.info("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
             egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size,
-                                                    confidence, use_video=use_video, check_video=check_video)
+                                                    confidence, use_video=use_video, check_video=check_video, tqdm_stream=tqdm_stream)
 
             # Shifiting section added 2/29/2024 PN
             egocentric_time_series_shifted = egocentric_time_series
@@ -507,10 +525,7 @@ def egocentric_alignment(
             np.save(os.path.join(path_to_file,'data',file,file+'-PE-seq.npy'), egocentric_time_series_shifted) # save new shifted file
     #        np.save(os.path.join(path_to_file,'data/',file,"",file+'-PE-seq.npy', egocentric_time_series))
 
-        print("Your data is now ine right format and you can call vame.create_trainset()")
+        logger.info("Your data is now ine right format and you can call vame.create_trainset()")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.exception(f"{e}")
         raise e
-    finally:
-        redirect_stream.stop()
-

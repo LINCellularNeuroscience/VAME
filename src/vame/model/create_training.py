@@ -11,15 +11,17 @@ Licensed under GNU General Public License v3.0
 
 import os
 import numpy as np
-import pandas as pd
 from pathlib import Path
 import scipy.signal
 from scipy.stats import iqr
 import matplotlib.pyplot as plt
 from typing import List, Optional, Tuple
-from vame.logging.redirect_stream import StreamToLogger
+from vame.logging.logger import VameLogger
 from vame.util.auxiliary import read_config
 
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 def nan_helper(y: np.ndarray) -> Tuple:
@@ -132,7 +134,7 @@ def plot_check_parameter(
         plt.title("Original signal z-scored")
         plt.legend()
 
-    print("Please run the function with check_parameter=False if you are happy with the results")
+    logger.info("Please run the function with check_parameter=False if you are happy with the results")
 
 def traindata_aligned(
     cfg: dict,
@@ -162,12 +164,12 @@ def traindata_aligned(
     pos_temp = 0
     pos.append(0)
 
-    if check_parameter == True:
+    if check_parameter:
         X_true = []
         files = [files[0]]
 
     for file in files:
-        print("z-scoring of file %s" %file)
+        logger.info("z-scoring of file %s" %file)
         path_to_file = os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
         data = np.load(path_to_file)
 
@@ -184,13 +186,13 @@ def traindata_aligned(
         #             X_z[i+j, rnd[0]] = X_z[i+j, rnd[0]] * rang[j]
         #             X_z[i+j, rnd[1]] = X_z[i+j, rnd[1]] * rang[j]
 
-        if check_parameter == True:
+        if check_parameter:
             X_z_copy = X_z.copy()
             X_true.append(X_z_copy)
 
-        if cfg['robust'] == True:
+        if cfg['robust']:
             iqr_val = iqr(X_z)
-            print("IQR value: %.2f, IQR cutoff: %.2f" %(iqr_val, cfg['iqr_factor']*iqr_val))
+            logger.info("IQR value: %.2f, IQR cutoff: %.2f" %(iqr_val, cfg['iqr_factor']*iqr_val))
             for i in range(X_z.shape[0]):
                 for marker in range(X_z.shape[1]):
                     if X_z[i,marker] > cfg['iqr_factor']*iqr_val:
@@ -244,7 +246,7 @@ def traindata_aligned(
     z_test =X_med[:,:test]
     z_train = X_med[:,test:]
 
-    if check_parameter == True:
+    if check_parameter:
         plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med, anchor_1, anchor_2)
 
     else:
@@ -255,8 +257,8 @@ def traindata_aligned(
         for i, file in enumerate(files):
             np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
 
-        print('Lenght of train data: %d' %len(z_train.T))
-        print('Lenght of test data: %d' %len(z_test.T))
+        logger.info('Lenght of train data: %d' %len(z_train.T))
+        logger.info('Lenght of test data: %d' %len(z_test.T))
 
 
 def traindata_fixed(
@@ -288,26 +290,26 @@ def traindata_fixed(
     pos_temp = 0
     pos.append(0)
 
-    if check_parameter == True:
+    if check_parameter:
         X_true = []
         rnd_file = np.random.choice(len(files))
         files = [files[0]]
 
     for file in files:
-        print("z-scoring of file %s" %file)
+        logger.info("z-scoring of file %s" %file)
         path_to_file = os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
         data = np.load(path_to_file)
         X_mean = np.mean(data,axis=None)
         X_std = np.std(data, axis=None)
         X_z = (data.T - X_mean) / X_std
 
-        if check_parameter == True:
+        if check_parameter:
             X_z_copy = X_z.copy()
             X_true.append(X_z_copy)
 
-        if cfg['robust'] == True:
+        if cfg['robust']:
             iqr_val = iqr(X_z)
-            print("IQR value: %.2f, IQR cutoff: %.2f" %(iqr_val, cfg['iqr_factor']*iqr_val))
+            logger.info("IQR value: %.2f, IQR cutoff: %.2f" %(iqr_val, cfg['iqr_factor']*iqr_val))
             for i in range(X_z.shape[0]):
                 for marker in range(X_z.shape[1]):
                     if X_z[i,marker] > cfg['iqr_factor']*iqr_val:
@@ -336,7 +338,7 @@ def traindata_fixed(
     z_test = X_med[:,:test]
     z_train = X_med[:,test:]
 
-    if check_parameter == True:
+    if check_parameter:
         plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med)
 
     else:
@@ -361,11 +363,10 @@ def traindata_fixed(
             X_med_shifted_file[y_shifted_indices,:] -= belly_Y_shift
             X_med_shifted_file[x_shifted_indices,:] -= belly_X_shift
 
-            # np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med[:,pos[i]:pos[i+1]])
             np.save(os.path.join(cfg['project_path'],"data", file, file+'-PE-seq-clean.npy'), X_med_shifted_file) # saving new shifted file
 
-        print('Lenght of train data: %d' %len(z_train.T))
-        print('Lenght of test data: %d' %len(z_test.T))
+        logger.info('Lenght of train data: %d' %len(z_train.T))
+        logger.info('Lenght of test data: %d' %len(z_test.T))
 
 
 def create_trainset(
@@ -383,15 +384,14 @@ def create_trainset(
     """
 
     try:
-        redirect_stream = StreamToLogger()
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
-        legacy = cfg['legacy']
+        # legacy = cfg['legacy']
         fixed = cfg['egocentric_data']
 
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'create_trainset.log'
-            redirect_stream.add_file_handler(log_path)
+            logger_config.add_file_handler(log_path)
 
 
         if not os.path.exists(os.path.join(cfg['project_path'],'data','train',"")):
@@ -409,22 +409,22 @@ def create_trainset(
             for file in cfg['video_sets']:
                 files.append(file)
 
-        print("Creating training dataset...")
-        if cfg['robust'] == True:
-            print("Using robust setting to eliminate outliers! IQR factor: %d" %cfg['iqr_factor'])
+        logger.info("Creating training dataset...")
+        if cfg['robust']:
+            logger.info("Using robust setting to eliminate outliers! IQR factor: %d" %cfg['iqr_factor'])
 
-        if fixed == False:
-            print("Creating trainset from the vame.egocentrical_alignment() output ")
+        if not fixed:
+            logger.info("Creating trainset from the vame.egocentrical_alignment() output ")
             traindata_aligned(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
         else:
-            print("Creating trainset from the vame.csv_to_numpy() output ")
+            logger.info("Creating trainset from the vame.csv_to_numpy() output ")
             traindata_fixed(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter,  pose_ref_index)
 
-        if check_parameter == False:
-            print("A training and test set has been created. Next step: vame.train_model()")
+        if not check_parameter:
+            logger.info("A training and test set has been created. Next step: vame.train_model()")
 
     except Exception as e:
-        redirect_stream.logger.exception(f"An error occurred: {e}")
+        logger.exception(str(e))
         raise e
     finally:
-        redirect_stream.stop()
+        logger_config.remove_file_handler()

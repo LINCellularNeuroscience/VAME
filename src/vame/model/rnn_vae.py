@@ -22,8 +22,12 @@ from vame.util.auxiliary import read_config
 from vame.model.dataloader import SEQUENCE_DATASET
 from vame.model.rnn_model import RNN_VAE, RNN_VAE_LEGACY
 from tqdm import tqdm
-from vame.logging.redirect_stream import StreamToLogger
+from datetime import datetime
+from vame.logging.logger import VameLogger, TqdmToLogger
 
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
+tqdm_to_logger = TqdmToLogger(logger)
 
 # make sure torch uses cuda for GPU computing
 use_gpu = torch.cuda.is_available()
@@ -358,14 +362,13 @@ def train_model(config: str, save_logs: bool = False) -> None:
         config (str): Path to the configuration file.
     """
     try:
-        redirect_stream = StreamToLogger()
         tqdm_logger_stream = None
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         if save_logs:
+            tqdm_logger_stream = TqdmToLogger(logger)
             log_path = Path(cfg['project_path']) / 'logs' / 'train_model.log'
-            redirect_stream.add_file_handler(log_path)
-            tqdm_logger_stream = redirect_stream
+            logger_config.add_file_handler(log_path)
 
         legacy = cfg['legacy']
         model_name = cfg['model_name']
@@ -373,7 +376,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
         pretrained_model = cfg['pretrained_model']
         fixed = cfg['egocentric_data']
 
-        print("Train Variational Autoencoder - model name: %s \n" %model_name)
+        logger.info("Train Variational Autoencoder - model name: %s \n" %model_name)
         if not os.path.exists(os.path.join(cfg['project_path'],'model','best_model',"")):
             os.mkdir(os.path.join(cfg['project_path'],'model','best_model',""))
             os.mkdir(os.path.join(cfg['project_path'],'model','best_model','snapshots',""))
@@ -382,12 +385,12 @@ def train_model(config: str, save_logs: bool = False) -> None:
         # make sure torch uses cuda for GPU computing
         use_gpu = torch.cuda.is_available()
         if use_gpu:
-            print("Using CUDA")
-            print('GPU active:',torch.cuda.is_available())
-            print('GPU used: ',torch.cuda.get_device_name(0))
+            logger.info("Using CUDA")
+            logger.info("GPU active: {}".format(torch.cuda.is_available()))
+            logger.info('GPU used: {}'.format(torch.cuda.get_device_name(0)))
         else:
             torch.device("cpu")
-            print("warning, a GPU was not found... proceeding with CPU (slow!) \n")
+            logger.info("warning, a GPU was not found... proceeding with CPU (slow!) \n")
             #raise NotImplementedError('GPU Computing is required!')
 
         """ HYPERPARAMTERS """
@@ -402,7 +405,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
         SNAPSHOT = cfg['model_snapshot']
         LEARNING_RATE = cfg['learning_rate']
         NUM_FEATURES = cfg['num_features']
-        if fixed == False:
+        if not fixed:
             NUM_FEATURES = NUM_FEATURES - 2
         TEMPORAL_WINDOW = cfg['time_window']*2
         FUTURE_DECODER = cfg['prediction_decoder']
@@ -432,7 +435,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
 
         BEST_LOSS = 999999
         convergence = 0
-        print('Latent Dimensions: %d, Time window: %d, Batch Size: %d, Beta: %d, lr: %.4f\n' %(ZDIMS, cfg['time_window'], TRAIN_BATCH_SIZE, BETA, LEARNING_RATE))
+        logger.info('Latent Dimensions: %d, Time window: %d, Batch Size: %d, Beta: %d, lr: %.4f\n' %(ZDIMS, cfg['time_window'], TRAIN_BATCH_SIZE, BETA, LEARNING_RATE))
 
         # simple logging of diverse losses
         train_losses = []
@@ -445,7 +448,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
 
         torch.manual_seed(SEED)
 
-        if legacy == False:
+        if not legacy:
             RNN = RNN_VAE
         else:
             RNN = RNN_VAE_LEGACY
@@ -462,19 +465,19 @@ def train_model(config: str, save_logs: bool = False) -> None:
 
         if pretrained_weights:
             try:
-                print("Loading pretrained weights from model: %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
+                logger.info("Loading pretrained weights from model: %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
                 model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')))
                 KL_START = 0
                 ANNEALTIME = 1
-            except:
-                print("No file found at %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
+            except Exception:
+                logger.info("No file found at %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
                 try:
-                    print("Loading pretrained weights from %s\n" %pretrained_model)
+                    logger.info("Loading pretrained weights from %s\n" %pretrained_model)
                     model.load_state_dict(torch.load(pretrained_model))
                     KL_START = 0
                     ANNEALTIME = 1
-                except:
-                    print("Could not load pretrained model. Check file path in config.yaml.")
+                except Exception:
+                    logger.error("Could not load pretrained model. Check file path in config.yaml.")
 
         """ DATASET """
         trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
@@ -486,13 +489,13 @@ def train_model(config: str, save_logs: bool = False) -> None:
         optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, amsgrad=True)
 
         if optimizer_scheduler:
-            print('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
+            logger.info('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
             # Thanks to @alexcwsmith for the optimized scheduler contribution
             scheduler = ReduceLROnPlateau(optimizer, 'min', factor=cfg['scheduler_gamma'], patience=cfg['scheduler_step_size'], threshold=1e-3, threshold_mode='rel', verbose=True)
         else:
             scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
 
-        print("Start training... ")
+        logger.info("Start training... ")
         for epoch in tqdm(range(1,EPOCHS), desc="Training Model", unit="epoch", file=tqdm_logger_stream):
             #print("Epoch: %d" %epoch)
             weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
@@ -501,7 +504,6 @@ def train_model(config: str, save_logs: bool = False) -> None:
                                                                             FUTURE_STEPS, scheduler, MSE_REC_REDUCTION,
                                                                             MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA,
                                                                             TRAIN_BATCH_SIZE, noise)
-
             current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer,
                                                     BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
                                                     KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
@@ -518,7 +520,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
             # save best model
             if weight > 0.99 and current_loss <= BEST_LOSS:
                 BEST_LOSS = current_loss
-                print("Saving model!")
+                logger.info("Saving model!")
 
                 if use_gpu:
                     torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",model_name+'_'+cfg['Project']+'.pkl'))
@@ -531,12 +533,12 @@ def train_model(config: str, save_logs: bool = False) -> None:
                 convergence += 1
 
             if epoch % SNAPSHOT == 0:
-                print("Saving model snapshot!\n")
+                logger.info("Saving model snapshot!\n")
                 torch.save(model.state_dict(), os.path.join(cfg['project_path'],'model','best_model','snapshots',model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl'))
 
             if convergence > cfg['model_convergence']:
-                print('Finished training...')
-                print('Model converged. Please check your model with vame.evaluate_model(). \n'
+                logger.info('Finished training...')
+                logger.info('Model converged. Please check your model with vame.evaluate_model(). \n'
                     'You can also re-run vame.trainmodel() to further improve your model. \n'
                     'Make sure to set _pretrained_weights_ in your config.yaml to "true" \n'
                     'and plug your current model name into _pretrained_model_. \n'
@@ -544,7 +546,6 @@ def train_model(config: str, save_logs: bool = False) -> None:
                     '\n'
                     'Next: \n'
                     'Use vame.pose_segmentation() to identify behavioral motifs in your dataset!')
-                #return
                 break
 
             # save logged losses
@@ -560,14 +561,14 @@ def train_model(config: str, save_logs: bool = False) -> None:
             print("\n")
 
         if convergence < cfg['model_convergence']:
-            print('Finished training...')
-            print('Model seems to have not reached convergence. You may want to check your model \n'
+            logger.info('Finished training...')
+            logger.info('Model seems to have not reached convergence. You may want to check your model \n'
                 'with vame.evaluate_model(). If your satisfied you can continue. \n'
                 'Use vame.pose_segmentation() to identify behavioral motifs! \n'
                 'OPTIONAL: You can re-run vame.train_model() to improve performance.')
 
     except Exception as e:
-        redirect_stream.logger.exception(f"An error occurred: {e}")
+        logger.exception(f"An error occurred: {e}")
         raise e
     finally:
-        redirect_stream.stop()
+        logger_config.remove_file_handler()
