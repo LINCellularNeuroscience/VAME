@@ -71,7 +71,7 @@ def gmm_clustering(context: np.ndarray, n_components: int) -> np.ndarray:
 
 def behavior_segmentation(
     config: str,
-    model_name: str = None,
+    model_name: str | None = None,
     cluster_method: str = 'kmeans',
     n_cluster: List[int] = [30]
 ) -> None:
