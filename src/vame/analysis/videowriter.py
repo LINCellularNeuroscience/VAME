@@ -167,6 +167,13 @@ def motif_videos(
                 os.mkdir(os.path.join(path_to_file,"cluster_videos"))
 
             get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, output_video_type=output_video_type, tqdm_logger_stream=tqdm_logger_stream)
+        logger.info("All videos have been created!")
+    except Exception as e:
+        logger.exception(f"Error in motif_videos: {e}")
+        raise e
+    finally:
+        logger_config.remove_file_handler()
+
 
 @save_state(model=CommunityVideosFunctionSchema)
 def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_logs: bool = False) -> None:

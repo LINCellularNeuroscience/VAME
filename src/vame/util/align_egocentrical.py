@@ -464,7 +464,8 @@ def egocentric_alignment(
     crop_size: tuple = (300,300),
     use_video: bool = False,
     video_format: str = '.mp4',
-    check_video: bool = False
+    check_video: bool = False,
+    save_logs: bool = False
 ) -> None:
     """Aligns egocentric data for VAME training
 
