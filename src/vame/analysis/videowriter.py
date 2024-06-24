@@ -48,7 +48,6 @@ def get_cluster_vid(
     Returns:
         None - Generate cluster videos and save them to fs on project folder.
     """
-
     if output_video_type not in ['.mp4', '.avi']:
         raise ValueError("Output video type must be either '.avi' or '.mp4'.")
 
