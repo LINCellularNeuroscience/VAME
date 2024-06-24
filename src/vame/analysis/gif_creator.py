@@ -20,6 +20,12 @@ from matplotlib.gridspec import GridSpec
 from vame.util.auxiliary import read_config
 from vame.util.gif_pose_helper import get_animal_frames
 from typing import List, Tuple
+from vame.logging.logger import VameLogger
+
+
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 def create_video(
@@ -51,7 +57,7 @@ def create_video(
     """
     # set matplotlib colormap
     cmap = matplotlib.cm.gray
-    cmap_reversed = matplotlib.cm.get_cmap('gray_r')
+    cmap_reversed = plt.get_cmap('gray_r')
 
     # this here generates every frame for your gif. The gif is lastly created by using ImageJ
     # the embed variable is my umap embedding, which is for the 2D case a 2xn dimensional vector
@@ -82,7 +88,7 @@ def gif(
     config: str,
     pose_ref_index: int,
     subtract_background: bool = True,
-    start: int = None,
+    start: int | None = None,
     length: int = 500,
     max_lag: int = 30,
     label: str = 'community',
@@ -147,8 +153,8 @@ def gif(
             num_points = cfg['num_points']
             if num_points > embed.shape[0]:
                 num_points = embed.shape[0]
-        except:
-            print("Compute embedding for file %s" %file)
+        except Exception:
+            logger.info(f"Compute embedding for file {file}")
             reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'],
                     random_state=cfg['random_state'])
 
@@ -157,7 +163,7 @@ def gif(
             num_points = cfg['num_points']
             if num_points > latent_vector.shape[0]:
                 num_points = latent_vector.shape[0]
-            print("Embedding %d data points.." %num_points)
+            logger.info("Embedding %d data points.." %num_points)
 
             embed = reducer.fit_transform(latent_vector[:num_points,:])
             np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
@@ -166,16 +172,15 @@ def gif(
             umap_label = np.load(os.path.join(path_to_file,str(n_cluster)+"_" + param + "_label_"+file+'.npy'))
         elif label == "community":
             umap_label = np.load(os.path.join(path_to_file,"community","community_label_"+file+'.npy'))
-        elif label == None:
+        elif label is None:
             umap_label = None
 
-        if start == None:
+        if start is None:
             start = np.random.choice(embed[:num_points].shape[0]-length)
         else:
             start = start
 
         frames = get_animal_frames(cfg, file, pose_ref_index, start, length, subtract_background, file_format, crop_size)
-
         create_video(path_to_file, file, embed, umap_label, frames, start, length, max_lag, num_points)
 
 

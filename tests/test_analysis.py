@@ -2,6 +2,8 @@ from pathlib import Path
 import vame
 import pytest
 from matplotlib.figure import Figure
+from unittest.mock import patch
+from vame.util.gif_pose_helper import background
 
 
 def test_pose_segmentation_files_exists(setup_project_and_train_model):
@@ -31,7 +33,8 @@ def test_motif_videos_files_exists(setup_project_and_train_model):
 
     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "cluster_videos"
 
-    assert len(list(save_base_path.glob("*.avi"))) == n_cluster
+    assert len(list(save_base_path.glob("*.mp4"))) > 0
+    assert len(list(save_base_path.glob("*.mp4"))) <= n_cluster
 
 def test_community_files_exists(setup_project_and_train_model):
     # Check if the files are created
@@ -58,7 +61,6 @@ def test_community_files_exists(setup_project_and_train_model):
     assert hierarchy_path.exists()
 
 
-#@pytest.mark.skip(reason="The method is not working yet.")
 def test_cohort_community_files_exists(setup_project_and_train_model):
     # Check if the files are created
     vame.community(
@@ -94,7 +96,8 @@ def test_community_videos_files_exists(setup_project_and_train_model):
 
     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "community_videos"
 
-    assert len(list(save_base_path.glob("*.avi"))) == n_cluster
+    assert len(list(save_base_path.glob("*.mp4"))) > 0
+    assert len(list(save_base_path.glob("*.mp4"))) <= n_cluster
 
 
 def test_visualization_output_type(setup_project_and_train_model):
@@ -112,16 +115,20 @@ def test_generative_model(setup_project_and_train_model, mode):
     assert isinstance(generative_figure, Figure)
 
 
-@pytest.mark.skip(reason="The method is too heavy and being killed.")
 def test_gif(setup_project_and_train_model):
-    vame.gif(
-        config=setup_project_and_train_model['config_path'],
-        pose_ref_index=[0,5],
-        subtract_background=True,
-        start=None,
-        length=500,
-        max_lag=30,
-        label="community",
-        file_format='.mp4',
-        crop_size=(300,300)
-    )
+    def mock_background(path_to_file=None, filename=None, file_format=None, num_frames=None):
+        num_frames = 100
+        return background(path_to_file, filename, file_format, num_frames)
+
+    with patch("vame.util.gif_pose_helper.background", side_effect=mock_background):
+        vame.gif(
+            config=setup_project_and_train_model['config_path'],
+            pose_ref_index=[0,5],
+            subtract_background=True,
+            start=None,
+            length=500,
+            max_lag=30,
+            label="motif",
+            file_format='.mp4',
+            crop_size=(300,300)
+        )

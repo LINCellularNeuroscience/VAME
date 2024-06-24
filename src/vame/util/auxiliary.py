@@ -120,9 +120,6 @@ def create_config_template() -> Tuple[dict, ruamel.yaml.YAML]:
     anneal_function:
     kl_start:
     annealtime:
-    \n
-# Legacy mode
-    legacy:
     """
     ruamelFile = ruamel.yaml.YAML()
     cfg_file = ruamelFile.load(yaml_str)
@@ -248,7 +245,6 @@ def update_config(config: str, force_update: bool = False) -> None:
         cfg_file['length_of_motif_video'] = 1000
         cfg_file['noise'] = False
         cfg_file['scheduler_step_size'] = 100
-        cfg_file['legacy'] = False
         cfg_file['individual_parametrization'] = False
         cfg_file['random_state_kmeans'] = 42
         cfg_file['n_init_kmeans'] = 15

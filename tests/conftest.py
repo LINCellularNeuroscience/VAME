@@ -29,7 +29,7 @@ def init_project(
     videos: list,
     poses_estimations: list,
     working_directory: str,
-    egocentric_data: bool = False
+    egocentric_data: bool = False,
 ):
     config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
 
@@ -48,6 +48,8 @@ def init_project(
         "pose_ref_index": [0, 5]
     }
     return config, project_data
+
+
 
 @fixture(scope='session')
 def setup_project_not_aligned_data():

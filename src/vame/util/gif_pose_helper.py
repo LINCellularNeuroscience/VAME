@@ -16,7 +16,10 @@ import scipy
 import cv2 as cv
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from vame.logging.logger import VameLogger
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 def crop_and_flip(rect: tuple, src: np.ndarray, points: list, ref_index: list) -> tuple:
@@ -87,7 +90,7 @@ def crop_and_flip(rect: tuple, src: np.ndarray, points: list, ref_index: list) -
     return out, dlc_points_shifted
 
 
-def background(path_to_file: str, filename: str, file_format: str = '.mp4', num_frames: int = 1000) -> np.ndarray:
+def background(path_to_file: str, filename: str, file_format: str = '.mp4', num_frames: int = 100) -> np.ndarray:
     """
     Compute background image from fixed camera.
 
@@ -119,7 +122,7 @@ def background(path_to_file: str, filename: str, file_format: str = '.mp4', num_
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         frames[...,i] = gray
 
-    print('Finishing up!')
+    logger.info('Finishing up!')
     medFrame = np.median(frames,2)
     background = scipy.ndimage.median_filter(medFrame, (5,5))
 
@@ -246,12 +249,12 @@ def get_animal_frames(
     pose_flip_ref = pose_ref_index
 
     # compute background
-    if subtract_background == True:
+    if subtract_background:
         try:
-            print("Loading background image ...")
+            logger.info("Loading background image ...")
             bg = np.load(os.path.join(path_to_file,"videos",filename+'-background.npy'))
-        except:
-            print("Can't find background image... Calculate background image...")
+        except Exception:
+            logger.info("Can't find background image... Calculate background image...")
             bg = background(path_to_file,filename, file_format)
 
     images = []
@@ -275,11 +278,11 @@ def get_animal_frames(
             capture.set(1,idx+start+lag)
             ret, frame = capture.read()
             frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-            if subtract_background == True:
+            if subtract_background:
                 frame = frame - bg
                 frame[frame <= 0] = 0
-        except:
-            print("Couldn't find a frame in capture.read(). #Frame: %d" %idx+start+lag)
+        except Exception:
+            logger.info("Couldn't find a frame in capture.read(). #Frame: %d" %idx+start+lag)
             continue
 
        #Read coordinates and add border
