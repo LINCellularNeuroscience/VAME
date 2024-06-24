@@ -51,7 +51,7 @@ def create_video(
     """
     # set matplotlib colormap
     cmap = matplotlib.cm.gray
-    cmap_reversed = matplotlib.cm.get_cmap('gray_r')
+    cmap_reversed = plt.get_cmap('gray_r')
 
     # this here generates every frame for your gif. The gif is lastly created by using ImageJ
     # the embed variable is my umap embedding, which is for the 2D case a 2xn dimensional vector
@@ -175,7 +175,6 @@ def gif(
             start = start
 
         frames = get_animal_frames(cfg, file, pose_ref_index, start, length, subtract_background, file_format, crop_size)
-
         create_video(path_to_file, file, embed, umap_label, frames, start, length, max_lag, num_points)
 
 

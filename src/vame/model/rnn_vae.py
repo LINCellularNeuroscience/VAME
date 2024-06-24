@@ -20,9 +20,8 @@ from pathlib import Path
 from typing import Tuple
 from vame.util.auxiliary import read_config
 from vame.model.dataloader import SEQUENCE_DATASET
-from vame.model.rnn_model import RNN_VAE, RNN_VAE_LEGACY
+from vame.model.rnn_model import RNN_VAE
 from tqdm import tqdm
-from datetime import datetime
 from vame.logging.logger import VameLogger, TqdmToLogger
 
 logger_config = VameLogger(__name__)
@@ -370,7 +369,6 @@ def train_model(config: str, save_logs: bool = False) -> None:
             log_path = Path(cfg['project_path']) / 'logs' / 'train_model.log'
             logger_config.add_file_handler(log_path)
 
-        legacy = cfg['legacy']
         model_name = cfg['model_name']
         pretrained_weights = cfg['pretrained_weights']
         pretrained_model = cfg['pretrained_model']
@@ -447,11 +445,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
         fut_losses = []
 
         torch.manual_seed(SEED)
-
-        if not legacy:
-            RNN = RNN_VAE
-        else:
-            RNN = RNN_VAE_LEGACY
+        RNN = RNN_VAE
         if CUDA:
             torch.cuda.manual_seed(SEED)
             model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,

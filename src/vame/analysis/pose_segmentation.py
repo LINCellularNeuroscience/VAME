@@ -188,9 +188,6 @@ def same_parametrization(
     Returns:
         Tuple: Tuple of labels, cluster centers, and motif usages.
     """
-    random_state = cfg['random_state_kmeans']
-    n_init = cfg['n_init_kmeans']
-
     labels = []
     cluster_centers = []
     motif_usages = []
@@ -210,7 +207,8 @@ def same_parametrization(
             hmm_model.fit(latent_vector_cat)
             label = hmm_model.predict(latent_vector_cat)
             save_data = os.path.join(cfg['project_path'], "results", "")
-            with open(save_data+"hmm_trained.pkl", "wb") as file: pickle.dump(hmm_model, file)
+            with open(save_data+"hmm_trained.pkl", "wb") as file:
+                pickle.dump(hmm_model, file)
         else:
             logger.info("Using a pretrained HMM as parametrization!")
             save_data = os.path.join(cfg['project_path'], "results", "")
@@ -285,7 +283,6 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
             log_path = Path(cfg['project_path']) / 'logs' / 'pose_segmentation.log'
             logger_config.add_file_handler(log_path)
             tqdm_stream = TqdmToLogger(logger)
-        legacy = cfg['legacy']
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
         fixed = cfg['egocentric_data']
@@ -293,56 +290,79 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
 
         logger.info('Pose segmentation for VAME model: %s \n' %model_name)
 
-        if legacy:
-            from .segment_behavior import behavior_segmentation
-            behavior_segmentation(config, model_name=model_name, cluster_method='kmeans', n_cluster=n_cluster)
+
+
+        ind_param = cfg['individual_parametrization']
+
+        for folders in cfg['video_sets']:
+            if not os.path.exists(os.path.join(cfg['project_path'],"results",folders,model_name,"")):
+                os.mkdir(os.path.join(cfg['project_path'],"results",folders,model_name,""))
+
+        files = []
+        if cfg['all_data'] == 'No':
+            all_flag = input("Do you want to qunatify your entire dataset? \n"
+                            "If you only want to use a specific dataset type filename: \n"
+                            "yes/no/filename ")
+            file = all_flag
 
         else:
-            ind_param = cfg['individual_parametrization']
+            all_flag = 'yes'
 
-            for folders in cfg['video_sets']:
-                if not os.path.exists(os.path.join(cfg['project_path'],"results",folders,model_name,"")):
-                    os.mkdir(os.path.join(cfg['project_path'],"results",folders,model_name,""))
-
-            files = []
-            if cfg['all_data'] == 'No':
-                all_flag = input("Do you want to qunatify your entire dataset? \n"
-                                "If you only want to use a specific dataset type filename: \n"
-                                "yes/no/filename ")
-                file = all_flag
-
-            else:
-                all_flag = 'yes'
-
-            if all_flag == 'yes' or all_flag == 'Yes':
-                for file in cfg['video_sets']:
+        if all_flag == 'yes' or all_flag == 'Yes':
+            for file in cfg['video_sets']:
+                files.append(file)
+        elif all_flag == 'no' or all_flag == 'No':
+            for file in cfg['video_sets']:
+                use_file = input("Do you want to quantify " + file + "? yes/no: ")
+                if use_file == 'yes':
                     files.append(file)
-            elif all_flag == 'no' or all_flag == 'No':
-                for file in cfg['video_sets']:
-                    use_file = input("Do you want to quantify " + file + "? yes/no: ")
-                    if use_file == 'yes':
-                        files.append(file)
-                    if use_file == 'no':
-                        continue
-            else:
-                files.append(all_flag)
-            # files.append("mouse-3-1")
-            # file="mouse-3-1"
+                if use_file == 'no':
+                    continue
+        else:
+            files.append(all_flag)
+        # files.append("mouse-3-1")
+        # file="mouse-3-1"
 
-            use_gpu = torch.cuda.is_available()
-            if use_gpu:
-                logger.info("Using CUDA")
-                logger.info('GPU active: {}'.format(torch.cuda.is_available()))
-                logger.info('GPU used: {}'.format(torch.cuda.get_device_name(0)))
-            else:
-                logger.info("CUDA is not working! Attempting to use the CPU...")
-                torch.device("cpu")
+        use_gpu = torch.cuda.is_available()
+        if use_gpu:
+            logger.info("Using CUDA")
+            logger.info('GPU active: {}'.format(torch.cuda.is_available()))
+            logger.info('GPU used: {}'.format(torch.cuda.get_device_name(0)))
+        else:
+            logger.info("CUDA is not working! Attempting to use the CPU...")
+            torch.device("cpu")
 
-            if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
+        if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
+            new = True
+            # print("Hello1")
+            model = load_model(cfg, model_name, fixed)
+            latent_vectors = embedd_latent_vectors(cfg, files, model, fixed, tqdm_stream=tqdm_stream)
+
+            if not ind_param:
+                logger.info("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
+                labels, cluster_center, motif_usages = same_parametrization(cfg, files, latent_vectors, n_cluster, parametrization)
+            else:
+                logger.info("Individual parametrization of latent vectors for %d cluster" %n_cluster)
+                labels, cluster_center, motif_usages = individual_parametrization(cfg, files, latent_vectors, n_cluster)
+
+        else:
+            logger.info('\n'
+                'For model %s a latent vector embedding already exists. \n'
+                'parametrization of latent vector with %d k-Means cluster' %(model_name, n_cluster))
+
+            if os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
+                flag = input('WARNING: A parametrization for the chosen cluster size of the model already exists! \n'
+                            'Do you want to continue? A new parametrization will be computed! (yes/no) ')
+            else:
+                flag = 'yes'
+
+            if flag == 'yes':
                 new = True
-                # print("Hello1")
-                model = load_model(cfg, model_name, fixed)
-                latent_vectors = embedd_latent_vectors(cfg, files, model, fixed, tqdm_stream=tqdm_stream)
+                latent_vectors = []
+                for file in files:
+                    path_to_latent_vector = os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")
+                    latent_vector = np.load(os.path.join(path_to_latent_vector,'latent_vector_'+file+'.npy'))
+                    latent_vectors.append(latent_vector)
 
                 if not ind_param:
                     logger.info("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
@@ -352,56 +372,30 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
                     labels, cluster_center, motif_usages = individual_parametrization(cfg, files, latent_vectors, n_cluster)
 
             else:
-                logger.info('\n'
-                    'For model %s a latent vector embedding already exists. \n'
-                    'parametrization of latent vector with %d k-Means cluster' %(model_name, n_cluster))
+                logger.info('No new parametrization has been calculated.')
+                new = False
 
-                if os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
-                    flag = input('WARNING: A parametrization for the chosen cluster size of the model already exists! \n'
-                                'Do you want to continue? A new parametrization will be computed! (yes/no) ')
-                else:
-                    flag = 'yes'
+        # print("Hello2")
+        if new:
+            for idx, file in enumerate(files):
+                logger.info(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
+                if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")):
+                    try:
+                        os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
+                    except OSError as error:
+                        logger.error(error)
 
-                if flag == 'yes':
-                    new = True
-                    latent_vectors = []
-                    for file in files:
-                        path_to_latent_vector = os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")
-                        latent_vector = np.load(os.path.join(path_to_latent_vector,'latent_vector_'+file+'.npy'))
-                        latent_vectors.append(latent_vector)
-
-                    if not ind_param:
-                        logger.info("For all animals the same parametrization of latent vectors is applied for %d cluster" %n_cluster)
-                        labels, cluster_center, motif_usages = same_parametrization(cfg, files, latent_vectors, n_cluster, parametrization)
-                    else:
-                        logger.info("Individual parametrization of latent vectors for %d cluster" %n_cluster)
-                        labels, cluster_center, motif_usages = individual_parametrization(cfg, files, latent_vectors, n_cluster)
-
-                else:
-                    logger.info('No new parametrization has been calculated.')
-                    new = False
-
-            # print("Hello2")
-            if new:
-                for idx, file in enumerate(files):
-                    logger.info(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
-                    if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")):
-                        try:
-                            os.mkdir(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
-                        except OSError as error:
-                            logger.error(error)
-
-                    save_data = os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")
-                    np.save(os.path.join(save_data,str(n_cluster)+'_' + parametrization + '_label_'+file), labels[idx])
-                    if parametrization=="kmeans":
-                        np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
-                    np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
-                    np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
+                save_data = os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")
+                np.save(os.path.join(save_data,str(n_cluster)+'_' + parametrization + '_label_'+file), labels[idx])
+                if parametrization=="kmeans":
+                    np.save(os.path.join(save_data,'cluster_center_'+file), cluster_center[idx])
+                np.save(os.path.join(save_data,'latent_vector_'+file), latent_vectors[idx])
+                np.save(os.path.join(save_data,'motif_usage_'+file), motif_usages[idx])
 
 
-                logger.info("You succesfully extracted motifs with VAME! From here, you can proceed running vame.motif_videos() ")
-                    # "to get an idea of the behavior captured by VAME. This will leave you with short snippets of certain movements."
-                    # "To get the full picture of the spatiotemporal dynamic we recommend applying our community approach afterwards.")
+            logger.info("You succesfully extracted motifs with VAME! From here, you can proceed running vame.motif_videos() ")
+                # "to get an idea of the behavior captured by VAME. This will leave you with short snippets of certain movements."
+                # "To get the full picture of the spatiotemporal dynamic we recommend applying our community approach afterwards.")
     except Exception as e:
         logger.exception(f"An error occurred during pose segmentation: {e}")
     finally:

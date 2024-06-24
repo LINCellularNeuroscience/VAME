@@ -386,7 +386,6 @@ def create_trainset(
     try:
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
-        # legacy = cfg['legacy']
         fixed = cfg['egocentric_data']
 
         if save_logs:

@@ -83,4 +83,3 @@ def test_evaluate_model_images_exists(setup_project_and_evaluate_model):
 
     assert reconstruction_image_path.exists()
     assert loss_image_path.exists()
-
