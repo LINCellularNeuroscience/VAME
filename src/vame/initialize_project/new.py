@@ -167,7 +167,6 @@ def init_new_project(
     cfg_file['length_of_motif_video'] = 1000
     cfg_file['noise'] = False
     cfg_file['scheduler_step_size'] = 100
-    cfg_file['legacy'] = False
     cfg_file['individual_parametrization'] = False
     cfg_file['random_state_kmeans'] = 42
     cfg_file['n_init_kmeans'] = 15

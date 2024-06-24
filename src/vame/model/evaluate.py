@@ -258,7 +258,6 @@ def evaluate_model(config: str, use_snapshots: bool = False, save_logs: bool = F
                 fullpath = os.path.join(cfg['project_path'],"model","best_model","snapshots",snap)
                 epoch=snap.split('_')[-1]
                 eval_temporal(cfg, use_gpu, model_name, fixed, snapshot=fullpath, suffix='snapshot'+str(epoch))
-                #eval_temporal(cfg, use_gpu, model_name, legacy=legacy, suffix='bestModel')
 
         logger.info("You can find the results of the evaluation in '/Your-VAME-Project-Apr30-2020/model/evaluate/' \n"
             "OPTIONS:\n"
