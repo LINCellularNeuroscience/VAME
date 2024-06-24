@@ -23,6 +23,12 @@ from vame.model.dataloader import SEQUENCE_DATASET
 from vame.model.rnn_model import RNN_VAE
 from vame.legacy.rnn_model import RNN_VAE_LEGACY
 from tqdm import tqdm
+from datetime import datetime
+from vame.logging.logger import VameLogger, TqdmToLogger
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
+tqdm_to_logger = TqdmToLogger(logger)
 
 # make sure torch uses cuda for GPU computing
 use_gpu = torch.cuda.is_available()
@@ -350,209 +356,220 @@ def test(
     return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
 
 
-def train_model(config: str) -> None:
+def train_model(config: str, save_logs: bool = False) -> None:
     """Train Variational Autoencoder using the configuration file values.
 
     Args:
         config (str): Path to the configuration file.
     """
-    config_file = Path(config).resolve()
-    cfg = read_config(config_file)
-    legacy = cfg['legacy']
-    model_name = cfg['model_name']
-    pretrained_weights = cfg['pretrained_weights']
-    pretrained_model = cfg['pretrained_model']
-    fixed = cfg['egocentric_data']
+    try:
+        tqdm_logger_stream = None
+        config_file = Path(config).resolve()
+        cfg = read_config(config_file)
+        if save_logs:
+            tqdm_logger_stream = TqdmToLogger(logger)
+            log_path = Path(cfg['project_path']) / 'logs' / 'train_model.log'
+            logger_config.add_file_handler(log_path)
 
-    print("Train Variational Autoencoder - model name: %s \n" %model_name)
-    if not os.path.exists(os.path.join(cfg['project_path'],'model','best_model',"")):
-        os.mkdir(os.path.join(cfg['project_path'],'model','best_model',""))
-        os.mkdir(os.path.join(cfg['project_path'],'model','best_model','snapshots',""))
-        os.mkdir(os.path.join(cfg['project_path'],'model','model_losses',""))
+        legacy = cfg['legacy']
+        model_name = cfg['model_name']
+        pretrained_weights = cfg['pretrained_weights']
+        pretrained_model = cfg['pretrained_model']
+        fixed = cfg['egocentric_data']
 
-    # make sure torch uses cuda for GPU computing
-    use_gpu = torch.cuda.is_available()
-    if use_gpu:
-        print("Using CUDA")
-        print('GPU active:',torch.cuda.is_available())
-        print('GPU used: ',torch.cuda.get_device_name(0))
-    else:
-        torch.device("cpu")
-        print("warning, a GPU was not found... proceeding with CPU (slow!) \n")
-        #raise NotImplementedError('GPU Computing is required!')
+        logger.info("Train Variational Autoencoder - model name: %s \n" %model_name)
+        if not os.path.exists(os.path.join(cfg['project_path'],'model','best_model',"")):
+            os.mkdir(os.path.join(cfg['project_path'],'model','best_model',""))
+            os.mkdir(os.path.join(cfg['project_path'],'model','best_model','snapshots',""))
+            os.mkdir(os.path.join(cfg['project_path'],'model','model_losses',""))
 
-    """ HYPERPARAMTERS """
-    # General
-    CUDA = use_gpu
-    SEED = 19
-    TRAIN_BATCH_SIZE = cfg['batch_size']
-    TEST_BATCH_SIZE = int(cfg['batch_size']/4)
-    EPOCHS = cfg['max_epochs']
-    ZDIMS = cfg['zdims']
-    BETA  = cfg['beta']
-    SNAPSHOT = cfg['model_snapshot']
-    LEARNING_RATE = cfg['learning_rate']
-    NUM_FEATURES = cfg['num_features']
-    if fixed == False:
-        NUM_FEATURES = NUM_FEATURES - 2
-    TEMPORAL_WINDOW = cfg['time_window']*2
-    FUTURE_DECODER = cfg['prediction_decoder']
-    FUTURE_STEPS = cfg['prediction_steps']
+        # make sure torch uses cuda for GPU computing
+        use_gpu = torch.cuda.is_available()
+        if use_gpu:
+            logger.info("Using CUDA")
+            logger.info("GPU active: {}".format(torch.cuda.is_available()))
+            logger.info('GPU used: {}'.format(torch.cuda.get_device_name(0)))
+        else:
+            torch.device("cpu")
+            logger.info("warning, a GPU was not found... proceeding with CPU (slow!) \n")
+            #raise NotImplementedError('GPU Computing is required!')
 
-    # RNN
-    hidden_size_layer_1 = cfg['hidden_size_layer_1']
-    hidden_size_layer_2 = cfg['hidden_size_layer_2']
-    hidden_size_rec = cfg['hidden_size_rec']
-    hidden_size_pred = cfg['hidden_size_pred']
-    dropout_encoder = cfg['dropout_encoder']
-    dropout_rec = cfg['dropout_rec']
-    dropout_pred = cfg['dropout_pred']
-    noise = cfg['noise']
-    scheduler_step_size = cfg['scheduler_step_size']
-    softplus = cfg['softplus']
+        """ HYPERPARAMTERS """
+        # General
+        CUDA = use_gpu
+        SEED = 19
+        TRAIN_BATCH_SIZE = cfg['batch_size']
+        TEST_BATCH_SIZE = int(cfg['batch_size']/4)
+        EPOCHS = cfg['max_epochs']
+        ZDIMS = cfg['zdims']
+        BETA  = cfg['beta']
+        SNAPSHOT = cfg['model_snapshot']
+        LEARNING_RATE = cfg['learning_rate']
+        NUM_FEATURES = cfg['num_features']
+        if not fixed:
+            NUM_FEATURES = NUM_FEATURES - 2
+        TEMPORAL_WINDOW = cfg['time_window']*2
+        FUTURE_DECODER = cfg['prediction_decoder']
+        FUTURE_STEPS = cfg['prediction_steps']
 
-    # Loss
-    MSE_REC_REDUCTION = cfg['mse_reconstruction_reduction']
-    MSE_PRED_REDUCTION = cfg['mse_prediction_reduction']
-    KMEANS_LOSS = cfg['kmeans_loss']
-    KMEANS_LAMBDA = cfg['kmeans_lambda']
-    KL_START = cfg['kl_start']
-    ANNEALTIME = cfg['annealtime']
-    anneal_function = cfg['anneal_function']
-    optimizer_scheduler = cfg['scheduler']
+        # RNN
+        hidden_size_layer_1 = cfg['hidden_size_layer_1']
+        hidden_size_layer_2 = cfg['hidden_size_layer_2']
+        hidden_size_rec = cfg['hidden_size_rec']
+        hidden_size_pred = cfg['hidden_size_pred']
+        dropout_encoder = cfg['dropout_encoder']
+        dropout_rec = cfg['dropout_rec']
+        dropout_pred = cfg['dropout_pred']
+        noise = cfg['noise']
+        scheduler_step_size = cfg['scheduler_step_size']
+        softplus = cfg['softplus']
 
-    BEST_LOSS = 999999
-    convergence = 0
-    print('Latent Dimensions: %d, Time window: %d, Batch Size: %d, Beta: %d, lr: %.4f\n' %(ZDIMS, cfg['time_window'], TRAIN_BATCH_SIZE, BETA, LEARNING_RATE))
+        # Loss
+        MSE_REC_REDUCTION = cfg['mse_reconstruction_reduction']
+        MSE_PRED_REDUCTION = cfg['mse_prediction_reduction']
+        KMEANS_LOSS = cfg['kmeans_loss']
+        KMEANS_LAMBDA = cfg['kmeans_lambda']
+        KL_START = cfg['kl_start']
+        ANNEALTIME = cfg['annealtime']
+        anneal_function = cfg['anneal_function']
+        optimizer_scheduler = cfg['scheduler']
 
-    # simple logging of diverse losses
-    train_losses = []
-    test_losses = []
-    kmeans_losses = []
-    kl_losses = []
-    weight_values = []
-    mse_losses = []
-    fut_losses = []
+        BEST_LOSS = 999999
+        convergence = 0
+        logger.info('Latent Dimensions: %d, Time window: %d, Batch Size: %d, Beta: %d, lr: %.4f\n' %(ZDIMS, cfg['time_window'], TRAIN_BATCH_SIZE, BETA, LEARNING_RATE))
 
-    torch.manual_seed(SEED)
+        # simple logging of diverse losses
+        train_losses = []
+        test_losses = []
+        kmeans_losses = []
+        kl_losses = []
+        weight_values = []
+        mse_losses = []
+        fut_losses = []
 
-    if legacy == False:
-        RNN = RNN_VAE
-    else:
-        RNN = RNN_VAE_LEGACY
-    if CUDA:
-        torch.cuda.manual_seed(SEED)
-        model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
-                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred, softplus).cuda()
-    else: #cpu support ...
-        torch.cuda.manual_seed(SEED)
-        model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
-                        hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                        dropout_rec, dropout_pred, softplus).to()
+        torch.manual_seed(SEED)
 
-    if pretrained_weights:
-        try:
-            print("Loading pretrained weights from model: %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
-            model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')))
-            KL_START = 0
-            ANNEALTIME = 1
-        except:
-            print("No file found at %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
+        if not legacy:
+            RNN = RNN_VAE
+        else:
+            RNN = RNN_VAE_LEGACY
+        if CUDA:
+            torch.cuda.manual_seed(SEED)
+            model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+                            hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
+                            dropout_rec, dropout_pred, softplus).cuda()
+        else: #cpu support ...
+            torch.cuda.manual_seed(SEED)
+            model = RNN(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+                            hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
+                            dropout_rec, dropout_pred, softplus).to()
+
+        if pretrained_weights:
             try:
-                print("Loading pretrained weights from %s\n" %pretrained_model)
-                model.load_state_dict(torch.load(pretrained_model))
+                logger.info("Loading pretrained weights from model: %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
+                model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl')))
                 KL_START = 0
                 ANNEALTIME = 1
-            except:
-                print("Could not load pretrained model. Check file path in config.yaml.")
+            except Exception:
+                logger.info("No file found at %s\n" %os.path.join(cfg['project_path'],'model','best_model',pretrained_model+'_'+cfg['Project']+'.pkl'))
+                try:
+                    logger.info("Loading pretrained weights from %s\n" %pretrained_model)
+                    model.load_state_dict(torch.load(pretrained_model))
+                    KL_START = 0
+                    ANNEALTIME = 1
+                except Exception:
+                    logger.error("Could not load pretrained model. Check file path in config.yaml.")
 
-    """ DATASET """
-    trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
-    testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
+        """ DATASET """
+        trainset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=True, temporal_window=TEMPORAL_WINDOW)
+        testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW)
 
-    train_loader = Data.DataLoader(trainset, batch_size=TRAIN_BATCH_SIZE, shuffle=True, drop_last=True)
-    test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
+        train_loader = Data.DataLoader(trainset, batch_size=TRAIN_BATCH_SIZE, shuffle=True, drop_last=True)
+        test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, amsgrad=True)
+        optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, amsgrad=True)
 
-    if optimizer_scheduler:
-        print('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
-        # Thanks to @alexcwsmith for the optimized scheduler contribution
-        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=cfg['scheduler_gamma'], patience=cfg['scheduler_step_size'], threshold=1e-3, threshold_mode='rel', verbose=True)
-    else:
-        scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
-
-    print("Start training... ")
-    for epoch in tqdm(range(1,EPOCHS), desc="Training Model", unit="epoch"):
-        #print("Epoch: %d" %epoch)
-        weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
-                                                                         anneal_function, BETA, KL_START,
-                                                                         ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
-                                                                         FUTURE_STEPS, scheduler, MSE_REC_REDUCTION,
-                                                                         MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA,
-                                                                         TRAIN_BATCH_SIZE, noise)
-
-        current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer,
-                                                  BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
-                                                  KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
-
-        # logging losses
-        train_losses.append(train_loss)
-        test_losses.append(test_loss)
-        kmeans_losses.append(km_loss)
-        kl_losses.append(kl_loss)
-        weight_values.append(weight)
-        mse_losses.append(mse_loss)
-        fut_losses.append(fut_loss)
-
-        # save best model
-        if weight > 0.99 and current_loss <= BEST_LOSS:
-            BEST_LOSS = current_loss
-            print("Saving model!")
-
-            if use_gpu:
-                torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",model_name+'_'+cfg['Project']+'.pkl'))
-
-            else:
-                torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",model_name+'_'+cfg['Project']+'.pkl'))
-
-            convergence = 0
+        if optimizer_scheduler:
+            logger.info('Scheduler step size: %d, Scheduler gamma: %.2f\n' %(scheduler_step_size, cfg['scheduler_gamma']))
+            # Thanks to @alexcwsmith for the optimized scheduler contribution
+            scheduler = ReduceLROnPlateau(optimizer, 'min', factor=cfg['scheduler_gamma'], patience=cfg['scheduler_step_size'], threshold=1e-3, threshold_mode='rel', verbose=True)
         else:
-            convergence += 1
+            scheduler = StepLR(optimizer, step_size=scheduler_step_size, gamma=1, last_epoch=-1)
 
-        if epoch % SNAPSHOT == 0:
-            print("Saving model snapshot!\n")
-            torch.save(model.state_dict(), os.path.join(cfg['project_path'],'model','best_model','snapshots',model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl'))
+        logger.info("Start training... ")
+        for epoch in tqdm(range(1,EPOCHS), desc="Training Model", unit="epoch", file=tqdm_logger_stream):
+            #print("Epoch: %d" %epoch)
+            weight, train_loss, km_loss, kl_loss, mse_loss, fut_loss = train(train_loader, epoch, model, optimizer,
+                                                                            anneal_function, BETA, KL_START,
+                                                                            ANNEALTIME, TEMPORAL_WINDOW, FUTURE_DECODER,
+                                                                            FUTURE_STEPS, scheduler, MSE_REC_REDUCTION,
+                                                                            MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA,
+                                                                            TRAIN_BATCH_SIZE, noise)
+            current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer,
+                                                    BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
+                                                    KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
 
-        if convergence > cfg['model_convergence']:
-            print('Finished training...')
-            print('Model converged. Please check your model with vame.evaluate_model(). \n'
-                  'You can also re-run vame.trainmodel() to further improve your model. \n'
-                  'Make sure to set _pretrained_weights_ in your config.yaml to "true" \n'
-                  'and plug your current model name into _pretrained_model_. \n'
-                  'Hint: Set "model_convergence" in your config.yaml to a higher value. \n'
-                  '\n'
-                  'Next: \n'
-                  'Use vame.pose_segmentation() to identify behavioral motifs in your dataset!')
-            #return
-            break
+            # logging losses
+            train_losses.append(train_loss)
+            test_losses.append(test_loss)
+            kmeans_losses.append(km_loss)
+            kl_losses.append(kl_loss)
+            weight_values.append(weight)
+            mse_losses.append(mse_loss)
+            fut_losses.append(fut_loss)
 
-        # save logged losses
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','train_losses_'+model_name), train_losses)
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','test_losses_'+model_name), test_losses)
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','kmeans_losses_'+model_name), kmeans_losses)
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','kl_losses_'+model_name), kl_losses)
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','weight_values_'+model_name), weight_values)
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_train_losses_'+model_name), mse_losses)
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_test_losses_'+model_name), current_loss)
-        np.save(os.path.join(cfg['project_path'],'model','model_losses','fut_losses_'+model_name), fut_losses)
+            # save best model
+            if weight > 0.99 and current_loss <= BEST_LOSS:
+                BEST_LOSS = current_loss
+                logger.info("Saving model!")
 
-        print("\n")
+                if use_gpu:
+                    torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",model_name+'_'+cfg['Project']+'.pkl'))
 
-    if convergence < cfg['model_convergence']:
-        print('Finished training...')
-        print('Model seems to have not reached convergence. You may want to check your model \n'
-              'with vame.evaluate_model(). If your satisfied you can continue. \n'
-              'Use vame.pose_segmentation() to identify behavioral motifs! \n'
-              'OPTIONAL: You can re-run vame.train_model() to improve performance.')
+                else:
+                    torch.save(model.state_dict(), os.path.join(cfg['project_path'],"model", "best_model",model_name+'_'+cfg['Project']+'.pkl'))
+
+                convergence = 0
+            else:
+                convergence += 1
+
+            if epoch % SNAPSHOT == 0:
+                logger.info("Saving model snapshot!\n")
+                torch.save(model.state_dict(), os.path.join(cfg['project_path'],'model','best_model','snapshots',model_name+'_'+cfg['Project']+'_epoch_'+str(epoch)+'.pkl'))
+
+            if convergence > cfg['model_convergence']:
+                logger.info('Finished training...')
+                logger.info('Model converged. Please check your model with vame.evaluate_model(). \n'
+                    'You can also re-run vame.trainmodel() to further improve your model. \n'
+                    'Make sure to set _pretrained_weights_ in your config.yaml to "true" \n'
+                    'and plug your current model name into _pretrained_model_. \n'
+                    'Hint: Set "model_convergence" in your config.yaml to a higher value. \n'
+                    '\n'
+                    'Next: \n'
+                    'Use vame.pose_segmentation() to identify behavioral motifs in your dataset!')
+                break
+
+            # save logged losses
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','train_losses_'+model_name), train_losses)
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','test_losses_'+model_name), test_losses)
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','kmeans_losses_'+model_name), kmeans_losses)
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','kl_losses_'+model_name), kl_losses)
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','weight_values_'+model_name), weight_values)
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_train_losses_'+model_name), mse_losses)
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','mse_test_losses_'+model_name), current_loss)
+            np.save(os.path.join(cfg['project_path'],'model','model_losses','fut_losses_'+model_name), fut_losses)
+
+            print("\n")
+
+        if convergence < cfg['model_convergence']:
+            logger.info('Finished training...')
+            logger.info('Model seems to have not reached convergence. You may want to check your model \n'
+                'with vame.evaluate_model(). If your satisfied you can continue. \n'
+                'Use vame.pose_segmentation() to identify behavioral motifs! \n'
+                'OPTIONAL: You can re-run vame.train_model() to improve performance.')
+
+    except Exception as e:
+        logger.exception(f"An error occurred: {e}")
+        raise e
+    finally:
+        logger_config.remove_file_handler()

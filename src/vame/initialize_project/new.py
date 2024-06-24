@@ -31,7 +31,7 @@ def init_new_project(
     videos: List[str],
     poses_estimations: List[str],
     working_directory: str = None,
-    videotype:str = '.mp4'
+    videotype: str = '.mp4'
 ) -> str:
     """Creates a new VAME project with the given parameters.
 

@@ -33,7 +33,7 @@ def test_motif_videos_files_exists(setup_project_and_train_model):
 
     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "cluster_videos"
 
-    assert len(list(save_base_path.glob("*.avi"))) == n_cluster
+    assert len(list(save_base_path.glob("*.mp4"))) == n_cluster
 
 def test_community_files_exists(setup_project_and_train_model):
     # Check if the files are created
@@ -95,7 +95,7 @@ def test_community_videos_files_exists(setup_project_and_train_model):
 
     save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "community_videos"
 
-    assert len(list(save_base_path.glob("*.avi"))) == n_cluster
+    assert len(list(save_base_path.glob("*.mp4"))) == n_cluster
 
 
 def test_visualization_output_type(setup_project_and_train_model):
