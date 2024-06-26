@@ -155,10 +155,10 @@ def test_gif_frames_files_exists(setup_project_and_evaluate_model, label):
         show_umap=False,
         cut_tree=2,
         cohort=False,
-        save_logs=True
+        save_logs=False
     )
     vame.visualization(
-        setup_project_and_evaluate_model["config_path"], label=label, save_logs=True
+        setup_project_and_evaluate_model["config_path"], label=label, save_logs=False
     )
     VIDEO_LEN = 30
     with patch("vame.util.gif_pose_helper.background", side_effect=mock_background):
