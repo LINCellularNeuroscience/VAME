@@ -14,7 +14,7 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from sklearn.mixture import GaussianMixture
-
+from vame.schemas.states import GenerativeModelFunctionSchema, save_state
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
 from vame.logging.logger import VameLogger
@@ -231,7 +231,7 @@ def load_model(cfg: dict, model_name: str) -> torch.nn.Module:
 
     return model
 
-
+@save_state(model=GenerativeModelFunctionSchema)
 def generative_model(config: str, mode: str = "sampling", save_logs: bool = False) -> plt.Figure:
     """Generative model.
 

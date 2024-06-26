@@ -16,6 +16,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from typing import Optional, Union
 from vame.util.auxiliary import read_config
+from vame.schemas.states import VisualizationFunctionSchema, save_state
 from vame.logging.logger import VameLogger
 
 
@@ -88,7 +89,7 @@ def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num
     plt.grid(False)
     return fig
 
-
+@save_state(model=VisualizationFunctionSchema)
 def visualization(
     config: Union[str, Path],
     label: Optional[str] = None,

@@ -19,6 +19,7 @@ from typing import List, Tuple
 
 from hmmlearn import hmm
 from sklearn.cluster import KMeans
+from vame.schemas.states import save_state, PoseSegmentationFunctionSchema
 from vame.logging.logger import VameLogger, TqdmToLogger
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
@@ -247,7 +248,7 @@ def individual_parametrization(
     Returns:
         Tuple: Tuple of labels, cluster centers, and motif usages.
     """
-    random_state = cfg['random_state_kmeans: ']
+    random_state = cfg['random_state_kmeans']
     n_init = cfg['n_init_kmeans']
 
     labels = []
@@ -265,7 +266,7 @@ def individual_parametrization(
 
     return labels, cluster_centers, motif_usages
 
-
+@save_state(model=PoseSegmentationFunctionSchema)
 def pose_segmentation(config: str, save_logs: bool = False) -> None:
     """Perform pose segmentation using the VAME model.
 
@@ -289,11 +290,7 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
         parametrization = cfg['parametrization']
 
         logger.info('Pose segmentation for VAME model: %s \n' %model_name)
-
-
-
         ind_param = cfg['individual_parametrization']
-
         for folders in cfg['video_sets']:
             if not os.path.exists(os.path.join(cfg['project_path'],"results",folders,model_name,"")):
                 os.mkdir(os.path.join(cfg['project_path'],"results",folders,model_name,""))

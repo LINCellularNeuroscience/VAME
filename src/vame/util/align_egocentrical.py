@@ -16,6 +16,7 @@ from typing import Tuple, List
 from vame.logging.logger import VameLogger, TqdmToLogger
 from pathlib import Path
 from vame.util.auxiliary import read_config
+from vame.schemas.states import EgocentricAlignmentFunctionSchema, save_state
 
 
 logger_config = VameLogger(__name__)
@@ -456,6 +457,7 @@ def alignment(
     return time_series, frames
 
 
+@save_state(model=EgocentricAlignmentFunctionSchema)
 def egocentric_alignment(
     config: str,
     pose_ref_index: list = [5,6],

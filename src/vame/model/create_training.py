@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from typing import List, Optional, Tuple
 from vame.logging.logger import VameLogger
 from vame.util.auxiliary import read_config
+from vame.schemas.states import CreateTrainsetFunctionSchema, save_state
 
 
 logger_config = VameLogger(__name__)
@@ -369,6 +370,7 @@ def traindata_fixed(
         logger.info('Lenght of test data: %d' %len(z_test.T))
 
 
+@save_state(model=CreateTrainsetFunctionSchema)
 def create_trainset(
     config: str,
     pose_ref_index: Optional[List] = None,

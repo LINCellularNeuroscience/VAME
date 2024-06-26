@@ -74,7 +74,11 @@ def create_video(
         ax1.cla()
         ax1.axis('off')
         ax1.grid(False)
-        ax1.scatter(embed[:num_points,0], embed[:num_points,1], c=clabel[:num_points], cmap='Spectral', s=1, alpha=0.4)
+        if clabel is not None:
+            ax1.scatter(embed[:num_points,0], embed[:num_points,1], c=clabel[:num_points], cmap='Spectral', s=1, alpha=0.4)
+        else:
+            ax1.scatter(embed[:num_points,0], embed[:num_points,1], s=1, alpha=0.4)
+
         ax1.set_aspect('equal', 'datalim')
         ax1.plot(embed[start+lag:start+i,0], embed[start+lag:start+i,1],'.b-',alpha=.6, linewidth=2, markersize=4)
         ax1.plot(embed[start+i,0], embed[start+i,1], 'gx', markersize=4)
@@ -104,7 +108,7 @@ def gif(
         start (int, optional): Starting index. Defaults to None.
         length (int, optional): Length of the video. Defaults to 500.
         max_lag (int, optional): Maximum lag. Defaults to 30.
-        label (str, optional): Label type. Defaults to 'community'.
+        label (str, optional): Label type [None, community, motif]. Defaults to 'community'.
         file_format (str, optional): File format. Defaults to '.mp4'.
         crop_size (Tuple[int, int], optional): Crop size. Defaults to (300,300).
 

@@ -24,6 +24,14 @@ import shutil
 from datetime import datetime as dt
 from vame.util import auxiliary
 from typing import List
+from vame.schemas.project import ProjectSchema
+from vame.schemas.states import VAMEPipelineStatesSchema
+import json
+from vame.logging.logger import VameLogger
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
+
 
 
 def init_new_project(
@@ -52,17 +60,15 @@ def init_new_project(
     d = str(month[0:3]+str(day))
     date = dt.today().strftime('%Y-%m-%d')
 
-    if working_directory == None:
+    if working_directory is None:
         working_directory = '.'
 
     wd = Path(working_directory).resolve()
     project_name = '{pn}-{date}'.format(pn=project, date=d+'-'+str(year))
 
     project_path = wd / project_name
-
-
     if project_path.exists():
-        print('Project "{}" already exists!'.format(project_path))
+        logger.info('Project "{}" already exists!'.format(project_path))
         projconfigfile = os.path.join(str(project_path),'config.yaml')
         return projconfigfile
 
@@ -73,7 +79,7 @@ def init_new_project(
 
     for p in [video_path, data_path, results_path, model_path]:
         p.mkdir(parents=True)
-        print('Created "{}"'.format(p))
+        logger.info('Created "{}"'.format(p))
 
     vids = []
     for i in videos:
@@ -82,11 +88,13 @@ def init_new_project(
             vids_in_dir = [os.path.join(i,vp) for vp in os.listdir(i) if videotype in vp]
             vids = vids + vids_in_dir
             if len(vids_in_dir)==0:
-                print("No videos found in",i)
-                print("Perhaps change the videotype, which is currently set to:", videotype)
+                logger.info(f"No videos found in {i}")
+                logger.info(f"Perhaps change the videotype, which is currently set to: {videotype}")
             else:
                 videos = vids
-                print(len(vids_in_dir)," videos from the directory" ,i, "were added to the project.")
+                logger.info(
+                    f"{len(vids_in_dir)} videos from the directory {i} were added to the project."
+                )
         else:
             if os.path.isfile(i):
                 vids = vids + [i]
@@ -115,86 +123,35 @@ def init_new_project(
     os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
     os.mkdir(str(project_path)+'/model/pretrained_model')
 
-    print("Copying the videos \n")
+    logger.info("Copying the videos \n")
     for src, dst in zip(videos, destinations):
         shutil.copy(os.fspath(src),os.fspath(dst))
 
-    print("Copying pose estimation files\n")
+    logger.info("Copying pose estimation files\n")
     for src, dst in zip(poses_estimations, [str(project_path)+'/videos/pose_estimation/'+Path(p).name for p in poses_estimations]):
-        print('Copying ',src,' to ',dst)
+        logger.info(f'Copying {src} to {dst}')
         shutil.copy(os.fspath(src),os.fspath(dst))
 
+    new_project = ProjectSchema(
+        Project=str(project),
+        project_path=str(project_path),
+        video_sets=video_names
+    )
+    cfg_data = new_project.model_dump()
 
-    cfg_file,ruamelFile = auxiliary.create_config_template()
-    cfg_file
-
-    cfg_file['Project']=str(project)
-    cfg_file['project_path']=str(project_path)+'/'
-    cfg_file['test_fraction']=0.1
-    cfg_file['video_sets']=video_names
-    cfg_file['all_data']='yes'
-    cfg_file['load_data']='-PE-seq-clean'
-    cfg_file['anneal_function']='linear'
-    cfg_file['batch_size']=256
-    cfg_file['max_epochs']=500
-    cfg_file['transition_function']='GRU'
-    cfg_file['beta']=1
-    cfg_file['zdims']=30
-    cfg_file['learning_rate']=5e-4
-    cfg_file['time_window']=30
-    cfg_file['prediction_decoder']=1
-    cfg_file['prediction_steps']=15
-    cfg_file['model_convergence']=50
-    cfg_file['model_snapshot']=50
-    cfg_file['num_features']=12
-    cfg_file['savgol_filter']=True
-    cfg_file['savgol_length']=5
-    cfg_file['savgol_order']=2
-    cfg_file['hidden_size_layer_1']=256
-    cfg_file['hidden_size_layer_2']=256
-    cfg_file['dropout_encoder']=0
-    cfg_file['hidden_size_rec']=256
-    cfg_file['dropout_rec']=0
-    cfg_file['hidden_size_pred']=256
-    cfg_file['dropout_pred']=0
-    cfg_file['kl_start']=2
-    cfg_file['annealtime']=4
-    cfg_file['mse_reconstruction_reduction']='sum'
-    cfg_file['mse_prediction_reduction']='sum'
-    cfg_file['kmeans_loss']=cfg_file['zdims']
-    cfg_file['kmeans_lambda']=0.1
-    cfg_file['scheduler']=1
-    cfg_file['length_of_motif_video'] = 1000
-    cfg_file['noise'] = False
-    cfg_file['scheduler_step_size'] = 100
-    cfg_file['individual_parametrization'] = False
-    cfg_file['random_state_kmeans'] = 42
-    cfg_file['n_init_kmeans'] = 15
-    cfg_file['model_name']='VAME'
-    cfg_file['n_cluster'] = 15
-    cfg_file['pretrained_weights'] = False
-    cfg_file['pretrained_model']='None'
-    cfg_file['min_dist'] = 0.1
-    cfg_file['n_neighbors'] = 200
-    cfg_file['random_state'] = 42
-    cfg_file['num_points'] = 30000
-    cfg_file['scheduler_gamma'] = 0.2
-    cfg_file['softplus'] = False
-    cfg_file['pose_confidence'] = 0.99
-    cfg_file['iqr_factor'] = 4
-    cfg_file['robust'] = True
-    cfg_file['beta_norm'] = False
-    cfg_file['n_layers'] = 1
-    cfg_file['axis'] = None
-    cfg_file['parametrization'] = 'hmm'
-    cfg_file['hmm_trained'] = False
-
-    projconfigfile=os.path.join(str(project_path),'config.yaml')
+    projconfigfile=os.path.join(str(project_path), 'config.yaml')
     # Write dictionary to yaml  config file
-    auxiliary.write_config(projconfigfile,cfg_file)
+    auxiliary.write_config(projconfigfile, cfg_data)
 
-    print('A VAME project has been created. \n')
-    print('Now its time to prepare your data for VAME. '
+    vame_pipeline_default_schema = VAMEPipelineStatesSchema()
+    vame_pipeline_default_schema_path = Path(project_path) / 'states/states.json'
+    if not vame_pipeline_default_schema_path.parent.exists():
+        vame_pipeline_default_schema_path.parent.mkdir(parents=True)
+    with open(vame_pipeline_default_schema_path, 'w') as f:
+        json.dump(vame_pipeline_default_schema.model_dump(), f, indent=4)
+
+    logger.info('A VAME project has been created. \n')
+    logger.info('Now its time to prepare your data for VAME. '
           'The first step is to move your pose .csv file (e.g. DeepLabCut .csv) into the '
           '//YOUR//VAME//PROJECT//videos//pose_estimation folder. From here you can call '
           'either the function vame.egocentric_alignment() or if your data is by design egocentric '

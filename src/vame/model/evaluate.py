@@ -16,7 +16,7 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 import torch.utils.data as Data
 from typing import Optional
-
+from vame.schemas.states import EvaluateModelFunctionSchema, save_state
 from vame.util.auxiliary import read_config
 from vame.model.rnn_vae import RNN_VAE
 from vame.model.dataloader import SEQUENCE_DATASET
@@ -170,7 +170,6 @@ def eval_temporal(
     if not fixed:
         NUM_FEATURES = NUM_FEATURES - 2
     TEST_BATCH_SIZE = 64
-    PROJECT_PATH = cfg['project_path']
     hidden_size_layer_1 = cfg['hidden_size_layer_1']
     hidden_size_layer_2 = cfg['hidden_size_layer_2']
     hidden_size_rec = cfg['hidden_size_rec']
@@ -219,7 +218,7 @@ def eval_temporal(
         plot_loss(cfg, filepath, model_name)
         # pass #note, loading of losses needs to be adapted for CPU use #TODO
 
-
+@save_state(model=EvaluateModelFunctionSchema)
 def evaluate_model(config: str, use_snapshots: bool = False, save_logs: bool = False) -> None:
     """Evaluate the trained model.
 
