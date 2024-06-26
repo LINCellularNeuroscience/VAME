@@ -290,11 +290,7 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
         parametrization = cfg['parametrization']
 
         logger.info('Pose segmentation for VAME model: %s \n' %model_name)
-
-
-
         ind_param = cfg['individual_parametrization']
-
         for folders in cfg['video_sets']:
             if not os.path.exists(os.path.join(cfg['project_path'],"results",folders,model_name,"")):
                 os.mkdir(os.path.join(cfg['project_path'],"results",folders,model_name,""))

@@ -132,37 +132,6 @@ def background(path_to_file: str, filename: str, file_format: str = '.mp4', num_
     return background
 
 
-def get_rotation_matrix(adjacent: float, opposite: float, crop_size: tuple = (300, 300)) -> np.ndarray:
-    """
-    Compute the rotation matrix based on the adjacent and opposite sides.
-
-    Args:
-        adjacent (float): Length of the adjacent side.
-        opposite (float): Length of the opposite side.
-        crop_size (tuple, optional): Size of the cropped area. Defaults to (300, 300).
-
-    Returns:
-        np.ndarray: Rotation matrix.
-    """
-
-    tan_alpha = np.abs(opposite) / np.abs(adjacent)
-    alpha = np.arctan(tan_alpha)
-    alpha = np.rad2deg(alpha)
-
-    if adjacent < 0 and opposite > 0:
-        alpha = 180-alpha
-
-    if adjacent  < 0 and opposite < 0:
-        alpha = -(180-alpha)
-
-    if adjacent > 0 and opposite < 0:
-        alpha = -alpha
-
-    rot_mat = cv.getRotationMatrix2D((crop_size[0] // 2, crop_size[1] // 2),alpha, 1)
-
-    return rot_mat
-
-
 def nan_helper(y: np.ndarray) -> tuple:
     """
     Helper function to find indices of NaN values.

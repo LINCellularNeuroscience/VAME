@@ -138,20 +138,48 @@ def test_generative_model_kmeans_figures(setup_kmeans_project_and_pose_segmentat
     )
     assert isinstance(generative_figure, Figure)
 
-def test_gif(setup_project_and_train_model):
+
+@pytest.mark.parametrize("label", [None, 'community', 'motif'])
+@pytest.mark.gif
+def test_gif_frames_files_exists(setup_project_and_evaluate_model, label):
+
+    with patch("builtins.input", return_value="yes"):
+        vame.pose_segmentation(setup_project_and_evaluate_model["config_path"])
+
     def mock_background(path_to_file=None, filename=None, file_format=None, num_frames=None):
         num_frames = 100
         return background(path_to_file, filename, file_format, num_frames)
 
+    vame.community(
+        setup_project_and_evaluate_model["config_path"],
+        show_umap=False,
+        cut_tree=2,
+        cohort=False,
+        save_logs=True
+    )
+    vame.visualization(
+        setup_project_and_evaluate_model["config_path"], label=label, save_logs=True
+    )
+    VIDEO_LEN = 30
     with patch("vame.util.gif_pose_helper.background", side_effect=mock_background):
         vame.gif(
-            config=setup_project_and_train_model['config_path'],
-            pose_ref_index=[0,5],
+            config=setup_project_and_evaluate_model["config_path"],
+            pose_ref_index=[0, 5],
             subtract_background=True,
             start=None,
-            length=500,
+            length=VIDEO_LEN,
             max_lag=30,
-            label="motif",
-            file_format='.mp4',
-            crop_size=(300,300)
+            label=label,
+            file_format=".mp4",
+            crop_size=(300, 300),
         )
+
+    # path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
+    video = setup_project_and_evaluate_model["config_data"]["video_sets"][0]
+    model_name = setup_project_and_evaluate_model["config_data"]["model_name"]
+    n_cluster = setup_project_and_evaluate_model["config_data"]["n_cluster"]
+    parametrization = setup_project_and_evaluate_model["config_data"]["parametrization"]
+    save_base_path = Path(setup_project_and_evaluate_model["config_data"]["project_path"]) / "results" / video / model_name / f'{parametrization}-{n_cluster}'
+
+    gif_frames_path = save_base_path / "gif_frames"
+    assert len(list(gif_frames_path.glob("*.png"))) == VIDEO_LEN

@@ -49,6 +49,7 @@ def init_project(
         "config_data": config_values,
         "pose_ref_index": [0, 5]
     }
+
     return config, project_data
 
 
