@@ -248,7 +248,7 @@ def individual_parametrization(
     Returns:
         Tuple: Tuple of labels, cluster centers, and motif usages.
     """
-    random_state = cfg['random_state_kmeans: ']
+    random_state = cfg['random_state_kmeans']
     n_init = cfg['n_init_kmeans']
 
     labels = []

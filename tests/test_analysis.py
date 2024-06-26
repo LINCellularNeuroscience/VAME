@@ -6,9 +6,12 @@ from unittest.mock import patch
 from vame.util.gif_pose_helper import background
 
 
-def test_pose_segmentation_files_exists(setup_project_and_train_model):
-    # Check if the files are created
-    vame.pose_segmentation(setup_project_and_train_model['config_path'])
+@pytest.mark.parametrize('individual_parametrization', [True, False])
+def test_pose_segmentation_files_exists(setup_project_and_train_model, individual_parametrization):
+    mock_config = {**setup_project_and_train_model['config_data'], 'individual_parametrization': individual_parametrization}
+    with patch("vame.util.auxiliary.read_config", return_value=mock_config):
+        with patch('builtins.input', return_value='yes'):
+            vame.pose_segmentation(setup_project_and_train_model['config_path'])
     project_path = setup_project_and_train_model['config_data']['project_path']
     file = setup_project_and_train_model['config_data']['video_sets'][0]
     model_name = setup_project_and_train_model['config_data']['model_name']
@@ -21,6 +24,7 @@ def test_pose_segmentation_files_exists(setup_project_and_train_model):
 
     assert latent_vector_path.exists()
     assert motif_usage_path.exists()
+
 
 def test_motif_videos_files_exists(setup_project_and_train_model):
     # Check if the files are created
