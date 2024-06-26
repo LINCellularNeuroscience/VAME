@@ -125,4 +125,5 @@ def csv_to_numpy(config: str, save_logs=False) -> None:
     except Exception as e:
         logger.exception(f"{e}")
         raise e
-
+    finally:
+        logger_config.remove_file_handler()

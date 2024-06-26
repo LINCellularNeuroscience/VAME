@@ -531,3 +531,5 @@ def egocentric_alignment(
     except Exception as e:
         logger.exception(f"{e}")
         raise e
+    finally:
+        logger_config.remove_file_handler()
