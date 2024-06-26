@@ -140,7 +140,6 @@ def test_generative_model_kmeans_figures(setup_kmeans_project_and_pose_segmentat
 
 
 @pytest.mark.parametrize("label", [None, 'community', 'motif'])
-@pytest.mark.gif
 def test_gif_frames_files_exists(setup_project_and_evaluate_model, label):
 
     with patch("builtins.input", return_value="yes"):
