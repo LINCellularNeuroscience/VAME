@@ -83,7 +83,7 @@ def get_transition_matrix(adjacency_matrix: np.ndarray, threshold: float = 0.0) 
     transition_matrix = adjacency_matrix/row_sum[:,np.newaxis]
     transition_matrix[transition_matrix <= threshold] = 0
     if np.any(np.isnan(transition_matrix)):
-            transition_matrix=np.nan_to_num(transition_matrix)
+        transition_matrix=np.nan_to_num(transition_matrix)
     return transition_matrix
 
 
@@ -277,7 +277,7 @@ def create_community_bag(
         T = graph_to_tree(usage, transition_matrices[i], n_cluster, merge_sel=1)
         trees.append(T)
 
-        if cut_tree != None:
+        if cut_tree is not None:
             community_bag =  traverse_tree_cutline(T,cutline=cut_tree)
             communities_all.append(community_bag)
             draw_tree(T)
@@ -339,7 +339,7 @@ def create_cohort_community_bag(
     # nx.write_gpickle(T, 'T.gpickle')
     trees.append(T)
 
-    if cut_tree != None:
+    if cut_tree is not None:
         community_bag =  traverse_tree_cutline(T,cutline=cut_tree)
         communities_all = community_bag
         draw_tree(T)

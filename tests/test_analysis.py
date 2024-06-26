@@ -36,11 +36,13 @@ def test_motif_videos_files_exists(setup_project_and_train_model):
     assert len(list(save_base_path.glob("*.mp4"))) > 0
     assert len(list(save_base_path.glob("*.mp4"))) <= n_cluster
 
-def test_community_files_exists(setup_project_and_train_model):
+@pytest.mark.parametrize("show_umap", [True, False])
+def test_community_files_exists(setup_project_and_train_model, show_umap):
     # Check if the files are created
     vame.community(
         setup_project_and_train_model['config_path'],
-        show_umap=False,
+        show_umap=show_umap,
+        save_umap_figure=show_umap,
         cut_tree=2,
         cohort=False
     )
@@ -60,6 +62,10 @@ def test_community_files_exists(setup_project_and_train_model):
     assert community_label_path.exists()
     assert hierarchy_path.exists()
 
+    if show_umap:
+        umap_save_path = save_base_path / f'{file}_umap.png'
+        assert umap_save_path.exists()
+
 
 def test_cohort_community_files_exists(setup_project_and_train_model):
     # Check if the files are created
@@ -67,7 +73,8 @@ def test_cohort_community_files_exists(setup_project_and_train_model):
         setup_project_and_train_model['config_path'],
         show_umap=False,
         cut_tree=2,
-        cohort=True
+        cohort=True,
+        save_logs=True
     )
     project_path = setup_project_and_train_model['config_data']['project_path']
     parametrization = setup_project_and_train_model['config_data']['parametrization']
@@ -86,7 +93,8 @@ def test_cohort_community_files_exists(setup_project_and_train_model):
 def test_community_videos_files_exists(setup_project_and_train_model):
 
     vame.community_videos(
-        config=setup_project_and_train_model['config_path']
+        config=setup_project_and_train_model['config_path'],
+        save_logs=True
     )
     file = setup_project_and_train_model['config_data']['video_sets'][0]
     model_name = setup_project_and_train_model['config_data']['model_name']
@@ -100,20 +108,31 @@ def test_community_videos_files_exists(setup_project_and_train_model):
     assert len(list(save_base_path.glob("*.mp4"))) <= n_cluster
 
 
-def test_visualization_output_type(setup_project_and_train_model):
-    fig = vame.visualization(setup_project_and_train_model['config_path'], label=None)
+@pytest.mark.parametrize("label", [None, "motif", "community"])
+def test_visualization_output_type(setup_project_and_train_model, label):
+    fig = vame.visualization(setup_project_and_train_model['config_path'], label=label, save_logs=True)
     assert isinstance(fig, Figure)
 
 
 @pytest.mark.parametrize("mode", ["sampling", "reconstruction", "motifs"])
-def test_generative_model(setup_project_and_train_model, mode):
-    # skipping mode=centers by now because it requires a cluster_center.npy file which is created only with parametrization = "kmeans"
+def test_generative_model_figures(setup_project_and_train_model, mode):
     generative_figure = vame.generative_model(
         config=setup_project_and_train_model['config_path'],
-        mode=mode
+        mode=mode,
+        save_logs=True
     )
     assert isinstance(generative_figure, Figure)
 
+
+def test_generative_model_kmeans_figures(setup_kmeans_project_and_pose_segmentation):
+    # Running mode centers separated from the rest of the test because it requires a different setup
+    # It uses kmeans parametrization
+    generative_figure = vame.generative_model(
+        config=setup_kmeans_project_and_pose_segmentation['config_path'],
+        mode="centers",
+        save_logs=True
+    )
+    assert isinstance(generative_figure, Figure)
 
 def test_gif(setup_project_and_train_model):
     def mock_background(path_to_file=None, filename=None, file_format=None, num_frames=None):

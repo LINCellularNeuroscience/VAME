@@ -27,6 +27,10 @@ from typing import List
 from vame.schemas.project import ProjectSchema
 from vame.schemas.states import VAMEPipelineStatesSchema
 import json
+from vame.logging.logger import VameLogger
+
+logger_config = VameLogger(__name__)
+logger = logger_config.logger
 
 
 
@@ -56,17 +60,15 @@ def init_new_project(
     d = str(month[0:3]+str(day))
     date = dt.today().strftime('%Y-%m-%d')
 
-    if working_directory == None:
+    if working_directory is None:
         working_directory = '.'
 
     wd = Path(working_directory).resolve()
     project_name = '{pn}-{date}'.format(pn=project, date=d+'-'+str(year))
 
     project_path = wd / project_name
-
-
     if project_path.exists():
-        print('Project "{}" already exists!'.format(project_path))
+        logger.info('Project "{}" already exists!'.format(project_path))
         projconfigfile = os.path.join(str(project_path),'config.yaml')
         return projconfigfile
 
@@ -77,7 +79,7 @@ def init_new_project(
 
     for p in [video_path, data_path, results_path, model_path]:
         p.mkdir(parents=True)
-        print('Created "{}"'.format(p))
+        logger.info('Created "{}"'.format(p))
 
     vids = []
     for i in videos:
@@ -86,11 +88,13 @@ def init_new_project(
             vids_in_dir = [os.path.join(i,vp) for vp in os.listdir(i) if videotype in vp]
             vids = vids + vids_in_dir
             if len(vids_in_dir)==0:
-                print("No videos found in",i)
-                print("Perhaps change the videotype, which is currently set to:", videotype)
+                logger.info(f"No videos found in {i}")
+                logger.info(f"Perhaps change the videotype, which is currently set to: {videotype}")
             else:
                 videos = vids
-                print(len(vids_in_dir)," videos from the directory" ,i, "were added to the project.")
+                logger.info(
+                    f"{len(vids_in_dir)} videos from the directory {i} were added to the project."
+                )
         else:
             if os.path.isfile(i):
                 vids = vids + [i]
@@ -119,13 +123,13 @@ def init_new_project(
     os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
     os.mkdir(str(project_path)+'/model/pretrained_model')
 
-    print("Copying the videos \n")
+    logger.info("Copying the videos \n")
     for src, dst in zip(videos, destinations):
         shutil.copy(os.fspath(src),os.fspath(dst))
 
-    print("Copying pose estimation files\n")
+    logger.info("Copying pose estimation files\n")
     for src, dst in zip(poses_estimations, [str(project_path)+'/videos/pose_estimation/'+Path(p).name for p in poses_estimations]):
-        print('Copying ',src,' to ',dst)
+        logger.info(f'Copying {src} to {dst}')
         shutil.copy(os.fspath(src),os.fspath(dst))
 
     new_project = ProjectSchema(
@@ -146,8 +150,8 @@ def init_new_project(
     with open(vame_pipeline_default_schema_path, 'w') as f:
         json.dump(vame_pipeline_default_schema.model_dump(), f, indent=4)
 
-    print('A VAME project has been created. \n')
-    print('Now its time to prepare your data for VAME. '
+    logger.info('A VAME project has been created. \n')
+    logger.info('Now its time to prepare your data for VAME. '
           'The first step is to move your pose .csv file (e.g. DeepLabCut .csv) into the '
           '//YOUR//VAME//PROJECT//videos//pose_estimation folder. From here you can call '
           'either the function vame.egocentric_alignment() or if your data is by design egocentric '
