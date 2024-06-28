@@ -25,11 +25,6 @@ config = vame.init_new_project(project=project, videos=videos, poses_estimations
 # After the inital creation of your project you can always access the config.yaml file
 # via specifying the path to your project
 
-# As our config.yaml is sometimes still changing a little due to updates, we have here a small function
-# to update your config.yaml to the current state. Be aware that this will overwrite your current config.yaml
-# and make sure to back up your version if you did parameter changes!
-vame.update_config(config, force_update=False)
-
 # Step 1.2: Align your behavior videos egocentric and create training dataset
 # pose_ref_index: list of reference coordinate indices for alignment
 # Example: 0: snout, 1: forehand_left, 2: forehand_right, 3: hindleft, 4: hindright, 5: tail
