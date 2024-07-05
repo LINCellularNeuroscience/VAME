@@ -5,25 +5,6 @@ from pathlib import Path
 import shutil
 
 
-def pytest_collection_modifyitems(items):
-    """Modifies test items in place to ensure test modules run in a given order.
-    We are using this because these are integration tests and we need to run them in a specific order to avoid errors.
-    """
-    MODULE_ORDER = [
-        "test_initialize_project",
-        "test_util",
-        "test_model",
-        "test_analysis"
-    ]
-    module_mapping = {item: item.module.__name__ for item in items}
-    sorted_items = items.copy()
-    # Iteratively move tests of each module to the end of the test queue
-    for module in MODULE_ORDER:
-        sorted_items = [it for it in sorted_items if module_mapping[it] != module] + [
-            it for it in sorted_items if module_mapping[it] == module
-        ]
-    items[:] = sorted_items
-
 def init_project(
     project: str,
     videos: list,
