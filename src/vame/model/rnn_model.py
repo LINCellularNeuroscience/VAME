@@ -65,7 +65,7 @@ class Encoder(nn.Module):
 
 class Lambda(nn.Module):
     """Lambda module for computing the latent space parameters."""
-    def __init__(self, ZDIMS: int, hidden_size_layer_1: int, hidden_size_layer_2: int, softplus: bool):
+    def __init__(self, ZDIMS: int, hidden_size_layer_1: int, softplus: bool):
         """
         Initialize the Lambda module.
 
@@ -271,7 +271,7 @@ class RNN_VAE(nn.Module):
         self.FUTURE_DECODER = FUTURE_DECODER
         self.seq_len = int(TEMPORAL_WINDOW / 2)
         self.encoder = Encoder(NUM_FEATURES, hidden_size_layer_1, hidden_size_layer_2, dropout_encoder)
-        self.lmbda = Lambda(ZDIMS, hidden_size_layer_1, hidden_size_layer_2, softplus)
+        self.lmbda = Lambda(ZDIMS, hidden_size_layer_1, softplus)
         self.decoder = Decoder(self.seq_len,ZDIMS,NUM_FEATURES, hidden_size_rec, dropout_rec)
         if FUTURE_DECODER:
             self.decoder_future = Decoder_Future(self.seq_len,ZDIMS,NUM_FEATURES,FUTURE_STEPS, hidden_size_pred,

@@ -33,8 +33,6 @@ def plot_check_parameter(
     num_frames: int,
     X_true: List[np.ndarray],
     X_med: np.ndarray,
-    anchor_1: int | None = None,
-    anchor_2: int | None = None
 ) -> None:
     """
     Plot the check parameter - z-scored data and the filtered data.
@@ -113,7 +111,6 @@ def traindata_aligned(
     cfg: dict,
     files: List[str],
     testfraction: float,
-    num_features: int,
     savgol_filter: bool,
     check_parameter: bool
 ) -> None:
@@ -220,7 +217,7 @@ def traindata_aligned(
     z_train = X_med[:,test:]
 
     if check_parameter:
-        plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med, anchor_1, anchor_2)
+        plot_check_parameter(cfg, iqr_val, num_frames, X_true, X_med)
 
     else:
         #save numpy arrays the the test/train info:
@@ -388,7 +385,7 @@ def create_trainset(
 
         if not fixed:
             logger.info("Creating trainset from the vame.egocentrical_alignment() output ")
-            traindata_aligned(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter)
+            traindata_aligned(cfg, files, cfg['test_fraction'], cfg['savgol_filter'], check_parameter)
         else:
             logger.info("Creating trainset from the vame.csv_to_numpy() output ")
             traindata_fixed(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter,  pose_ref_index)

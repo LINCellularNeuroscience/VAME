@@ -298,7 +298,6 @@ def create_community_bag(
     return communities_all, trees
 
 def create_cohort_community_bag(
-    files: List[str],
     labels: List[np.ndarray],
     trans_mat_full: np.ndarray,
     cut_tree: int,
@@ -308,7 +307,6 @@ def create_cohort_community_bag(
     (markov chain to tree -> community detection)
 
     Args:
-        files (List[str]): List of files paths (deprecated).
         labels (List[np.ndarray]): List of label arrays.
         trans_mat_full (np.ndarray): Full transition matrix.
         cut_tree (int): Cut line for tree.
@@ -506,7 +504,7 @@ def community(
             augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
             _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
             _, usage_full = np.unique(augmented_label, return_counts=True)
-            communities_all, trees = create_cohort_community_bag(files, labels, trans_mat_full, cut_tree, n_cluster)
+            communities_all, trees = create_cohort_community_bag(labels, trans_mat_full, cut_tree, n_cluster)
 
             community_labels_all = get_cohort_community_labels(files, labels, communities_all)
             # community_bag = traverse_tree_cutline(trees, cutline=cut_tree)
