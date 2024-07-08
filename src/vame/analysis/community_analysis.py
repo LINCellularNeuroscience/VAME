@@ -20,9 +20,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from vame.util.auxiliary import read_config
 from vame.analysis.tree_hierarchy import graph_to_tree, draw_tree, traverse_tree_cutline
+from vame.util.data_manipulation import consecutive
 from typing import List, Tuple
 from vame.schemas.states import save_state, CommunityFunctionSchema
 from vame.logging.logger import VameLogger
+from vame.analysis.umap_visualization import umap_vis_community_labels
 
 
 logger_config = VameLogger(__name__)
@@ -86,21 +88,6 @@ def get_transition_matrix(adjacency_matrix: np.ndarray, threshold: float = 0.0) 
         transition_matrix=np.nan_to_num(transition_matrix)
     return transition_matrix
 
-
-def consecutive(data: np.ndarray, stepsize: int = 1) -> List[np.ndarray]:
-    """Identifies location of missing motif finding consecutive elements in an array and returns array(s) at the split.
-
-    Args:
-        data (np.ndarray): Input array.
-        stepsize (int, optional): Step size. Defaults to 1.
-
-    Returns:
-        List[np.ndarray]: List of arrays containing consecutive elements.
-    """
-    data = data[:]
-    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
-
-# New find_zero_labels 8/8/2022 KL
 
 
 def find_zero_labels(motif_usage: Tuple[np.ndarray, np.ndarray], n_cluster: int) -> np.ndarray:
@@ -462,38 +449,6 @@ def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parame
     return embed
 
 
-def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.ndarray, save_path: str | None) -> None:
-    """Create plotly visualizaton of UMAP embedding.
-
-    Args:
-        cfg (dict): Configuration parameters.
-        file (str): File path.
-        embed (np.ndarray): UMAP embedding.
-        community_labels_all (np.ndarray): Community labels.
-        save_path: Path to save the plot. If None it will not save the plot.
-
-    Returns:
-        None
-    """
-    num_points = cfg['num_points']
-    community_labels_all = np.asarray(community_labels_all)
-    if num_points > community_labels_all.shape[0]:
-        num_points = community_labels_all.shape[0]
-    logger.info("Embedding %d data points.." %num_points)
-
-    num = np.unique(community_labels_all)
-
-    fig = plt.figure(1)
-    plt.scatter(embed[:,0], embed[:,1],  c=community_labels_all[:num_points], cmap='Spectral', s=2, alpha=1)
-    plt.colorbar(boundaries=np.arange(np.max(num)+2)-0.5).set_ticks(np.arange(np.max(num)+1))
-    plt.gca().set_aspect('equal', 'datalim')
-    plt.grid(False)
-
-    if save_path is not None:
-        plt.savefig(save_path)
-        return
-    plt.show()
-
 @save_state(model=CommunityFunctionSchema)
 def community(
     config: str,
@@ -570,7 +525,7 @@ def community(
             if show_umap:
                 embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
                 # TODO fix umap vis for cohort and add save path
-                umap_vis(cfg, files, embed, community_labels_all)
+                umap_vis_community_labels(cfg, embed, community_labels_all)
 
         # Work in Progress
         elif not cohort:
@@ -595,7 +550,7 @@ def community(
                     umap_save_path = None
                     if save_umap_figure:
                         umap_save_path = os.path.join(path_to_file, "community", file + "_umap.png")
-                    umap_vis(cfg, files, embed, community_labels_all[idx], save_path=umap_save_path)
+                    umap_vis_community_labels(cfg, embed, community_labels_all[idx], save_path=umap_save_path)
     except Exception as e:
         logger.exception(f"Error in community_analysis: {e}")
         raise e

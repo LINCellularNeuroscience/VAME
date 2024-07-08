@@ -145,9 +145,9 @@ def test_gif_frames_files_exists(setup_project_and_evaluate_model, label):
     with patch("builtins.input", return_value="yes"):
         vame.pose_segmentation(setup_project_and_evaluate_model["config_path"])
 
-    def mock_background(path_to_file=None, filename=None, file_format=None, num_frames=None):
+    def mock_background(path_to_file=None, filename=None, file_format=None, num_frames=None, save_background=True):
         num_frames = 100
-        return background(path_to_file, filename, file_format, num_frames)
+        return background(path_to_file, filename, file_format, num_frames, save_background)
 
     vame.community(
         setup_project_and_evaluate_model["config_path"],

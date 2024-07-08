@@ -19,41 +19,13 @@ from typing import List, Optional, Tuple
 from vame.logging.logger import VameLogger
 from vame.util.auxiliary import read_config
 from vame.schemas.states import CreateTrainsetFunctionSchema, save_state
+from vame.util.data_manipulation import interpol_all_nans
 
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
 
 
-def nan_helper(y: np.ndarray) -> Tuple:
-    """
-    Identifies indices of NaN values in an array and provides a function to convert them to non-NaN indices.
-
-    Args:
-        y (np.ndarray): Input array containing NaN values.
-
-    Returns:
-        Tuple[np.ndarray, Union[np.ndarray, None]]: A tuple containing two elements:
-            - An array of boolean values indicating the positions of NaN values.
-            - A lambda function to convert NaN indices to non-NaN indices.
-    """
-    return np.isnan(y), lambda z: z.nonzero()[0]
-
-def interpol(arr: np.ndarray) -> np.ndarray:
-    """
-    Interpolates all NaN values in the given array.
-
-    Args:
-        arr (np.ndarray): Input array containing NaN values.
-
-    Returns:
-        np.ndarray: Array with NaN values replaced by interpolated values.
-    """
-    y = np.transpose(arr)
-    nans, x = nan_helper(y)
-    y[nans]= np.interp(x(nans), x(~nans), y[~nans])
-    arr = np.transpose(y)
-    return arr
 
 def plot_check_parameter(
     cfg: dict,
@@ -202,7 +174,7 @@ def traindata_aligned(
                     elif X_z[i,marker] < -cfg['iqr_factor']*iqr_val:
                         X_z[i,marker] = np.nan
 
-            X_z = interpol(X_z)
+            X_z = interpol_all_nans(X_z)
 
         X_len = len(data.T)
         pos_temp += X_len
@@ -319,7 +291,7 @@ def traindata_fixed(
                     elif X_z[i,marker] < -cfg['iqr_factor']*iqr_val:
                         X_z[i,marker] = np.nan
 
-                X_z[i,:] = interpol(X_z[i,:])
+                X_z[i,:] = interpol_all_nans(X_z[i,:])
 
         X_len = len(data.T)
         pos_temp += X_len

@@ -24,5 +24,6 @@ from vame.analysis import generative_model
 from vame.analysis import gif
 from vame.util.csv_to_npy import csv_to_numpy
 from vame.util.align_egocentrical import egocentric_alignment
+from vame.util import model_util
 from vame.util import auxiliary
 

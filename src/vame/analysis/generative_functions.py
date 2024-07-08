@@ -16,8 +16,9 @@ import matplotlib.pyplot as plt
 from sklearn.mixture import GaussianMixture
 from vame.schemas.states import GenerativeModelFunctionSchema, save_state
 from vame.util.auxiliary import read_config
-from vame.model.rnn_model import RNN_VAE
 from vame.logging.logger import VameLogger
+from vame.util.model_util import load_model
+
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
@@ -189,48 +190,6 @@ def visualize_cluster_center(cfg: dict, model: torch.nn.Module, cluster_center: 
     return fig
 
 
-def load_model(cfg: dict, model_name: str) -> torch.nn.Module:
-    """Load PyTorch model.
-
-    Args:
-        cfg (dict): Configuration dictionary.
-        model_name (str): Name of the model.
-
-    Returns:
-        torch.nn.Module: Loaded PyTorch model.
-    """
-    ZDIMS = cfg['zdims']
-    FUTURE_DECODER = cfg['prediction_decoder']
-    TEMPORAL_WINDOW = cfg['time_window']*2
-    FUTURE_STEPS = cfg['prediction_steps']
-
-    NUM_FEATURES = cfg['num_features']
-    NUM_FEATURES = NUM_FEATURES - 2
-
-    hidden_size_layer_1 = cfg['hidden_size_layer_1']
-    hidden_size_layer_2 = cfg['hidden_size_layer_2']
-    hidden_size_rec = cfg['hidden_size_rec']
-    hidden_size_pred = cfg['hidden_size_pred']
-    dropout_encoder = cfg['dropout_encoder']
-    dropout_rec = cfg['dropout_rec']
-    dropout_pred = cfg['dropout_pred']
-    softplus = cfg['softplus']
-
-    logger.info('Loading model... ')
-
-    model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
-                            hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                            dropout_rec, dropout_pred, softplus)
-    if torch.cuda.is_available():
-        model = model.cuda()
-    else:
-        model = model.cpu()
-
-    model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',model_name+'_'+cfg['Project']+'.pkl')))
-    model.eval()
-
-    return model
-
 @save_state(model=GenerativeModelFunctionSchema)
 def generative_model(config: str, mode: str = "sampling", save_logs: bool = False) -> plt.Figure:
     """Generative model.
@@ -276,7 +235,7 @@ def generative_model(config: str, mode: str = "sampling", save_logs: bool = Fals
             files.append(all_flag)
 
 
-        model = load_model(cfg, model_name)
+        model = load_model(cfg, model_name, fixed=False)
 
         for file in files:
             path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization + '-' +str(n_cluster),"")

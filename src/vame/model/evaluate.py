@@ -22,17 +22,15 @@ from vame.model.rnn_vae import RNN_VAE
 from vame.model.dataloader import SEQUENCE_DATASET
 from vame.logging.logger import VameLogger
 
+
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
-
-
 
 use_gpu = torch.cuda.is_available()
 if use_gpu:
     pass
 else:
     torch.device("cpu")
-
 
 def plot_reconstruction(
     filepath: str,

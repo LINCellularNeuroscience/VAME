@@ -17,156 +17,15 @@ import cv2 as cv
 import numpy as np
 import pandas as pd
 from vame.logging.logger import VameLogger
+from vame.util.data_manipulation import (
+    interpol_first_rows_nans,
+    crop_and_flip,
+    background
+)
+
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
-
-
-def crop_and_flip(rect: tuple, src: np.ndarray, points: list, ref_index: list) -> tuple:
-    """
-    Crop and flip an image based on a rectangle and reference points.
-
-    Args:
-        rect (tuple): Tuple containing rectangle information (center, size, angle).
-        src (np.ndarray): Source image to crop and flip.
-        points (list): List of points to be aligned.
-        ref_index (list): Reference indices for alignment.
-
-    Returns:
-        tuple: Cropped and flipped image, shifted points.
-    """
-    #Read out rect structures and convert
-    center, size, theta = rect
-    center, size = tuple(map(int, center)), tuple(map(int, size))
-    #Get rotation matrix
-    M = cv.getRotationMatrix2D(center, theta, 1)
-
-    #shift DLC points
-    x_diff = center[0] - size[0]//2
-    y_diff = center[1] - size[1]//2
-
-    dlc_points_shifted = []
-
-    for i in points:
-        point=cv.transform(np.array([[[i[0], i[1]]]]),M)[0][0]
-
-        point[0] -= x_diff
-        point[1] -= y_diff
-
-        dlc_points_shifted.append(point)
-
-    # Perform rotation on src image
-    dst = cv.warpAffine(src.astype('float32'), M, src.shape[:2])
-    out = cv.getRectSubPix(dst, size, center)
-
-    #check if flipped correctly, otherwise flip again
-    if dlc_points_shifted[ref_index[1]][0] >= dlc_points_shifted[ref_index[0]][0]:
-        rect = ((size[0]//2,size[0]//2),size,180)
-        center, size, theta = rect
-        center, size = tuple(map(int, center)), tuple(map(int, size))
-        #Get rotation matrix
-        M = cv.getRotationMatrix2D(center, theta, 1)
-
-
-        #shift DLC points
-        x_diff = center[0] - size[0]//2
-        y_diff = center[1] - size[1]//2
-
-        points = dlc_points_shifted
-        dlc_points_shifted = []
-
-        for i in points:
-            point=cv.transform(np.array([[[i[0], i[1]]]]),M)[0][0]
-
-            point[0] -= x_diff
-            point[1] -= y_diff
-
-            dlc_points_shifted.append(point)
-
-        # Perform rotation on src image
-        dst = cv.warpAffine(out.astype('float32'), M, out.shape[:2])
-        out = cv.getRectSubPix(dst, size, center)
-
-    return out, dlc_points_shifted
-
-
-def background(path_to_file: str, filename: str, file_format: str = '.mp4', num_frames: int = 100) -> np.ndarray:
-    """
-    Compute background image from fixed camera.
-
-    Args:
-        path_to_file (str): Path to the directory containing the video files.
-        filename (str): Name of the video file.
-        file_format (str, optional): Format of the video file. Defaults to '.mp4'.
-        num_frames (int, optional): Number of frames to use for background computation. Defaults to 1000.
-
-    Returns:
-        np.ndarray: Background image.
-    """
-
-    capture = cv.VideoCapture(os.path.join(path_to_file,"videos",filename+file_format))
-
-    if not capture.isOpened():
-        raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,"videos",filename+file_format)))
-
-    frame_count = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
-    ret, frame = capture.read()
-
-    height, width, _ = frame.shape
-    frames = np.zeros((height,width,num_frames))
-
-    for i in tqdm.tqdm(range(num_frames), disable=not True, desc='Compute background image for video %s' %filename):
-        rand = np.random.choice(frame_count, replace=False)
-        capture.set(1,rand)
-        ret, frame = capture.read()
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        frames[...,i] = gray
-
-    logger.info('Finishing up!')
-    medFrame = np.median(frames,2)
-    background = scipy.ndimage.median_filter(medFrame, (5,5))
-
-    np.save(os.path.join(path_to_file,"videos",filename+'-background.npy'),background)
-
-    capture.release()
-    return background
-
-
-def nan_helper(y: np.ndarray) -> tuple:
-    """
-    Helper function to find indices of NaN values.
-
-    Args:
-        y (np.ndarray): Input array.
-
-    Returns:
-        tuple: Indices of NaN values.
-    """
-    return np.isnan(y), lambda z: z.nonzero()[0]
-
-
-def interpol(arr: np.ndarray) -> np.ndarray:
-    """
-    Interpolates NaN values in the given array.
-
-    Args:
-        arr (np.ndarray): Input array with NaN values.
-
-    Returns:
-        np.ndarray: Array with interpolated NaN values.
-    """
-
-    y = np.transpose(arr)
-
-    nans, x = nan_helper(y[0])
-    y[0][nans]= np.interp(x(nans), x(~nans), y[0][~nans])
-    nans, x = nan_helper(y[1])
-    y[1][nans]= np.interp(x(nans), x(~nans), y[1][~nans])
-
-    arr = np.transpose(y)
-
-    return arr
-
 
 def get_animal_frames(
     cfg: dict,
@@ -224,7 +83,7 @@ def get_animal_frames(
             bg = np.load(os.path.join(path_to_file,"videos",filename+'-background.npy'))
         except Exception:
             logger.info("Can't find background image... Calculate background image...")
-            bg = background(path_to_file,filename, file_format)
+            bg = background(path_to_file,filename, file_format, save_background=True)
 
     images = []
     points = []
@@ -236,7 +95,7 @@ def get_animal_frames(
 
 
     for i in pose_list:
-        i = interpol(i)
+        i = interpol_first_rows_nans(i)
 
     capture = cv.VideoCapture(os.path.join(path_to_file,"videos",filename+file_format))
     if not capture.isOpened():
