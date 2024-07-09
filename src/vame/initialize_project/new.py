@@ -22,7 +22,7 @@ import os
 from pathlib import Path
 import shutil
 from datetime import datetime as dt
-from vame.util import auxiliary
+from vame.util.auxiliary import write_config
 from typing import List
 from vame.schemas.project import ProjectSchema
 from vame.schemas.states import VAMEPipelineStatesSchema
@@ -141,7 +141,7 @@ def init_new_project(
 
     projconfigfile=os.path.join(str(project_path), 'config.yaml')
     # Write dictionary to yaml  config file
-    auxiliary.write_config(projconfigfile, cfg_data)
+    write_config(projconfigfile, cfg_data)
 
     vame_pipeline_default_schema = VAMEPipelineStatesSchema()
     vame_pipeline_default_schema_path = Path(project_path) / 'states/states.json'
