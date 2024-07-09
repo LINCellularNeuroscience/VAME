@@ -131,7 +131,6 @@ def same_parametrization(
     motif_usages = []
 
     latent_vector_cat = np.concatenate(latent_vector_files, axis=0)
-
     if parametrization == "kmeans":
         logger.info("Using kmeans as parametrization!")
         kmeans = KMeans(init='k-means++', n_clusters=states, random_state=42, n_init=20).fit(latent_vector_cat)
@@ -172,7 +171,7 @@ def individual_parametrization(
     cfg: dict,
     files: List[str],
     latent_vector_files: List[np.ndarray],
-    cluster: int
+    cluster: int,
 ) -> Tuple:
     """Apply individual parametrization to each animal.
 
@@ -273,7 +272,6 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
 
             if not os.path.exists(os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")):
                 new = True
-                # print("Hello1")
                 model = load_model(cfg, model_name, fixed)
                 latent_vectors = embedd_latent_vectors(cfg, files, model, fixed, tqdm_stream=tqdm_stream)
 
@@ -314,7 +312,6 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
                     logger.info('No new parametrization has been calculated.')
                     new = False
 
-            # print("Hello2")
             if new:
                 for idx, file in enumerate(files):
                     logger.info(os.path.join(cfg['project_path'],"results",file,"",model_name,parametrization+'-'+str(n_cluster),""))
