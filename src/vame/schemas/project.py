@@ -1,6 +1,13 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List
+from enum import Enum
 
+class Parametrizations(str, Enum):
+    hmm = 'hmm'
+    kmeans = 'kmeans'
+
+    class Config:
+        use_enum_values = True
 
 class ProjectSchema(BaseModel):
     # Project attributes
@@ -48,7 +55,10 @@ class ProjectSchema(BaseModel):
     softplus: bool = Field(default=False, title='Softplus')
 
     # Segmentation:
-    parametrization: str = Field(default='hmm', title='Parametrization')
+    parametrization: List[Parametrizations] = Field(
+        title='Parametrizations',
+        default_factory=lambda: [Parametrizations.hmm.value, Parametrizations.kmeans.value]
+    )
     hmm_trained: bool = Field(default=False, title='HMM trained')
     load_data: str = Field(default='-PE-seq-clean', title='Load data')
     individual_parametrization: bool = Field(default=False, title='Individual parametrization')
