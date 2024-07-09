@@ -91,6 +91,7 @@ def create_video(
 def gif(
     config: str,
     pose_ref_index: int,
+    param: str,
     subtract_background: bool = True,
     start: int | None = None,
     length: int = 500,
@@ -120,7 +121,9 @@ def gif(
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
-    param = cfg['parametrization']
+
+    if param not in cfg['parametrization']:
+        raise ValueError("Parametrization not found in config")
 
     files = []
     if cfg['all_data'] == 'No':
