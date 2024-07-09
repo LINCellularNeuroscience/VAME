@@ -17,6 +17,7 @@ from sklearn.mixture import GaussianMixture
 from vame.schemas.states import GenerativeModelFunctionSchema, save_state
 from vame.util.auxiliary import read_config
 from vame.logging.logger import VameLogger
+from typing import Dict
 from vame.util.model_util import load_model
 
 
@@ -191,7 +192,7 @@ def visualize_cluster_center(cfg: dict, model: torch.nn.Module, cluster_center: 
 
 
 @save_state(model=GenerativeModelFunctionSchema)
-def generative_model(config: str, mode: str = "sampling", save_logs: bool = False) -> plt.Figure:
+def generative_model(config: str,  parametrization: str, mode: str = "sampling", save_logs: bool = False) -> Dict[str, plt.Figure]:
     """Generative model.
 
     Args:
@@ -199,7 +200,7 @@ def generative_model(config: str, mode: str = "sampling", save_logs: bool = Fals
         mode (str, optional): Mode for generating samples. Defaults to "sampling".
 
     Returns:
-        plt.Figure: Plot of generated samples.
+        Dict[str, plt.Figure]: Plots of generated samples for each parametrization.
     """
     try:
         config_file = Path(config).resolve()
@@ -210,7 +211,10 @@ def generative_model(config: str, mode: str = "sampling", save_logs: bool = Fals
         logger.info(f'Running generative model with mode {mode}...')
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
-        parametrization = cfg['parametrization']
+        parametrizations = cfg['parametrization']
+
+        if parametrization not in parametrizations:
+            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
 
         files = []
         if cfg['all_data'] == 'No':
@@ -249,6 +253,8 @@ def generative_model(config: str, mode: str = "sampling", save_logs: bool = Fals
                 return random_reconstruction_samples(cfg, model, latent_vector)
 
             if mode == "centers":
+                if parametrization != 'kmeans':
+                    raise ValueError(f"Parametrization {parametrization} not supported for cluster center visualization.")
                 cluster_center = np.load(os.path.join(path_to_file,'cluster_center_'+file+'.npy'))
                 return visualize_cluster_center(cfg, model, cluster_center)
 
