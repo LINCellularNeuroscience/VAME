@@ -14,7 +14,7 @@ sys.dont_write_bytecode = True
 from vame.analysis.pose_segmentation import pose_segmentation
 from vame.analysis.videowriter import motif_videos, community_videos
 from vame.analysis.community_analysis import community
-from vame.analysis.umap_visualization import visualization
+from vame.analysis.umap import visualization
 from vame.analysis.generative_functions import generative_model
 from vame.analysis.gif_creator import gif
 

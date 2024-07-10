@@ -24,6 +24,42 @@ logger_config = VameLogger(__name__)
 logger = logger_config.logger
 
 
+def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parametrization: str) -> np.ndarray:
+    """Perform UMAP embedding for given file and parameters.
+
+    Args:
+        cfg (dict): Configuration parameters.
+        file (str): File path.
+        model_name (str): Model name.
+        n_cluster (int): Number of clusters.
+        parametrization (str): parametrization.
+
+    Returns:
+        np.ndarray: UMAP embedding.
+    """
+    reducer = umap.UMAP(
+        n_components=2,
+        min_dist=cfg['min_dist'],
+        n_neighbors=cfg['n_neighbors'],
+        random_state=cfg['random_state']
+    )
+
+    logger.info("UMAP calculation for file %s" %file)
+
+    folder = os.path.join(cfg['project_path'],"results",file,model_name, parametrization +'-'+str(n_cluster),"")
+    latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
+
+    num_points = cfg['num_points']
+    if num_points > latent_vector.shape[0]:
+        num_points = latent_vector.shape[0]
+    logger.info("Embedding %d data points.." %num_points)
+
+    embed = reducer.fit_transform(latent_vector[:num_points,:])
+    np.save(os.path.join(folder,"community","umap_embedding_"+file+'.npy'), embed)
+
+    return embed
+
+
 def umap_vis_community_labels(cfg: dict, embed: np.ndarray, community_labels_all: np.ndarray, save_path: str | None) -> None:
     """Create plotly visualizaton of UMAP embedding with community labels.
 
@@ -188,19 +224,7 @@ def visualization(
                 if not os.path.exists(os.path.join(path_to_file,"community")):
                     os.mkdir(os.path.join(path_to_file,"community"))
                 logger.info("Compute embedding for file %s" %file)
-                reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'],
-                        random_state=cfg['random_state'])
-
-                latent_vector = np.load(os.path.join(path_to_file,"",'latent_vector_'+file+'.npy'))
-
-                num_points = cfg['num_points']
-                if num_points > latent_vector.shape[0]:
-                    num_points = latent_vector.shape[0]
-                logger.info("Embedding %d data points.." %num_points)
-
-                embed = reducer.fit_transform(latent_vector[:num_points,:])
-                np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
-
+                embed = umap_embedding(cfg, file, model_name, n_cluster, param)
             logger.info("Visualizing %d data points.. " %num_points)
             if label is None:
                 output_figure = umap_vis(embed, num_points)
