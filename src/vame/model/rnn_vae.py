@@ -277,9 +277,7 @@ def train(
 
 def test(
     test_loader: Data.DataLoader,
-    epoch: int,
     model: nn.Module,
-    optimizer: torch.optim.Optimizer,
     BETA: float,
     kl_weight: float,
     seq_len: int,
@@ -501,7 +499,7 @@ def train_model(config: str, save_logs: bool = False) -> None:
                                                                             FUTURE_STEPS, scheduler, MSE_REC_REDUCTION,
                                                                             MSE_PRED_REDUCTION, KMEANS_LOSS, KMEANS_LAMBDA,
                                                                             TRAIN_BATCH_SIZE, noise)
-            current_loss, test_loss, test_list = test(test_loader, epoch, model, optimizer,
+            current_loss, test_loss, test_list = test(test_loader, model,
                                                     BETA, weight, TEMPORAL_WINDOW, MSE_REC_REDUCTION,
                                                     KMEANS_LOSS, KMEANS_LAMBDA, FUTURE_DECODER, TEST_BATCH_SIZE)
 

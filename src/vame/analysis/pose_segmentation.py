@@ -16,67 +16,18 @@ import pickle
 import numpy as np
 from pathlib import Path
 from typing import List, Tuple
-
+from vame.util.data_manipulation import consecutive
 from hmmlearn import hmm
 from sklearn.cluster import KMeans
 from vame.schemas.states import save_state, PoseSegmentationFunctionSchema
 from vame.logging.logger import VameLogger, TqdmToLogger
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
+from vame.util.model_util import load_model
 
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
-
-
-def load_model(cfg: dict, model_name: str, fixed: bool) -> RNN_VAE:
-    """Load the VAME model.
-
-    Args:
-        cfg (dict): Configuration dictionary.
-        model_name (str): Name of the model.
-        fixed (bool): Fixed or variable length sequences.
-
-    Returns:
-        RNN_VAE: Loaded VAME model.
-    """
-    use_gpu = torch.cuda.is_available()
-    if use_gpu:
-        pass
-    else:
-        torch.device("cpu")
-
-    # load Model
-    ZDIMS = cfg['zdims']
-    FUTURE_DECODER = cfg['prediction_decoder']
-    TEMPORAL_WINDOW = cfg['time_window']*2
-    FUTURE_STEPS = cfg['prediction_steps']
-    NUM_FEATURES = cfg['num_features']
-    if not fixed:
-        NUM_FEATURES = NUM_FEATURES - 2
-    hidden_size_layer_1 = cfg['hidden_size_layer_1']
-    hidden_size_layer_2 = cfg['hidden_size_layer_2']
-    hidden_size_rec = cfg['hidden_size_rec']
-    hidden_size_pred = cfg['hidden_size_pred']
-    dropout_encoder = cfg['dropout_encoder']
-    dropout_rec = cfg['dropout_rec']
-    dropout_pred = cfg['dropout_pred']
-    softplus = cfg['softplus']
-
-
-    if use_gpu:
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
-                                hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                                dropout_rec, dropout_pred, softplus).cuda()
-    else:
-        model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
-                                hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
-                                dropout_rec, dropout_pred, softplus).to()
-
-    model.load_state_dict(torch.load(os.path.join(cfg['project_path'],'model','best_model',model_name+'_'+cfg['Project']+'.pkl')))
-    model.eval()
-
-    return model
 
 
 def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bool, tqdm_stream: TqdmToLogger | None) -> List[np.ndarray]:
@@ -126,20 +77,6 @@ def embedd_latent_vectors(cfg: dict, files: List[str], model: RNN_VAE, fixed: bo
         latent_vector_files.append(latent_vector)
 
     return latent_vector_files
-
-
-def consecutive(data: np.ndarray, stepsize: int = 1) -> List[np.ndarray]:
-    """Find consecutive sequences in the data array.
-
-    Args:
-        data (np.ndarray): Input array.
-        stepsize (int, optional): Step size. Defaults to 1.
-
-    Returns:
-        List[np.ndarray]: List of consecutive sequences.
-    """
-    data = data[:]
-    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
 
 
 def get_motif_usage(label: np.ndarray) -> np.ndarray:

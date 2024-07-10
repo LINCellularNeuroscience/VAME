@@ -17,187 +17,15 @@ from vame.logging.logger import VameLogger, TqdmToLogger
 from pathlib import Path
 from vame.util.auxiliary import read_config
 from vame.schemas.states import EgocentricAlignmentFunctionSchema, save_state
+from vame.util.data_manipulation import (
+    interpol_first_rows_nans,
+    crop_and_flip,
+    background
+)
 
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
-
-#Returns cropped image using rect tuple
-def crop_and_flip(
-    rect: Tuple,
-    src: np.ndarray,
-    points: List[np.ndarray],
-    ref_index: Tuple[int, int]
-) -> Tuple[np.ndarray, List[np.ndarray]]:
-    """
-    Crop and flip the image based on the given rectangle and points.
-
-    Args:
-        rect (Tuple): Rectangle coordinates (center, size, theta).
-        src (np.ndarray): Source image.
-        points (List[np.ndarray]): List of points.
-        ref_index (Tuple[int, int]): Reference indices for alignment.
-
-    Returns:
-        Tuple[np.ndarray, List[np.ndarray]]: Cropped and flipped image, and shifted points.
-    """
-    #Read out rect structures and convert
-    center, size, theta = rect
-
-    center, size = tuple(map(int, center)), tuple(map(int, size))
-
-    # center_lst = list(center)
-    # center_lst[0] = center[0] - size[0]//2
-    # center_lst[1] = center[1] - size[1]//2
-
-    # center = tuple(center_lst)
-
-
-    # center[0] -= size[0]//2
-    # center[1] -= size[0]//2 # added this shift to change center to belly 2/28/2024
-
-    #Get rotation matrix
-    M = cv.getRotationMatrix2D(center, theta, 1)
-
-    #shift DLC points
-    x_diff = center[0] - size[0]//2
-    y_diff = center[1] - size[1]//2
-
-    # x_diff = center[0]
-    # y_diff = center[1]
-
-    dlc_points_shifted = []
-
-    for i in points:
-        point=cv.transform(np.array([[[i[0], i[1]]]]),M)[0][0]
-
-        point[0] -= x_diff
-        point[1] -= y_diff
-
-        dlc_points_shifted.append(point)
-
-    # Perform rotation on src image
-    dst = cv.warpAffine(src.astype('float32'), M, src.shape[:2])
-    out = cv.getRectSubPix(dst, size, center)
-
-    #check if flipped correctly, otherwise flip again
-    if dlc_points_shifted[ref_index[1]][0] >= dlc_points_shifted[ref_index[0]][0]:
-        rect = ((size[0]//2,size[0]//2),size,180) #should second value be size[1]? Is this relevant to the flip? 3/5/24 KKL
-        center, size, theta = rect
-        center, size = tuple(map(int, center)), tuple(map(int, size))
-
-
-        # center_lst = list(center)
-        # center_lst[0] = center[0] - size[0]//2
-        # center_lst[1] = center[1] - size[1]//2
-        # center = tuple(center_lst)
-
-        #Get rotation matrix
-        M = cv.getRotationMatrix2D(center, theta, 1)
-
-
-        #shift DLC points
-        x_diff = center[0] - size[0]//2
-        y_diff = center[1] - size[1]//2
-
-        # x_diff = center[0]
-        # y_diff = center[1]
-
-
-        points = dlc_points_shifted
-        dlc_points_shifted = []
-
-        for i in points:
-            point=cv.transform(np.array([[[i[0], i[1]]]]),M)[0][0]
-
-            point[0] -= x_diff
-            point[1] -= y_diff
-
-            dlc_points_shifted.append(point)
-
-        # Perform rotation on src image
-        dst = cv.warpAffine(out.astype('float32'), M, out.shape[:2])
-        out = cv.getRectSubPix(dst, size, center)
-
-    return out, dlc_points_shifted
-
-
-def nan_helper(y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Helper function to identify NaN values in an array.
-
-    Args:
-        y (np.ndarray): Input array.
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray]: Boolean mask for NaN values and function to interpolate them.
-    """
-    return np.isnan(y), lambda z: z.nonzero()[0]
-
-
-def interpol(arr: np.ndarray) -> np.ndarray:
-    """
-    Interpolates NaN values in the given array.
-
-    Args:
-        arr (np.ndarray): Input array.
-
-    Returns:
-        np.ndarray: Array with interpolated NaN values.
-    """
-
-    y = np.transpose(arr)
-
-    nans, x = nan_helper(y[0])
-    y[0][nans]= np.interp(x(nans), x(~nans), y[0][~nans])
-    nans, x = nan_helper(y[1])
-    y[1][nans]= np.interp(x(nans), x(~nans), y[1][~nans])
-
-    arr = np.transpose(y)
-
-    return arr
-
-def background(path_to_file: str, filename: str, video_format: str = '.mp4', num_frames: int = 1000) -> np.ndarray:
-    """
-    Compute the background image from a fixed camera.
-
-    Args:
-        path_to_file (str): Path to the file directory.
-        filename (str): Name of the video file without the format.
-        video_format (str, optional): Format of the video file. Defaults to '.mp4'.
-        num_frames (int, optional): Number of frames to use for background computation. Defaults to 1000.
-
-    Returns:
-        np.ndarray: Background image.
-    """
-    import scipy.ndimage
-    capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
-
-    if not capture.isOpened():
-        raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
-
-    frame_count = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
-    ret, frame = capture.read()
-
-    height, width, _ = frame.shape
-    frames = np.zeros((height,width,num_frames))
-
-    for i in tqdm.tqdm(range(num_frames), disable=not True, desc='Compute background image for video %s' %filename):
-        rand = np.random.choice(frame_count, replace=False)
-        capture.set(1,rand)
-        ret, frame = capture.read()
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        frames[...,i] = gray
-
-    logger.info('Finishing up!')
-    medFrame = np.median(frames,2)
-    background = scipy.ndimage.median_filter(medFrame, (5,5))
-
-    # np.save(path_to_file+'videos/'+'background/'+filename+'-background.npy',background)
-
-    capture.release()
-    return background
-
 
 def align_mouse(
     path_to_file: str,
@@ -243,7 +71,7 @@ def align_mouse(
 
 
     for i in pose_list:
-        i = interpol(i)
+        i = interpol_first_rows_nans(i)
 
     if use_video:
         capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
@@ -424,7 +252,7 @@ def alignment(
 
     if use_video:
         #compute background
-        bg = background(path_to_file,filename,video_format)
+        bg = background(path_to_file,filename,video_format, save_background=False)
         capture = cv.VideoCapture(os.path.join(path_to_file,'videos',filename+video_format))
         if not capture.isOpened():
             raise Exception("Unable to open video file: {0}".format(os.path.join(path_to_file,'videos',filename+video_format)))
