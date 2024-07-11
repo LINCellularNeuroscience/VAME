@@ -12,7 +12,6 @@ Updated 5/11/2022 with PH edits
 """
 
 import os
-import umap
 import scipy
 import pickle
 import numpy as np
@@ -24,7 +23,6 @@ from vame.util.data_manipulation import consecutive
 from typing import List, Tuple
 from vame.schemas.states import save_state, CommunityFunctionSchema
 from vame.logging.logger import VameLogger
-from vame.analysis.umap import umap_vis_community_labels, umap_embedding
 
 
 logger_config = VameLogger(__name__)
@@ -420,9 +418,7 @@ def get_cohort_community_labels(
 def community(
     config: str,
     cohort: bool = True,
-    show_umap: bool = False,
     cut_tree: int | None = None,
-    save_umap_figure: bool = True,
     save_logs: bool = False
 ) -> None:
     """Perform community analysis.
@@ -430,7 +426,6 @@ def community(
     Args:
         config (str): Path to the configuration file.
         cohort (bool, optional): Flag indicating cohort analysis. Defaults to True.
-        show_umap (bool, optional): Flag indicating weather to show UMAP visualization. Defaults to False.
         cut_tree (int, optional): Cut line for tree. Defaults to None.
 
     Returns:
@@ -489,11 +484,6 @@ def community(
             with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
                 pickle.dump(communities_all, fp)
 
-            if show_umap:
-                embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
-                # TODO fix umap vis for cohort and add save path
-                umap_vis_community_labels(cfg, embed, community_labels_all)
-
         # Work in Progress
         elif not cohort:
             labels = get_labels(cfg, files, model_name, n_cluster, parametrization)
@@ -512,12 +502,6 @@ def community(
                 with open(os.path.join(path_to_file,"community","hierarchy"+file+".pkl"), "wb") as fp:   #Pickling
                     pickle.dump(communities_all[idx], fp)
 
-                if show_umap:
-                    embed = umap_embedding(cfg, file, model_name, n_cluster, parametrization)
-                    umap_save_path = None
-                    if save_umap_figure:
-                        umap_save_path = os.path.join(path_to_file, "community", file + "_umap.png")
-                    umap_vis_community_labels(cfg, embed, community_labels_all[idx], save_path=umap_save_path)
     except Exception as e:
         logger.exception(f"Error in community_analysis: {e}")
         raise e

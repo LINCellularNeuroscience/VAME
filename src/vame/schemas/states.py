@@ -57,7 +57,6 @@ class MotifVideosFunctionSchema(BaseStateSchema):
 
 class CommunityFunctionSchema(BaseStateSchema):
     cohort: bool = Field(title='Cohort', default=True)
-    show_umap: bool = Field(title='Show UMAP', default=False)
     cut_tree: int | None = Field(title='Cut tree', default=None)
 
 

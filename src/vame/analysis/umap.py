@@ -225,7 +225,10 @@ def visualization(
                     os.mkdir(os.path.join(path_to_file,"community"))
                 logger.info("Compute embedding for file %s" %file)
                 embed = umap_embedding(cfg, file, model_name, n_cluster, param)
-            logger.info("Visualizing %d data points.. " %num_points)
+                num_points = cfg['num_points']
+                if num_points > embed.shape[0]:
+                    num_points = embed.shape[0]
+
             if label is None:
                 output_figure = umap_vis(embed, num_points)
                 fig_path = os.path.join(path_to_file,"community","umap_vis_label_none_"+file+".png")
