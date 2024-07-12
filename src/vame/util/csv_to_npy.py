@@ -18,48 +18,12 @@ from vame.util.auxiliary import read_config
 from typing import Tuple
 from vame.schemas.states import CsvToNumpyFunctionSchema, save_state
 from vame.logging.logger import VameLogger
+from vame.util.data_manipulation import interpol_first_rows_nans
 
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
 
-
-def nan_helper(y: np.ndarray) -> Tuple:
-    """
-    Identifies indices of NaN values in an array and provides a function to convert them to non-NaN indices.
-
-    Args:
-        y (np.ndarray): Input array containing NaN values.
-
-    Returns:
-        Tuple[np.ndarray, Union[np.ndarray, None]]: A tuple containing two elements:
-            - An array of boolean values indicating the positions of NaN values.
-            - A lambda function to convert NaN indices to non-NaN indices.
-    """
-    return np.isnan(y), lambda z: z.nonzero()[0]
-
-
-
-def interpol(arr: np.ndarray) -> np.ndarray:
-    """Interpolates all NaN values of a given array.
-
-    Args:
-        arr (np.ndarray): A numpy array with NaN values.
-
-    Return:
-        np.ndarray: A numpy array with interpolated NaN values.
-    """
-
-    y = np.transpose(arr)
-
-    nans, x = nan_helper(y[0])
-    y[0][nans]= np.interp(x(nans), x(~nans), y[0][~nans])
-    nans, x = nan_helper(y[1])
-    y[1][nans]= np.interp(x(nans), x(~nans), y[1][~nans])
-
-    arr = np.transpose(y)
-
-    return arr
 
 
 @save_state(model=CsvToNumpyFunctionSchema)
@@ -105,7 +69,7 @@ def csv_to_numpy(config: str, save_logs=False) -> None:
 
             # interpolate NaNs
             for i in pose_list:
-                i = interpol(i)
+                i = interpol_first_rows_nans(i)
 
             positions = np.concatenate(pose_list, axis=1)
             final_positions = np.zeros((data_mat.shape[0], int(data_mat.shape[1]/3)*2))

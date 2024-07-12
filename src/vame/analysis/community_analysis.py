@@ -12,7 +12,6 @@ Updated 5/11/2022 with PH edits
 """
 
 import os
-import umap
 import scipy
 import pickle
 import numpy as np
@@ -20,6 +19,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from vame.util.auxiliary import read_config
 from vame.analysis.tree_hierarchy import graph_to_tree, draw_tree, traverse_tree_cutline
+from vame.util.data_manipulation import consecutive
 from typing import List, Tuple
 from vame.schemas.states import save_state, CommunityFunctionSchema
 from vame.logging.logger import VameLogger
@@ -86,21 +86,6 @@ def get_transition_matrix(adjacency_matrix: np.ndarray, threshold: float = 0.0) 
         transition_matrix=np.nan_to_num(transition_matrix)
     return transition_matrix
 
-
-def consecutive(data: np.ndarray, stepsize: int = 1) -> List[np.ndarray]:
-    """Identifies location of missing motif finding consecutive elements in an array and returns array(s) at the split.
-
-    Args:
-        data (np.ndarray): Input array.
-        stepsize (int, optional): Step size. Defaults to 1.
-
-    Returns:
-        List[np.ndarray]: List of arrays containing consecutive elements.
-    """
-    data = data[:]
-    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
-
-# New find_zero_labels 8/8/2022 KL
 
 
 def find_zero_labels(motif_usage: Tuple[np.ndarray, np.ndarray], n_cluster: int) -> np.ndarray:
@@ -311,7 +296,6 @@ def create_community_bag(
     return communities_all, trees
 
 def create_cohort_community_bag(
-    files: List[str],
     labels: List[np.ndarray],
     trans_mat_full: np.ndarray,
     cut_tree: int,
@@ -321,7 +305,6 @@ def create_cohort_community_bag(
     (markov chain to tree -> community detection)
 
     Args:
-        files (List[str]): List of files paths (deprecated).
         labels (List[np.ndarray]): List of label arrays.
         trans_mat_full (np.ndarray): Full transition matrix.
         cut_tree (int): Cut line for tree.
@@ -431,76 +414,11 @@ def get_cohort_community_labels(
     return community_labels_all
 
 
-def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parametrization: str) -> np.ndarray:
-    """Perform UMAP embedding for given file and parameters.
-
-    Args:
-        cfg (dict): Configuration parameters.
-        file (str): File path.
-        model_name (str): Model name.
-        n_cluster (int): Number of clusters.
-        parametrization (str): parametrization.
-
-    Returns:
-        np.ndarray: UMAP embedding.
-    """
-    reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'],
-                        random_state=cfg['random_state'])
-
-    logger.info("UMAP calculation for file %s" %file)
-
-    folder = os.path.join(cfg['project_path'],"results",file,model_name, parametrization +'-'+str(n_cluster),"")
-    latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
-
-    num_points = cfg['num_points']
-    if num_points > latent_vector.shape[0]:
-        num_points = latent_vector.shape[0]
-    logger.info("Embedding %d data points.." %num_points)
-
-    embed = reducer.fit_transform(latent_vector[:num_points,:])
-
-    return embed
-
-
-def umap_vis(cfg: dict, file: str, embed: np.ndarray, community_labels_all: np.ndarray, save_path: str | None) -> None:
-    """Create plotly visualizaton of UMAP embedding.
-
-    Args:
-        cfg (dict): Configuration parameters.
-        file (str): File path.
-        embed (np.ndarray): UMAP embedding.
-        community_labels_all (np.ndarray): Community labels.
-        save_path: Path to save the plot. If None it will not save the plot.
-
-    Returns:
-        None
-    """
-    num_points = cfg['num_points']
-    community_labels_all = np.asarray(community_labels_all)
-    if num_points > community_labels_all.shape[0]:
-        num_points = community_labels_all.shape[0]
-    logger.info("Embedding %d data points.." %num_points)
-
-    num = np.unique(community_labels_all)
-
-    fig = plt.figure(1)
-    plt.scatter(embed[:,0], embed[:,1],  c=community_labels_all[:num_points], cmap='Spectral', s=2, alpha=1)
-    plt.colorbar(boundaries=np.arange(np.max(num)+2)-0.5).set_ticks(np.arange(np.max(num)+1))
-    plt.gca().set_aspect('equal', 'datalim')
-    plt.grid(False)
-
-    if save_path is not None:
-        plt.savefig(save_path)
-        return
-    plt.show()
-
 @save_state(model=CommunityFunctionSchema)
 def community(
     config: str,
     cohort: bool = True,
-    show_umap: bool = False,
     cut_tree: int | None = None,
-    save_umap_figure: bool = True,
     save_logs: bool = False
 ) -> None:
     """Perform community analysis.
@@ -508,7 +426,6 @@ def community(
     Args:
         config (str): Path to the configuration file.
         cohort (bool, optional): Flag indicating cohort analysis. Defaults to True.
-        show_umap (bool, optional): Flag indicating weather to show UMAP visualization. Defaults to False.
         cut_tree (int, optional): Cut line for tree. Defaults to None.
 
     Returns:
@@ -551,7 +468,7 @@ def community(
             augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
             _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
             _, usage_full = np.unique(augmented_label, return_counts=True)
-            communities_all, trees = create_cohort_community_bag(files, labels, trans_mat_full, cut_tree, n_cluster)
+            communities_all, trees = create_cohort_community_bag(labels, trans_mat_full, cut_tree, n_cluster)
 
             community_labels_all = get_cohort_community_labels(files, labels, communities_all)
             # community_bag = traverse_tree_cutline(trees, cutline=cut_tree)
@@ -566,11 +483,6 @@ def community(
 
             with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
                 pickle.dump(communities_all, fp)
-
-            if show_umap:
-                embed = umap_embedding(cfg, files, model_name, n_cluster, parametrization)
-                # TODO fix umap vis for cohort and add save path
-                umap_vis(cfg, files, embed, community_labels_all)
 
         # Work in Progress
         elif not cohort:
@@ -590,12 +502,6 @@ def community(
                 with open(os.path.join(path_to_file,"community","hierarchy"+file+".pkl"), "wb") as fp:   #Pickling
                     pickle.dump(communities_all[idx], fp)
 
-                if show_umap:
-                    embed = umap_embedding(cfg, file, model_name, n_cluster, parametrization)
-                    umap_save_path = None
-                    if save_umap_figure:
-                        umap_save_path = os.path.join(path_to_file, "community", file + "_umap.png")
-                    umap_vis(cfg, files, embed, community_labels_all[idx], save_path=umap_save_path)
     except Exception as e:
         logger.exception(f"Error in community_analysis: {e}")
         raise e

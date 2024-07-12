@@ -24,12 +24,87 @@ logger_config = VameLogger(__name__)
 logger = logger_config.logger
 
 
-def umap_vis(file: str, embed: np.ndarray, num_points: int) -> None:
+def umap_embedding(cfg: dict, file: str, model_name: str, n_cluster: int, parametrization: str) -> np.ndarray:
+    """Perform UMAP embedding for given file and parameters.
+
+    Args:
+        cfg (dict): Configuration parameters.
+        file (str): File path.
+        model_name (str): Model name.
+        n_cluster (int): Number of clusters.
+        parametrization (str): parametrization.
+
+    Returns:
+        np.ndarray: UMAP embedding.
+    """
+    reducer = umap.UMAP(
+        n_components=2,
+        min_dist=cfg['min_dist'],
+        n_neighbors=cfg['n_neighbors'],
+        random_state=cfg['random_state']
+    )
+
+    logger.info("UMAP calculation for file %s" %file)
+
+    folder = os.path.join(cfg['project_path'],"results",file,model_name, parametrization +'-'+str(n_cluster),"")
+    latent_vector = np.load(os.path.join(folder,'latent_vector_'+file+'.npy'))
+
+    num_points = cfg['num_points']
+    if num_points > latent_vector.shape[0]:
+        num_points = latent_vector.shape[0]
+    logger.info("Embedding %d data points.." %num_points)
+
+    embed = reducer.fit_transform(latent_vector[:num_points,:])
+    np.save(os.path.join(folder,"community","umap_embedding_"+file+'.npy'), embed)
+
+    return embed
+
+
+def umap_vis_community_labels(cfg: dict, embed: np.ndarray, community_labels_all: np.ndarray, save_path: str | None) -> None:
+    """Create plotly visualizaton of UMAP embedding with community labels.
+
+    Args:
+        cfg (dict): Configuration parameters.
+        embed (np.ndarray): UMAP embedding.
+        community_labels_all (np.ndarray): Community labels.
+        save_path: Path to save the plot. If None it will not save the plot.
+
+    Returns:
+        None
+    """
+    num_points = cfg['num_points']
+    community_labels_all = np.asarray(community_labels_all)
+    if num_points > community_labels_all.shape[0]:
+        num_points = community_labels_all.shape[0]
+    logger.info("Embedding %d data points.." %num_points)
+
+    num = np.unique(community_labels_all)
+
+    fig = plt.figure(1)
+    plt.scatter(
+        embed[:,0],
+        embed[:,1],
+        c=community_labels_all[:num_points],
+        cmap='Spectral',
+        s=2,
+        alpha=1
+    )
+    plt.colorbar(boundaries=np.arange(np.max(num)+2)-0.5).set_ticks(np.arange(np.max(num)+1))
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.grid(False)
+
+    if save_path is not None:
+        plt.savefig(save_path)
+        return fig
+    plt.show()
+    return fig
+
+
+def umap_vis(embed: np.ndarray, num_points: int) -> None:
     """
     Visualize UMAP embedding without labels.
 
     Args:
-        file (str): Name of the file (deprecated).
         embed (np.ndarray): UMAP embedding.
         num_points (int): Number of data points to visualize.
 
@@ -46,12 +121,11 @@ def umap_vis(file: str, embed: np.ndarray, num_points: int) -> None:
     return fig
 
 
-def umap_label_vis(file: str, embed: np.ndarray, label: np.ndarray, n_cluster: int, num_points: int) -> None:
+def umap_label_vis(embed: np.ndarray, label: np.ndarray, n_cluster: int, num_points: int) -> None:
     """
     Visualize UMAP embedding with motif labels.
 
     Args:
-        file (str): Name of the file (deprecated).
         embed (np.ndarray): UMAP embedding.
         label (np.ndarray): Motif labels.
         n_cluster (int): Number of clusters.
@@ -68,12 +142,11 @@ def umap_label_vis(file: str, embed: np.ndarray, label: np.ndarray, n_cluster: i
     return fig
 
 
-def umap_vis_comm(file: str, embed: np.ndarray, community_label: np.ndarray, num_points: int) -> None:
+def umap_vis_comm(embed: np.ndarray, community_label: np.ndarray, num_points: int) -> None:
     """
     Visualize UMAP embedding with community labels.
 
     Args:
-        file (str): Name of the file (deprecated).
         embed (np.ndarray): UMAP embedding.
         community_label (np.ndarray): Community labels.
         num_points (int): Number of data points to visualize.
@@ -151,36 +224,27 @@ def visualization(
                 if not os.path.exists(os.path.join(path_to_file,"community")):
                     os.mkdir(os.path.join(path_to_file,"community"))
                 logger.info("Compute embedding for file %s" %file)
-                reducer = umap.UMAP(n_components=2, min_dist=cfg['min_dist'], n_neighbors=cfg['n_neighbors'],
-                        random_state=cfg['random_state'])
-
-                latent_vector = np.load(os.path.join(path_to_file,"",'latent_vector_'+file+'.npy'))
-
+                embed = umap_embedding(cfg, file, model_name, n_cluster, param)
                 num_points = cfg['num_points']
-                if num_points > latent_vector.shape[0]:
-                    num_points = latent_vector.shape[0]
-                logger.info("Embedding %d data points.." %num_points)
+                if num_points > embed.shape[0]:
+                    num_points = embed.shape[0]
 
-                embed = reducer.fit_transform(latent_vector[:num_points,:])
-                np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
-
-            logger.info("Visualizing %d data points.. " %num_points)
             if label is None:
-                output_figure = umap_vis(file, embed, num_points)
+                output_figure = umap_vis(embed, num_points)
                 fig_path = os.path.join(path_to_file,"community","umap_vis_label_none_"+file+".png")
                 output_figure.savefig(fig_path)
                 return output_figure
 
             if label == 'motif':
                 motif_label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
-                output_figure = umap_label_vis(file, embed, motif_label, n_cluster, num_points)
+                output_figure = umap_label_vis(embed, motif_label, n_cluster, num_points)
                 fig_path = os.path.join(path_to_file,"community","umap_vis_motif_"+file+".png")
                 output_figure.savefig(fig_path)
                 return output_figure
 
             if label == "community":
                 community_label = np.load(os.path.join(path_to_file,"","community","","community_label_"+file+".npy"))
-                output_figure = umap_vis_comm(file, embed, community_label, num_points)
+                output_figure = umap_vis_comm(embed, community_label, num_points)
                 fig_path = os.path.join(path_to_file,"community","umap_vis_community_"+file+".png")
                 output_figure.savefig(fig_path)
                 return output_figure

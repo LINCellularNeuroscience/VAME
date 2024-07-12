@@ -299,7 +299,6 @@ def graph_to_tree(
 
     return T
 
-
 def draw_tree(T: nx.Graph) -> None:
     """
     Draw a tree.
@@ -316,110 +315,6 @@ def draw_tree(T: nx.Graph) -> None:
     nx.draw_networkx(T, pos)
     figManager = plt.get_current_fig_manager()
     #figManager.window.showMaximized()
-
-
-
-def traverse_tree(T: nx.Graph, root_node: str | None = None) -> str:
-    # TODO duplicated function def
-    """
-    Traverse a tree and return the traversal sequence.
-
-    Args:
-        T (nx.Graph): The tree to be traversed.
-        root_node (str, optional): The root node of the tree. If None, traversal starts from the root.
-
-    Returns:
-        str: The traversal sequence.
-    """
-    if root_node == None:
-        node=['Root']
-    else:
-        node=[root_node]
-    traverse_list = []
-    traverse_preorder = '{'
-
-    def _traverse_tree(T, node, traverse_preorder):
-        traverse_preorder += str(node[0])
-        traverse_list.append(node[0])
-        children = list(T.neighbors(node[0]))
-
-        if len(children) == 3:
-    #        print(children)
-            for child in children:
-                if child in traverse_list:
-#                    print(child)
-                    children.remove(child)
-
-        if len(children) > 1:
-            traverse_preorder += '{'
-            traverse_preorder_temp = _traverse_tree(T, [children[0]], '')
-            traverse_preorder += traverse_preorder_temp
-
-            traverse_preorder += '}{'
-
-            traverse_preorder_temp = _traverse_tree(T, [children[1]], '')
-            traverse_preorder += traverse_preorder_temp
-            traverse_preorder += '}'
-
-        return traverse_preorder
-
-    traverse_preorder = _traverse_tree(T, node, traverse_preorder)
-    traverse_preorder += '}'
-
-    return traverse_preorder
-
-
-
-def _traverse_tree(T: nx.Graph, node: List[str], traverse_preorder: str, traverse_list: List[str]) -> str:
-    # TODO duplicated function def
-    # Aux function for traverse_tree
-    traverse_preorder += str(node[0])
-    traverse_list.append(node[0])
-    children = list(T.neighbors(node[0]))
-
-    if len(children) == 3:
-#        print(children)
-        for child in children:
-            if child in traverse_list:
-#                    print(child)
-                children.remove(child)
-
-    if len(children) > 1:
-        traverse_preorder += '{'
-        traverse_preorder_temp = _traverse_tree(T, [children[0]], '',traverse_list)
-        traverse_preorder += traverse_preorder_temp
-
-        traverse_preorder += '}{'
-
-        traverse_preorder_temp = _traverse_tree(T, [children[1]], '',traverse_list)
-        traverse_preorder += traverse_preorder_temp
-        traverse_preorder += '}'
-
-    return traverse_preorder
-
-def traverse_tree(T: nx.Graph, root_node: str | None = None) -> str:
-    # TODO duplicated function def
-    """
-    Traverse a tree and return the traversal sequence.
-
-    Args:
-        T (nx.Graph): The tree to be traversed.
-        root_node (str, optional): The root node of the tree. If None, traversal starts from the root.
-
-    Returns:
-        str: The traversal sequence.
-    """
-    if root_node == None:
-        node=['Root']
-    else:
-        node=[root_node]
-    traverse_list = []
-    traverse_preorder = '{'
-    traverse_preorder = _traverse_tree(T, node, traverse_preorder,traverse_list)
-    traverse_preorder += '}'
-
-    return traverse_preorder
-
 
 def _traverse_tree_cutline(
     T: nx.Graph,

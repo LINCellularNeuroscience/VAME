@@ -87,7 +87,4 @@ class ProjectSchema(BaseModel):
     kl_start: int = Field(default=2, title='KL start')
     annealtime: int = Field(default=4, title='Annealtime')
 
-    # Legacy mode
-    legacy: bool = Field(default=False, title='Legacy mode')
-
     model_config: ConfigDict = ConfigDict(protected_namespaces=())
