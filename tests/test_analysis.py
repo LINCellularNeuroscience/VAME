@@ -107,9 +107,20 @@ def test_community_videos_files_exists(setup_project_and_train_model):
 
 
 @pytest.mark.parametrize("label", [None, "motif", "community"])
-def test_visualization_output_type(setup_project_and_train_model, label):
+def test_visualization_output_files(setup_project_and_train_model, label):
     fig = vame.visualization(setup_project_and_train_model['config_path'], label=label, save_logs=True)
-    assert isinstance(fig, Figure)
+
+    project_path = setup_project_and_train_model['config_data']['project_path']
+    file = setup_project_and_train_model['config_data']['video_sets'][0]
+    model_name = setup_project_and_train_model['config_data']['model_name']
+    n_cluster = setup_project_and_train_model['config_data']['n_cluster']
+    parametrization = setup_project_and_train_model['config_data']['parametrization']
+    project_path = setup_project_and_train_model['config_data']['project_path']
+
+    save_base_path = Path(project_path) / 'results' / file / model_name / f"{parametrization}-{n_cluster}" / 'community'
+    # asser exists umap_vis*.png files
+    assert len(list(save_base_path.glob(f"umap_vis*{file}.png"))) > 0
+
 
 
 @pytest.mark.parametrize("mode", ["sampling", "reconstruction", "motifs"])
