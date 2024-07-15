@@ -212,6 +212,7 @@ def visualization(
         else:
             files.append(all_flag)
 
+
         for idx, file in enumerate(files):
             path_to_file=os.path.join(cfg['project_path'],"results",file,"",model_name,"",param+'-'+str(n_cluster))
 
@@ -233,21 +234,19 @@ def visualization(
                 output_figure = umap_vis(embed, num_points)
                 fig_path = os.path.join(path_to_file,"community","umap_vis_label_none_"+file+".png")
                 output_figure.savefig(fig_path)
-                return output_figure
+                output_figure
 
             if label == 'motif':
                 motif_label = np.load(os.path.join(path_to_file,"",str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
                 output_figure = umap_label_vis(embed, motif_label, n_cluster, num_points)
                 fig_path = os.path.join(path_to_file,"community","umap_vis_motif_"+file+".png")
                 output_figure.savefig(fig_path)
-                return output_figure
 
             if label == "community":
                 community_label = np.load(os.path.join(path_to_file,"","community","","community_label_"+file+".npy"))
                 output_figure = umap_vis_comm(embed, community_label, num_points)
                 fig_path = os.path.join(path_to_file,"community","umap_vis_community_"+file+".png")
                 output_figure.savefig(fig_path)
-                return output_figure
     except Exception as e:
         logger.exception(str(e))
         raise e
