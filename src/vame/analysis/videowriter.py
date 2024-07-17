@@ -19,6 +19,7 @@ from vame.util.auxiliary import read_config
 from vame.schemas.states import save_state, MotifVideosFunctionSchema, CommunityVideosFunctionSchema
 import imageio
 from vame.logging.logger import VameLogger, TqdmToLogger
+from vame.schemas.project import Parametrizations
 
 
 logger_config = VameLogger(__name__)
@@ -111,6 +112,7 @@ def get_cluster_vid(
 @save_state(model=MotifVideosFunctionSchema)
 def motif_videos(
     config: Union[str, Path],
+    parametrization: Parametrizations,
     videoType: str = '.mp4',
     output_video_type: str = '.mp4',
     save_logs: bool = False
@@ -136,41 +138,40 @@ def motif_videos(
             tqdm_logger_stream = TqdmToLogger(logger=logger)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
-        parametrizations = cfg['parametrization']
         flag = 'motif'
 
-        for param in parametrizations:
-            logger.info(f"Creating motif videos for parametrization: {param}...")
-            files = []
-            if cfg['all_data'] == 'No':
-                all_flag = input("Do you want to write motif videos for your entire dataset? \n"
-                            "If you only want to use a specific dataset type filename: \n"
-                            "yes/no/filename ")
-            else:
-                all_flag = 'yes'
 
-            if all_flag == 'yes' or all_flag == 'Yes':
-                for file in cfg['video_sets']:
+        logger.info(f"Creating motif videos for parametrization: {parametrization}...")
+        files = []
+        if cfg['all_data'] == 'No':
+            all_flag = input("Do you want to write motif videos for your entire dataset? \n"
+                        "If you only want to use a specific dataset type filename: \n"
+                        "yes/no/filename ")
+        else:
+            all_flag = 'yes'
+
+        if all_flag == 'yes' or all_flag == 'Yes':
+            for file in cfg['video_sets']:
+                files.append(file)
+
+        elif all_flag == 'no' or all_flag == 'No':
+            for file in cfg['video_sets']:
+                use_file = input("Do you want to quantify " + file + "? yes/no: ")
+                if use_file == 'yes':
                     files.append(file)
+                if use_file == 'no':
+                    continue
+        else:
+            files.append(all_flag)
 
-            elif all_flag == 'no' or all_flag == 'No':
-                for file in cfg['video_sets']:
-                    use_file = input("Do you want to quantify " + file + "? yes/no: ")
-                    if use_file == 'yes':
-                        files.append(file)
-                    if use_file == 'no':
-                        continue
-            else:
-                files.append(all_flag)
+        logger.info("Cluster size is: %d " %n_cluster)
+        for file in files:
+            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")
+            if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
+                os.mkdir(os.path.join(path_to_file,"cluster_videos"))
 
-            logger.info("Cluster size is: %d " %n_cluster)
-            for file in files:
-                path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
-                if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
-                    os.mkdir(os.path.join(path_to_file,"cluster_videos"))
-
-                get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, param, output_video_type=output_video_type, tqdm_logger_stream=tqdm_logger_stream)
-            logger.info("All videos have been created!")
+            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, parametrization, output_video_type=output_video_type, tqdm_logger_stream=tqdm_logger_stream)
+        logger.info("All videos have been created!")
     except Exception as e:
         logger.exception(f"Error in motif_videos: {e}")
         raise e

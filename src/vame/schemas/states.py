@@ -4,6 +4,7 @@ from typing import Optional, Dict
 from pathlib import Path
 import json
 from enum import Enum
+from vame.schemas.project import Parametrizations
 
 class StatesEnum(str, Enum):
     success = 'success'
@@ -52,10 +53,13 @@ class PoseSegmentationFunctionSchema(BaseStateSchema):
 
 class MotifVideosFunctionSchema(BaseStateSchema):
     videoType: str = Field(title='Type of video', default='.mp4')
+    parametrization: Parametrizations = Field(title='Parametrization')
+    output_video_type: str = Field(title='Type of output video', default='.mp4')
 
 
 class CommunityFunctionSchema(BaseStateSchema):
     cohort: bool = Field(title='Cohort', default=True)
+    parametrization: Parametrizations = Field(title='Parametrization')
     show_umap: bool = Field(title='Show UMAP', default=False)
     cut_tree: int | None = Field(title='Cut tree', default=None)
 
