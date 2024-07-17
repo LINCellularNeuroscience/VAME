@@ -469,6 +469,11 @@ def community(
             files.append(all_flag)
 
         if cohort:
+            path_to_file = Path(os.path.join(cfg['project_path'], "results", 'community_cohort', parametrization + '-'+str(n_cluster)))
+
+            if not path_to_file.exists():
+                path_to_file.mkdir(parents=True, exist_ok=True)
+
             labels = get_community_label(cfg, files, model_name, n_cluster, parametrization)
             augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
             _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
@@ -481,12 +486,12 @@ def community(
             # convert communities_all to dtype object numpy array because communities_all is an inhomogeneous list
             communities_all = np.array(communities_all, dtype=object)
 
-            np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
-            np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
-            np.save(os.path.join(cfg['project_path'],"cohort_" + parametrization + "_label"+'.npy'), labels)
-            np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
+            np.save(os.path.join(path_to_file,"cohort_transition_matrix"+'.npy'),trans_mat_full)
+            np.save(os.path.join(path_to_file,"cohort_community_label"+'.npy'), community_labels_all)
+            np.save(os.path.join(path_to_file,"cohort_" + parametrization + "_label"+'.npy'), labels)
+            np.save(os.path.join(path_to_file,"cohort_community_bag"+'.npy'), communities_all)
 
-            with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
+            with open(os.path.join(path_to_file, "hierarchy"+".pkl"), "wb") as fp:   #Pickling
                 pickle.dump(communities_all, fp)
 
         # Work in Progress

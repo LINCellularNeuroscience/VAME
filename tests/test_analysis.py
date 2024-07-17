@@ -78,11 +78,13 @@ def test_cohort_community_files_exists(setup_project_and_train_model, parametriz
         parametrization=parametrization
     )
     project_path = setup_project_and_train_model['config_data']['project_path']
+    n_cluster = setup_project_and_train_model['config_data']['n_cluster']
 
-    cohort_path = Path(project_path) /  "cohort_transition_matrix.npy"
-    community_path = Path(project_path) /  "cohort_community_label.npy"
-    cohort_parametrization_path = Path(project_path) /  f"cohort_{parametrization}_label.npy"
-    cohort_community_bag_path = Path(project_path) /  "cohort_community_bag.npy"
+    base_path = Path(project_path) / "results" / 'community_cohort' / f'{parametrization}-{n_cluster}'
+    cohort_path = base_path /  "cohort_transition_matrix.npy"
+    community_path = base_path /  "cohort_community_label.npy"
+    cohort_parametrization_path = base_path /  f"cohort_{parametrization}_label.npy"
+    cohort_community_bag_path = base_path /  "cohort_community_bag.npy"
 
     assert cohort_path.exists()
     assert community_path.exists()
