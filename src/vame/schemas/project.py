@@ -55,7 +55,7 @@ class ProjectSchema(BaseModel):
     softplus: bool = Field(default=False, title='Softplus')
 
     # Segmentation:
-    parametrization: List[Parametrizations] = Field(
+    parametrizations: List[Parametrizations] = Field(
         title='Parametrizations',
         default_factory=lambda: [Parametrizations.hmm.value, Parametrizations.kmeans.value]
     )

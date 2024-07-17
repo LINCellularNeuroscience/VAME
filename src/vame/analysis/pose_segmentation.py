@@ -223,7 +223,7 @@ def pose_segmentation(config: str, save_logs: bool = False) -> None:
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
         fixed = cfg['egocentric_data']
-        parametrizations = cfg['parametrization']
+        parametrizations = cfg['parametrizations']
 
         logger.info('Pose segmentation for VAME model: %s \n' %model_name)
         ind_param = cfg['individual_parametrization']

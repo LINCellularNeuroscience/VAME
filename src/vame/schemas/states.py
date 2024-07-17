@@ -65,6 +65,7 @@ class CommunityFunctionSchema(BaseStateSchema):
 
 
 class CommunityVideosFunctionSchema(BaseStateSchema):
+    parametrization: Parametrizations = Field(title='Parametrization')
     videoType: str = Field(title='Type of video', default='.mp4')
 
 
@@ -73,6 +74,7 @@ class VisualizationFunctionSchema(BaseStateSchema):
     label: Optional[str] = Field(title='Type of labels to visualize', default=None)
 
 class GenerativeModelFunctionSchema(BaseStateSchema):
+    parametrization: Parametrizations = Field(title='Parametrization')
     mode: GenerativeModelModeEnum = Field(title='Mode for generating samples', default=GenerativeModelModeEnum.sampling)
 
 class VAMEPipelineStatesSchema(BaseModel):

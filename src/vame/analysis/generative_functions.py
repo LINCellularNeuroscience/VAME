@@ -19,6 +19,7 @@ from vame.util.auxiliary import read_config
 from vame.logging.logger import VameLogger
 from typing import Dict
 from vame.util.model_util import load_model
+from vame.schemas.project import Parametrizations
 
 
 logger_config = VameLogger(__name__)
@@ -192,7 +193,7 @@ def visualize_cluster_center(cfg: dict, model: torch.nn.Module, cluster_center: 
 
 
 @save_state(model=GenerativeModelFunctionSchema)
-def generative_model(config: str,  parametrization: str, mode: str = "sampling", save_logs: bool = False) -> Dict[str, plt.Figure]:
+def generative_model(config: str,  parametrization: Parametrizations, mode: str = "sampling", save_logs: bool = False) -> Dict[str, plt.Figure]:
     """Generative model.
 
     Args:
@@ -211,7 +212,7 @@ def generative_model(config: str,  parametrization: str, mode: str = "sampling",
         logger.info(f'Running generative model with mode {mode}...')
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
-        parametrizations = cfg['parametrization']
+        parametrizations = cfg['parametrizations']
 
         if parametrization not in parametrizations:
             raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
