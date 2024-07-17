@@ -10,6 +10,7 @@ class StatesEnum(str, Enum):
     success = 'success'
     failed = 'failed'
     running = 'running'
+    aborted = 'aborted'
 
 class GenerativeModelModeEnum(str, Enum):
     sampling = 'sampling'
@@ -60,7 +61,6 @@ class MotifVideosFunctionSchema(BaseStateSchema):
 class CommunityFunctionSchema(BaseStateSchema):
     cohort: bool = Field(title='Cohort', default=True)
     parametrization: Parametrizations = Field(title='Parametrization')
-    show_umap: bool = Field(title='Show UMAP', default=False)
     cut_tree: int | None = Field(title='Cut tree', default=None)
 
 
@@ -69,6 +69,7 @@ class CommunityVideosFunctionSchema(BaseStateSchema):
 
 
 class VisualizationFunctionSchema(BaseStateSchema):
+    parametrization: Parametrizations = Field(title='Parametrization')
     label: Optional[str] = Field(title='Type of labels to visualize', default=None)
 
 class GenerativeModelFunctionSchema(BaseStateSchema):
@@ -138,6 +139,9 @@ def save_state(model: BaseModel):
                 return func_output
             except Exception as e:
                 _save_state(kwargs_model, function_name, state=StatesEnum.failed)
+                raise e
+            except KeyboardInterrupt as e:
+                _save_state(kwargs_model, function_name, state=StatesEnum.aborted)
                 raise e
         return wrapper
     return decorator

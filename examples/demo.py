@@ -56,7 +56,7 @@ vame.pose_segmentation(config)
 # vame.motif_videos(config, videoType='.mp4')
 
 # # OPTIONAL: Create behavioural hierarchies via community detection
-# vame.community(config, show_umap=False, cut_tree=2)
+# vame.community(config, cut_tree=2)
 
 # # OPTIONAL: Create community videos to get insights about behavior on a hierarchical scale
 # vame.community_videos(config)

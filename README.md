@@ -4,6 +4,9 @@
 <a href="https://codecov.io/gh/EthoML/VAME" >
  <img src="https://codecov.io/gh/EthoML/VAME/graph/badge.svg?token=J1CUXB4N0E"/>
  </a>
+   <a href="https://pypi.org/project/vame-py">
+    <img src="https://img.shields.io/pypi/v/vame-py?color=%231BA331&label=PyPI&logo=python&logoColor=%23F7F991%20">
+  </a>
 </p>
 
 🌟 Welcome to EthoML/VAME (Variational Animal Motion Encoding), an open-source machine learning tool for behavioral segmentation and analyses.
