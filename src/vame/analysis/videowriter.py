@@ -19,6 +19,7 @@ from vame.util.auxiliary import read_config
 from vame.schemas.states import save_state, MotifVideosFunctionSchema, CommunityVideosFunctionSchema
 import imageio
 from vame.logging.logger import VameLogger, TqdmToLogger
+from vame.schemas.project import Parametrizations
 
 
 logger_config = VameLogger(__name__)
@@ -32,6 +33,7 @@ def get_cluster_vid(
     n_cluster: int,
     videoType: str,
     flag: str,
+    param: Parametrizations,
     output_video_type: str = ".mp4",
     tqdm_logger_stream: TqdmToLogger | None = None,
 ) -> None:
@@ -52,7 +54,7 @@ def get_cluster_vid(
     if output_video_type not in ['.mp4', '.avi']:
         raise ValueError("Output video type must be either '.avi' or '.mp4'.")
 
-    param = cfg['parametrization']
+
     if flag == "motif":
         logger.info("Motif videos getting created for "+file+" ...")
         labels = np.load(os.path.join(path_to_file,str(n_cluster)+'_' + param + '_label_'+file+'.npy'))
@@ -110,6 +112,7 @@ def get_cluster_vid(
 @save_state(model=MotifVideosFunctionSchema)
 def motif_videos(
     config: Union[str, Path],
+    parametrization: Parametrizations,
     videoType: str = '.mp4',
     output_video_type: str = '.mp4',
     save_logs: bool = False
@@ -129,15 +132,21 @@ def motif_videos(
         tqdm_logger_stream = None
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
+        parametrizations = cfg['parametrizations']
+
+        if parametrization not in parametrizations:
+            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
+
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'motif_videos.log'
             logger_config.add_file_handler(log_path)
             tqdm_logger_stream = TqdmToLogger(logger=logger)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
-        param = cfg['parametrization']
         flag = 'motif'
 
+
+        logger.info(f"Creating motif videos for parametrization: {parametrization}...")
         files = []
         if cfg['all_data'] == 'No':
             all_flag = input("Do you want to write motif videos for your entire dataset? \n"
@@ -162,11 +171,11 @@ def motif_videos(
 
         logger.info("Cluster size is: %d " %n_cluster)
         for file in files:
-            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
+            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")
             if not os.path.exists(os.path.join(path_to_file,"cluster_videos")):
                 os.mkdir(os.path.join(path_to_file,"cluster_videos"))
 
-            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, output_video_type=output_video_type, tqdm_logger_stream=tqdm_logger_stream)
+            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, parametrization, output_video_type=output_video_type, tqdm_logger_stream=tqdm_logger_stream)
         logger.info("All videos have been created!")
     except Exception as e:
         logger.exception(f"Error in motif_videos: {e}")
@@ -176,7 +185,12 @@ def motif_videos(
 
 
 @save_state(model=CommunityVideosFunctionSchema)
-def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_logs: bool = False) -> None:
+def community_videos(
+    config: Union[str, Path],
+    parametrization: Parametrizations,
+    videoType: str = '.mp4',
+    save_logs: bool = False
+) -> None:
     """
     Generate community videos.
 
@@ -191,6 +205,10 @@ def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_log
         tqdm_logger_stream = None
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
+        parametrizations = cfg['parametrizations']
+
+        if parametrization not in parametrizations:
+            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
 
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'community_videos.log'
@@ -198,7 +216,6 @@ def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_log
             tqdm_logger_stream = TqdmToLogger(logger=logger)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
-        param = cfg['parametrization']
         flag = 'community'
 
         files = []
@@ -225,11 +242,11 @@ def community_videos(config: Union[str, Path], videoType: str = '.mp4', save_log
 
         logger.info("Cluster size is: %d " %n_cluster)
         for file in files:
-            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
+            path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,parametrization+'-'+str(n_cluster),"")
             if not os.path.exists(os.path.join(path_to_file,"community_videos")):
                 os.mkdir(os.path.join(path_to_file,"community_videos"))
 
-            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, tqdm_logger_stream=tqdm_logger_stream)
+            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, parametrization, tqdm_logger_stream=tqdm_logger_stream)
 
         logger.info("All videos have been created!")
 

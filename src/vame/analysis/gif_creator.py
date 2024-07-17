@@ -21,6 +21,7 @@ from vame.util.auxiliary import read_config
 from vame.util.gif_pose_helper import get_animal_frames
 from typing import List, Tuple
 from vame.logging.logger import VameLogger
+from vame.schemas.project import Parametrizations
 
 
 
@@ -91,6 +92,7 @@ def create_video(
 def gif(
     config: str,
     pose_ref_index: int,
+    parametrization: Parametrizations,
     subtract_background: bool = True,
     start: int | None = None,
     length: int = 500,
@@ -120,7 +122,9 @@ def gif(
     cfg = read_config(config_file)
     model_name = cfg['model_name']
     n_cluster = cfg['n_cluster']
-    param = cfg['parametrization']
+
+    if parametrization not in cfg['parametrizations']:
+        raise ValueError("Parametrization not found in config")
 
     files = []
     if cfg['all_data'] == 'No':
@@ -146,7 +150,7 @@ def gif(
 
 
     for file in files:
-        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name,param+'-'+str(n_cluster),"")
+        path_to_file=os.path.join(cfg['project_path'],"results",file,model_name, parametrization+'-'+str(n_cluster),"")
         if not os.path.exists(os.path.join(path_to_file,"gif_frames")):
             os.mkdir(os.path.join(path_to_file,"gif_frames"))
 
@@ -173,7 +177,7 @@ def gif(
             np.save(os.path.join(path_to_file,"community","umap_embedding_"+file+'.npy'), embed)
 
         if label == "motif":
-            umap_label = np.load(os.path.join(path_to_file,str(n_cluster)+"_" + param + "_label_"+file+'.npy'))
+            umap_label = np.load(os.path.join(path_to_file,str(n_cluster)+"_" + parametrization + "_label_"+file+'.npy'))
         elif label == "community":
             umap_label = np.load(os.path.join(path_to_file,"community","community_label_"+file+'.npy'))
         elif label is None:
