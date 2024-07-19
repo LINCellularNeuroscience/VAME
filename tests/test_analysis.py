@@ -11,7 +11,7 @@ def test_pose_segmentation_files_exists(setup_project_and_train_model, individua
     mock_config = {**setup_project_and_train_model['config_data'], 'individual_parametrization': individual_parametrization}
     with patch("vame.util.auxiliary.read_config", return_value=mock_config):
         with patch('builtins.input', return_value='yes'):
-            vame.pose_segmentation(setup_project_and_train_model['config_path'])
+            vame.pose_segmentation(setup_project_and_train_model['config_path'], save_logs=True)
     project_path = setup_project_and_train_model['config_data']['project_path']
     file = setup_project_and_train_model['config_data']['video_sets'][0]
     model_name = setup_project_and_train_model['config_data']['model_name']
