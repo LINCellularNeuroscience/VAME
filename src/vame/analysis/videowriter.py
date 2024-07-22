@@ -189,7 +189,8 @@ def community_videos(
     config: Union[str, Path],
     parametrization: Parametrizations,
     videoType: str = '.mp4',
-    save_logs: bool = False
+    save_logs: bool = False,
+    output_video_type: str = '.mp4'
 ) -> None:
     """
     Generate community videos.
@@ -246,7 +247,7 @@ def community_videos(
             if not os.path.exists(os.path.join(path_to_file,"community_videos")):
                 os.mkdir(os.path.join(path_to_file,"community_videos"))
 
-            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, parametrization, tqdm_logger_stream=tqdm_logger_stream)
+            get_cluster_vid(cfg, path_to_file, file, n_cluster, videoType, flag, parametrization, tqdm_logger_stream=tqdm_logger_stream, output_video_type=output_video_type)
 
         logger.info("All videos have been created!")
 
