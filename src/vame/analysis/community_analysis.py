@@ -438,8 +438,6 @@ def community(
         cfg = read_config(config_file)
         parametrizations = cfg['parametrizations']
 
-        if parametrization not in parametrizations:
-            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'community.log'
             logger_config.add_file_handler(log_path)

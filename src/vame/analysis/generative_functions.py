@@ -214,9 +214,6 @@ def generative_model(config: str,  parametrization: Parametrizations, mode: str 
         n_cluster = cfg['n_cluster']
         parametrizations = cfg['parametrizations']
 
-        if parametrization not in parametrizations:
-            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
-
         files = []
         if cfg['all_data'] == 'No':
             all_flag = input("Do you want to write motif videos for your entire dataset? \n"

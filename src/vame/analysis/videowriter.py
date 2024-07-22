@@ -134,9 +134,6 @@ def motif_videos(
         cfg = read_config(config_file)
         parametrizations = cfg['parametrizations']
 
-        if parametrization not in parametrizations:
-            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
-
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'motif_videos.log'
             logger_config.add_file_handler(log_path)
@@ -207,9 +204,6 @@ def community_videos(
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
         parametrizations = cfg['parametrizations']
-
-        if parametrization not in parametrizations:
-            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
 
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'community_videos.log'

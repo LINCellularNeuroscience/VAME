@@ -80,15 +80,6 @@ def test_community_files_exists(setup_project_and_train_model, parametrization):
     assert hierarchy_path.exists()
 
 
-def test_community_parametrization_not_exists(setup_project_and_train_model):
-    with pytest.raises(ValueError):
-        vame.community(
-            config=setup_project_and_train_model['config_path'],
-            cut_tree=2,
-            cohort=False,
-            parametrization='any'
-        )
-
 @pytest.mark.parametrize('parametrization', ['hmm', 'kmeans'])
 def test_cohort_community_files_exists(setup_project_and_train_model, parametrization):
     # Check if the files are created
@@ -187,14 +178,6 @@ def test_generative_model_figures(setup_project_and_train_model, mode, parametri
     )
     assert isinstance(generative_figure, Figure)
 
-def test_generative_parametrization_not_exists(setup_project_and_train_model):
-    with pytest.raises(ValueError):
-        vame.generative_model(
-            config=setup_project_and_train_model['config_path'],
-            parametrization='any',
-            mode='centers',
-            save_logs=True
-        )
 
 def test_generative_kmeans_wrong_mode(setup_project_and_train_model):
     with pytest.raises(ValueError):

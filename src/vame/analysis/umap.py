@@ -185,9 +185,6 @@ def visualization(
         cfg = read_config(config_file)
         parametrizations = cfg['parametrizations']
 
-        if parametrization not in parametrizations:
-            raise ValueError(f"Parametrization {parametrization} not found in configuration file.")
-
         if save_logs:
             logs_path = Path(cfg['project_path']) / "logs" / 'visualization.log'
             logger_config.add_file_handler(logs_path)
