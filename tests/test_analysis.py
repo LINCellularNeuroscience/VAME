@@ -7,11 +7,12 @@ from vame.util.gif_pose_helper import background
 
 
 @pytest.mark.parametrize(
-    'individual_parametrization,parametrization',
-    [(True, 'hmm'), (False, 'hmm'), (True, 'kmeans'), (False, 'kmeans')])
-def test_pose_segmentation_hmm_files_exists(setup_project_and_train_model, individual_parametrization, parametrization):
+    'individual_parametrization,parametrization,hmm_trained',
+    [(True, 'hmm', False), (False, 'hmm', False), (False, 'hmm', True), (True, 'kmeans', False), (False, 'kmeans', False)])
+def test_pose_segmentation_hmm_files_exists(setup_project_and_train_model, individual_parametrization, parametrization, hmm_trained):
     mock_config = {**setup_project_and_train_model['config_data'], 'individual_parametrization': individual_parametrization}
-    with patch("vame.util.auxiliary.read_config", return_value=mock_config):
+    mock_config['hmm_trained'] = hmm_trained
+    with patch("vame.analysis.pose_segmentation.read_config", return_value=mock_config) as mock_read_config:
         with patch('builtins.input', return_value='yes'):
             vame.pose_segmentation(setup_project_and_train_model['config_path'], save_logs=True)
     project_path = setup_project_and_train_model['config_data']['project_path']
