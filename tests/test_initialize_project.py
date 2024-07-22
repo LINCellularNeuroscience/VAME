@@ -1,5 +1,6 @@
 from pathlib import Path
 from vame.util.auxiliary import read_config
+from vame import init_new_project
 
 def test_project_config_exists(setup_project_not_aligned_data):
     """
@@ -15,3 +16,11 @@ def test_project_name_config(setup_project_not_aligned_data):
     config_values = read_config(config)
     assert config_values['Project'] == setup_project_not_aligned_data['project_name']
 
+
+def test_existing_project(setup_project_not_aligned_data):
+    init_new_project(
+        project=setup_project_not_aligned_data['project_name'],
+        videos=setup_project_not_aligned_data['videos'],
+        poses_estimations=setup_project_not_aligned_data['videos'],
+        working_directory='./tests'
+    )

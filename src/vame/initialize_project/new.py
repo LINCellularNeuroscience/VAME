@@ -38,7 +38,7 @@ def init_new_project(
     project: str,
     videos: List[str],
     poses_estimations: List[str],
-    working_directory: str = None,
+    working_directory: str = '.',
     videotype: str = '.mp4'
 ) -> str:
     """Creates a new VAME project with the given parameters.
@@ -59,9 +59,6 @@ def init_new_project(
     year = date.year
     d = str(month[0:3]+str(day))
     date = dt.today().strftime('%Y-%m-%d')
-
-    if working_directory is None:
-        working_directory = '.'
 
     wd = Path(working_directory).resolve()
     project_name = '{pn}-{date}'.format(pn=project, date=d+'-'+str(year))
