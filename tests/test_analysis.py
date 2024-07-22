@@ -28,9 +28,8 @@ def test_pose_segmentation_hmm_files_exists(setup_project_and_train_model, indiv
 
 
 @pytest.mark.parametrize('parametrization', ['hmm', 'kmeans'])
-def test_motif_videos_files_exists(setup_project_and_train_model, parametrization):
-    # Check if the files are created
-    vame.motif_videos(setup_project_and_train_model['config_path'], parametrization=parametrization)
+def test_motif_videos_mp4_files_exists(setup_project_and_train_model, parametrization):
+    vame.motif_videos(setup_project_and_train_model['config_path'], parametrization=parametrization, output_video_type='.mp4', save_logs=True)
     project_path = setup_project_and_train_model['config_data']['project_path']
     file = setup_project_and_train_model['config_data']['video_sets'][0]
     model_name = setup_project_and_train_model['config_data']['model_name']
@@ -41,6 +40,19 @@ def test_motif_videos_files_exists(setup_project_and_train_model, parametrizatio
     assert len(list(save_base_path.glob("*.mp4"))) > 0
     assert len(list(save_base_path.glob("*.mp4"))) <= n_cluster
 
+@pytest.mark.parametrize('parametrization', ['hmm', 'kmeans'])
+def test_motif_videos_avi_files_exists(setup_project_and_train_model, parametrization):
+    # Check if the files are created
+    vame.motif_videos(setup_project_and_train_model['config_path'], parametrization=parametrization, output_video_type='.avi', save_logs=True)
+    project_path = setup_project_and_train_model['config_data']['project_path']
+    file = setup_project_and_train_model['config_data']['video_sets'][0]
+    model_name = setup_project_and_train_model['config_data']['model_name']
+    n_cluster = setup_project_and_train_model['config_data']['n_cluster']
+
+    save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "cluster_videos"
+
+    assert len(list(save_base_path.glob("*.avi"))) > 0
+    assert len(list(save_base_path.glob("*.avi"))) <= n_cluster
 
 @pytest.mark.parametrize('parametrization', ['hmm', 'kmeans'])
 def test_community_files_exists(setup_project_and_train_model, parametrization):
@@ -49,7 +61,8 @@ def test_community_files_exists(setup_project_and_train_model, parametrization):
         setup_project_and_train_model['config_path'],
         cut_tree=2,
         cohort=False,
-        parametrization=parametrization
+        parametrization=parametrization,
+        save_logs=True
     )
     project_path = setup_project_and_train_model['config_data']['project_path']
     file = setup_project_and_train_model['config_data']['video_sets'][0]
@@ -66,6 +79,15 @@ def test_community_files_exists(setup_project_and_train_model, parametrization):
     assert community_label_path.exists()
     assert hierarchy_path.exists()
 
+
+def test_community_parametrization_not_exists(setup_project_and_train_model):
+    with pytest.raises(ValueError):
+        vame.community(
+            config=setup_project_and_train_model['config_path'],
+            cut_tree=2,
+            cohort=False,
+            parametrization='any'
+        )
 
 @pytest.mark.parametrize('parametrization', ['hmm', 'kmeans'])
 def test_cohort_community_files_exists(setup_project_and_train_model, parametrization):
@@ -93,12 +115,13 @@ def test_cohort_community_files_exists(setup_project_and_train_model, parametriz
 
 
 @pytest.mark.parametrize('parametrization', ['hmm', 'kmeans'])
-def test_community_videos_files_exists(setup_project_and_train_model, parametrization):
+def test_community_videos_mp4_files_exists(setup_project_and_train_model, parametrization):
 
     vame.community_videos(
         config=setup_project_and_train_model['config_path'],
         parametrization=parametrization,
-        save_logs=True
+        save_logs=True,
+        output_video_type='.mp4'
     )
     file = setup_project_and_train_model['config_data']['video_sets'][0]
     model_name = setup_project_and_train_model['config_data']['model_name']
@@ -110,6 +133,24 @@ def test_community_videos_files_exists(setup_project_and_train_model, parametriz
     assert len(list(save_base_path.glob("*.mp4"))) > 0
     assert len(list(save_base_path.glob("*.mp4"))) <= n_cluster
 
+@pytest.mark.parametrize('parametrization', ['hmm', 'kmeans'])
+def test_community_videos_avi_files_exists(setup_project_and_train_model, parametrization):
+
+    vame.community_videos(
+        config=setup_project_and_train_model['config_path'],
+        parametrization=parametrization,
+        save_logs=True,
+        output_video_type='.avi'
+    )
+    file = setup_project_and_train_model['config_data']['video_sets'][0]
+    model_name = setup_project_and_train_model['config_data']['model_name']
+    n_cluster = setup_project_and_train_model['config_data']['n_cluster']
+    project_path = setup_project_and_train_model['config_data']['project_path']
+
+    save_base_path = Path(project_path) / "results" / file / model_name / f"{parametrization}-{n_cluster}" / "community_videos"
+
+    assert len(list(save_base_path.glob("*.avi"))) > 0
+    assert len(list(save_base_path.glob("*.avi"))) <= n_cluster
 
 @pytest.mark.parametrize('label,parametrization', [
     (None, 'hmm'), ('motif', 'hmm'), ('community', 'hmm'),
@@ -146,6 +187,23 @@ def test_generative_model_figures(setup_project_and_train_model, mode, parametri
     )
     assert isinstance(generative_figure, Figure)
 
+def test_generative_parametrization_not_exists(setup_project_and_train_model):
+    with pytest.raises(ValueError):
+        vame.generative_model(
+            config=setup_project_and_train_model['config_path'],
+            parametrization='any',
+            mode='centers',
+            save_logs=True
+        )
+
+def test_generative_kmeans_wrong_mode(setup_project_and_train_model):
+    with pytest.raises(ValueError):
+        vame.generative_model(
+            config=setup_project_and_train_model['config_path'],
+            parametrization='hmm',
+            mode='centers',
+            save_logs=True
+        )
 
 @pytest.mark.parametrize("label", [None, 'community', 'motif'])
 def test_gif_frames_files_exists(setup_project_and_evaluate_model, label):
