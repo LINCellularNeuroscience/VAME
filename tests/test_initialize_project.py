@@ -2,6 +2,7 @@ from pathlib import Path
 from vame.util.auxiliary import read_config
 from vame import init_new_project
 
+
 def test_project_config_exists(setup_project_not_aligned_data):
     """
     Test if the project config file exists.
@@ -24,3 +25,10 @@ def test_existing_project(setup_project_not_aligned_data):
         poses_estimations=setup_project_not_aligned_data['videos'],
         working_directory='./tests'
     )
+
+
+def test_existing_project_from_folder(setup_project_from_folder):
+    config = Path(setup_project_from_folder['config_path'])
+    config_values = read_config(config)
+    assert config_values['Project'] == setup_project_from_folder['project_name']
+    assert Path(setup_project_from_folder['config_path']).exists()

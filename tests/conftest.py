@@ -31,7 +31,20 @@ def init_project(
 
     return config, project_data
 
+@fixture(scope='function')
+def setup_project_from_folder():
+    project = 'test_project_from_folder'
+    videos = ['./tests/tests_project_sample_data']
+    poses_estimations = ['./tests/tests_project_sample_data']
+    working_directory = './tests'
 
+    # Initialize project
+    config, project_data = init_project(project, videos, poses_estimations, working_directory, egocentric_data=False)
+
+    yield project_data
+
+    # Clean up
+    shutil.rmtree(Path(config).parent)
 
 @fixture(scope='session')
 def setup_project_not_aligned_data():
