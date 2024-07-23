@@ -31,7 +31,7 @@ def init_project(
 
     return config, project_data
 
-@fixture(scope='function')
+@fixture(scope='session')
 def setup_project_from_folder():
     project = 'test_project_from_folder'
     videos = ['./tests/tests_project_sample_data']
