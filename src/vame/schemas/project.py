@@ -9,6 +9,13 @@ class Parametrizations(str, Enum):
     class Config:
         use_enum_values = True
 
+class PoseEstimationFiletype(str, Enum):
+    csv = 'csv'
+    nwb = 'nwb'
+
+    class Config:
+        use_enum_values = True
+
 class ProjectSchema(BaseModel):
     # Project attributes
     Project: str = Field(..., title='Project name')
@@ -19,6 +26,8 @@ class ProjectSchema(BaseModel):
     # Project path and videos
     project_path: str = Field(..., title='Project path')
     video_sets: List[str] = Field(..., title='Video sets')
+    pose_estimation_filetype: PoseEstimationFiletype = Field(title='Pose estimation filetype')
+    path_to_pose_nwb_series_data: str = Field(title='Path to pose series data in nwb file', default=None)
 
     # Data
     all_data: str = Field(default='yes', title='All data')
@@ -53,6 +62,7 @@ class ProjectSchema(BaseModel):
     scheduler_gamma: float = Field(default=0.2, title='Scheduler gamma')
     scheduler_threshold: float = Field(default=None, title='Scheduler threshold')
     softplus: bool = Field(default=False, title='Softplus')
+
 
     # Segmentation:
     parametrizations: List[Parametrizations] = Field(
@@ -97,4 +107,4 @@ class ProjectSchema(BaseModel):
     kl_start: int = Field(default=2, title='KL start')
     annealtime: int = Field(default=4, title='Annealtime')
 
-    model_config: ConfigDict = ConfigDict(protected_namespaces=())
+    model_config: ConfigDict = ConfigDict(protected_namespaces=(), use_enum_values=True)
