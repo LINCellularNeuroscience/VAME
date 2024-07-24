@@ -15,10 +15,9 @@ import pandas as pd
 
 from pathlib import Path
 from vame.util.auxiliary import read_config
-from typing import Tuple
 from vame.schemas.states import CsvToNumpyFunctionSchema, save_state
 from vame.logging.logger import VameLogger
-from vame.util.data_manipulation import interpol_first_rows_nans
+from vame.util.data_manipulation import interpol_first_rows_nans, read_pose_estimation_file
 
 
 logger_config = VameLogger(__name__)
@@ -49,11 +48,15 @@ def csv_to_numpy(config: str, save_logs=False) -> None:
         if not cfg['egocentric_data']:
             raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
 
+        folder_path = os.path.join(path_to_file,'videos','pose_estimation')
         for file in filename:
             # Read in your .csv file, skip the first two rows and create a numpy array
-            data = pd.read_csv(os.path.join(path_to_file,"videos","pose_estimation",file+'.csv'), skiprows = 3, header=None)
-            data_mat = pd.DataFrame.to_numpy(data)
-            data_mat = data_mat[:,1:]
+            data, data_mat = read_pose_estimation_file(
+                folder_path=folder_path,
+                filename=file,
+                filetype=cfg['pose_estimation_filetype'],
+                path_to_pose_nwb_series_data=cfg['path_to_pose_nwb_series_data']
+            )
 
             pose_list = []
 
