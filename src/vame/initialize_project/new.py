@@ -171,7 +171,7 @@ def init_new_project(
           'The first step is to move your pose .csv file (e.g. DeepLabCut .csv) into the '
           '//YOUR//VAME//PROJECT//videos//pose_estimation folder. From here you can call '
           'either the function vame.egocentric_alignment() or if your data is by design egocentric '
-          'call vame.csv_to_numpy(). This will prepare the data in .csv into the right format to start '
+          'call vame.pose_to_numpy(). This will prepare the data in .csv into the right format to start '
           'working with VAME.')
 
     return projconfigfile

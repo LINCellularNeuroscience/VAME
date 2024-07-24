@@ -352,12 +352,12 @@ def egocentric_alignment(
         for file in filename:
             logger.info("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
             egocentric_time_series, frames = alignment(
-                path_to_file,
-                file,
-                pose_ref_index,
-                video_format,
-                crop_size,
-                confidence,
+                path_to_file=path_to_file,
+                filename=file,
+                pose_ref_index=pose_ref_index,
+                video_format=video_format,
+                crop_size=crop_size,
+                confidence=confidence,
                 pose_estimation_filetype=cfg['pose_estimation_filetype'],
                 path_to_pose_nwb_series_data=cfg['path_to_pose_nwb_series_data'],
                 use_video=use_video,

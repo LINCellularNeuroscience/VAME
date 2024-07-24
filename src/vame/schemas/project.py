@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 from enum import Enum
 
 class Parametrizations(str, Enum):
@@ -27,7 +27,7 @@ class ProjectSchema(BaseModel):
     project_path: str = Field(..., title='Project path')
     video_sets: List[str] = Field(..., title='Video sets')
     pose_estimation_filetype: PoseEstimationFiletype = Field(title='Pose estimation filetype')
-    path_to_pose_nwb_series_data: str = Field(title='Path to pose series data in nwb file', default=None)
+    path_to_pose_nwb_series_data: Optional[str] = Field(title='Path to pose series data in nwb file', default=None)
 
     # Data
     all_data: str = Field(default='yes', title='All data')

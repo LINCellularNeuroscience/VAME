@@ -78,9 +78,9 @@ def setup_project_fixed_data():
 
 
 @fixture(scope='session')
-def setup_project_and_convert_csv_to_numpy(setup_project_fixed_data):
+def setup_project_and_convert_pose_to_numpy(setup_project_fixed_data):
     config_path = setup_project_fixed_data['config_path']
-    vame.csv_to_numpy(config_path, save_logs=True)
+    vame.pose_to_numpy(config_path, save_logs=True)
     return setup_project_fixed_data
 
 @fixture(scope='session')
@@ -106,16 +106,16 @@ def setup_project_and_check_param_aligned_dataset(setup_project_and_align_egocen
     return setup_project_and_align_egocentric
 
 @fixture(scope='function')
-def setup_project_and_check_param_fixed_dataset(setup_project_and_convert_csv_to_numpy):
-    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_csv_to_numpy based on value of egocentric_aligned
-    config = setup_project_and_convert_csv_to_numpy['config_path']
+def setup_project_and_check_param_fixed_dataset(setup_project_and_convert_pose_to_numpy):
+    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_pose_to_numpy based on value of egocentric_aligned
+    config = setup_project_and_convert_pose_to_numpy['config_path']
     vame.create_trainset(
         config,
         check_parameter=True,
-        pose_ref_index=setup_project_and_convert_csv_to_numpy["pose_ref_index"],
+        pose_ref_index=setup_project_and_convert_pose_to_numpy["pose_ref_index"],
         save_logs=True,
     )
-    return setup_project_and_convert_csv_to_numpy
+    return setup_project_and_convert_pose_to_numpy
 
 
 @fixture(scope='session')
@@ -131,16 +131,16 @@ def setup_project_and_create_train_aligned_dataset(setup_project_and_align_egoce
 
 
 @fixture(scope='session')
-def setup_project_and_create_train_fixed_dataset(setup_project_and_convert_csv_to_numpy):
-    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_csv_to_numpy based on value of egocentric_aligned
-    config = setup_project_and_convert_csv_to_numpy['config_path']
+def setup_project_and_create_train_fixed_dataset(setup_project_and_convert_pose_to_numpy):
+    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_pose_to_numpy based on value of egocentric_aligned
+    config = setup_project_and_convert_pose_to_numpy['config_path']
     vame.create_trainset(
         config,
         check_parameter=False,
-        pose_ref_index=setup_project_and_convert_csv_to_numpy["pose_ref_index"],
+        pose_ref_index=setup_project_and_convert_pose_to_numpy["pose_ref_index"],
         save_logs=True,
     )
-    return setup_project_and_convert_csv_to_numpy
+    return setup_project_and_convert_pose_to_numpy
 
 
 @fixture(scope='session')
