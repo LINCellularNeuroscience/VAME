@@ -11,7 +11,6 @@ def init_project(
     poses_estimations: list,
     working_directory: str,
     egocentric_data: bool = False,
-    parametrization: str = 'hmm'
 ):
     config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
 
@@ -20,7 +19,6 @@ def init_project(
     config_values['egocentric_data'] = egocentric_data
     config_values['max_epochs'] = 10
     config_values['batch_size'] = 10
-    config_values['parametrization'] = parametrization
     write_config(config, config_values)
 
     project_data = {
@@ -33,7 +31,20 @@ def init_project(
 
     return config, project_data
 
+@fixture(scope='session')
+def setup_project_from_folder():
+    project = 'test_project_from_folder'
+    videos = ['./tests/tests_project_sample_data']
+    poses_estimations = ['./tests/tests_project_sample_data']
+    working_directory = './tests'
 
+    # Initialize project
+    config, project_data = init_project(project, videos, poses_estimations, working_directory, egocentric_data=False)
+
+    yield project_data
+
+    # Clean up
+    shutil.rmtree(Path(config).parent)
 
 @fixture(scope='session')
 def setup_project_not_aligned_data():
@@ -132,12 +143,12 @@ def setup_project_and_create_train_fixed_dataset(setup_project_and_convert_csv_t
     return setup_project_and_convert_csv_to_numpy
 
 
-
 @fixture(scope='session')
 def setup_project_and_train_model(setup_project_and_create_train_aligned_dataset):
     config = setup_project_and_create_train_aligned_dataset['config_path']
     vame.train_model(config, save_logs=True)
     return setup_project_and_create_train_aligned_dataset
+
 
 @fixture(scope='session')
 def setup_project_and_evaluate_model(setup_project_and_train_model):
@@ -145,39 +156,4 @@ def setup_project_and_evaluate_model(setup_project_and_train_model):
     vame.evaluate_model(config, save_logs=True)
     return setup_project_and_train_model
 
-
-@fixture(scope='session')
-def setup_kmeans_project():
-    project = 'test_kmeans_project'
-    videos = ['./tests/tests_project_sample_data/cropped_video.mp4']
-    poses_estimations = ['./tests/tests_project_sample_data/cropped_video.csv']
-    working_directory = './tests'
-
-    # Initialize project
-    config, project_data = init_project(project, videos, poses_estimations, working_directory, egocentric_data=False, parametrization='kmeans')
-
-    yield project_data
-
-    # Clean up
-    shutil.rmtree(Path(config).parent)
-
-
-@fixture(scope='session')
-def setup_kmeans_project_and_pose_segmentation(setup_kmeans_project):
-    config_path = setup_kmeans_project["config_path"]
-    vame.egocentric_alignment(
-        config_path,
-        pose_ref_index=setup_kmeans_project["pose_ref_index"],
-        save_logs=True,
-    )
-    vame.create_trainset(
-        config_path,
-        check_parameter=False,
-        pose_ref_index=setup_kmeans_project["pose_ref_index"],
-        save_logs=True,
-    )
-    vame.train_model(config_path, save_logs=True)
-    vame.evaluate_model(config_path, save_logs=True)
-    vame.pose_segmentation(config_path, save_logs=True)
-    return setup_kmeans_project
 

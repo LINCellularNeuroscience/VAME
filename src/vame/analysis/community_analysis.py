@@ -23,6 +23,7 @@ from vame.util.data_manipulation import consecutive
 from typing import List, Tuple
 from vame.schemas.states import save_state, CommunityFunctionSchema
 from vame.logging.logger import VameLogger
+from vame.schemas.project import Parametrizations
 
 
 logger_config = VameLogger(__name__)
@@ -417,6 +418,7 @@ def get_cohort_community_labels(
 @save_state(model=CommunityFunctionSchema)
 def community(
     config: str,
+    parametrization: Parametrizations,
     cohort: bool = True,
     cut_tree: int | None = None,
     save_logs: bool = False
@@ -434,12 +436,13 @@ def community(
     try:
         config_file = Path(config).resolve()
         cfg = read_config(config_file)
+        parametrizations = cfg['parametrizations']
+
         if save_logs:
             log_path = Path(cfg['project_path']) / 'logs' / 'community.log'
             logger_config.add_file_handler(log_path)
         model_name = cfg['model_name']
         n_cluster = cfg['n_cluster']
-        parametrization = cfg['parametrization']
 
         files = []
         if cfg['all_data'] == 'No':
@@ -464,6 +467,11 @@ def community(
             files.append(all_flag)
 
         if cohort:
+            path_to_file = Path(os.path.join(cfg['project_path'], "results", 'community_cohort', parametrization + '-'+str(n_cluster)))
+
+            if not path_to_file.exists():
+                path_to_file.mkdir(parents=True, exist_ok=True)
+
             labels = get_community_label(cfg, files, model_name, n_cluster, parametrization)
             augmented_label, zero_motifs = augment_motif_timeseries(labels, n_cluster)
             _, trans_mat_full,_ = get_adjacency_matrix(augmented_label, n_cluster=n_cluster)
@@ -476,12 +484,12 @@ def community(
             # convert communities_all to dtype object numpy array because communities_all is an inhomogeneous list
             communities_all = np.array(communities_all, dtype=object)
 
-            np.save(os.path.join(cfg['project_path'],"cohort_transition_matrix"+'.npy'),trans_mat_full)
-            np.save(os.path.join(cfg['project_path'],"cohort_community_label"+'.npy'), community_labels_all)
-            np.save(os.path.join(cfg['project_path'],"cohort_" + parametrization + "_label"+'.npy'), labels)
-            np.save(os.path.join(cfg['project_path'],"cohort_community_bag"+'.npy'), communities_all)
+            np.save(os.path.join(path_to_file,"cohort_transition_matrix"+'.npy'),trans_mat_full)
+            np.save(os.path.join(path_to_file,"cohort_community_label"+'.npy'), community_labels_all)
+            np.save(os.path.join(path_to_file,"cohort_" + parametrization + "_label"+'.npy'), labels)
+            np.save(os.path.join(path_to_file,"cohort_community_bag"+'.npy'), communities_all)
 
-            with open(os.path.join(cfg['project_path'],"hierarchy"+".pkl"), "wb") as fp:   #Pickling
+            with open(os.path.join(path_to_file, "hierarchy"+".pkl"), "wb") as fp:   #Pickling
                 pickle.dump(communities_all, fp)
 
         # Work in Progress

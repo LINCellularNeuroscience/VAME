@@ -38,7 +38,7 @@ def init_new_project(
     project: str,
     videos: List[str],
     poses_estimations: List[str],
-    working_directory: str = None,
+    working_directory: str = '.',
     videotype: str = '.mp4'
 ) -> str:
     """Creates a new VAME project with the given parameters.
@@ -59,9 +59,6 @@ def init_new_project(
     year = date.year
     d = str(month[0:3]+str(day))
     date = dt.today().strftime('%Y-%m-%d')
-
-    if working_directory is None:
-        working_directory = '.'
 
     wd = Path(working_directory).resolve()
     project_name = '{pn}-{date}'.format(pn=project, date=d+'-'+str(year))
@@ -100,6 +97,13 @@ def init_new_project(
                 vids = vids + [i]
             videos = vids
 
+    pose_estimations_paths = []
+    for pose_estimation_path in poses_estimations:
+        if os.path.isdir(pose_estimation_path):
+            pose_estimation_files = [os.path.join(pose_estimation_path, p) for p in os.listdir(pose_estimation_path) if '.csv' in p]
+            pose_estimations_paths.extend(pose_estimation_files)
+        else:
+            pose_estimations_paths.append(pose_estimation_path)
 
     videos = [Path(vp) for vp in videos]
     video_names = []
@@ -128,7 +132,7 @@ def init_new_project(
         shutil.copy(os.fspath(src),os.fspath(dst))
 
     logger.info("Copying pose estimation files\n")
-    for src, dst in zip(poses_estimations, [str(project_path)+'/videos/pose_estimation/'+Path(p).name for p in poses_estimations]):
+    for src, dst in zip(pose_estimations_paths, [str(project_path)+'/videos/pose_estimation/'+Path(p).name for p in pose_estimations_paths]):
         logger.info(f'Copying {src} to {dst}')
         shutil.copy(os.fspath(src),os.fspath(dst))
 
