@@ -42,10 +42,10 @@ def get_dataframe_from_pose_nwb_file(file_path: str, path_to_pose_nwb_series_dat
     io = NWBHDF5IO(file_path, 'r')
     nwbfile = io.read()
     # Todo change to use variable as path to pose estimation in nwb
-    pose = get_pose_data_from_nwb_file(nwbfile, 'processing/behavior/data_interfaces/PoseEstimationRightCamera')
+    pose = get_pose_data_from_nwb_file(nwbfile, path_to_pose_nwb_series_data)
 
     dataframes = []
-    for label, pose_series in pose.pose_estimation_series.items():
+    for label, pose_series in pose.items():
         data = pose_series.data[:]
         confidence = pose_series.confidence[:]
         df = pd.DataFrame(data, columns=[f'{label}_x', f'{label}_y'])

@@ -156,7 +156,7 @@ def init_new_project(
         project_path=str(project_path),
         video_sets=video_names,
         pose_estimation_filetype=pose_estimation_filetype,
-        path_to_pose_nwb_series_data=paths_to_pose_nwb_series_data
+        paths_to_pose_nwb_series_data=paths_to_pose_nwb_series_data
 
     )
     cfg_data = new_project.model_dump()
