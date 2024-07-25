@@ -27,7 +27,7 @@ class ProjectSchema(BaseModel):
     project_path: str = Field(..., title='Project path')
     video_sets: List[str] = Field(..., title='Video sets')
     pose_estimation_filetype: PoseEstimationFiletype = Field(title='Pose estimation filetype')
-    path_to_pose_nwb_series_data: Optional[str] = Field(title='Path to pose series data in nwb file', default=None)
+    paths_to_pose_nwb_series_data: Optional[List[str]] = Field(title='Paths to pose series data in nwb files', default=None)
 
     # Data
     all_data: str = Field(default='yes', title='All data')

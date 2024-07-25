@@ -49,12 +49,13 @@ def pose_to_numpy(config: str, save_logs=False) -> None:
             raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
 
         folder_path = os.path.join(path_to_file,'videos','pose_estimation')
-        for file in filename:
+        paths_to_pose_nwb_series_data = cfg['paths_to_pose_nwb_series_data']
+        for i, file in enumerate(filename):
             data, data_mat = read_pose_estimation_file(
                 folder_path=folder_path,
                 filename=file,
                 filetype=cfg['pose_estimation_filetype'],
-                path_to_pose_nwb_series_data=cfg['path_to_pose_nwb_series_data']
+                path_to_pose_nwb_series_data=paths_to_pose_nwb_series_data if not paths_to_pose_nwb_series_data else paths_to_pose_nwb_series_data[i],
             )
 
             pose_list = []

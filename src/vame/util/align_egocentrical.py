@@ -349,7 +349,8 @@ def egocentric_alignment(
             raise ValueError("The config.yaml indicates that the data is egocentric. Please check the parameter egocentric_data")
 
         # call function and save into your VAME data folder
-        for file in filename:
+        paths_to_pose_nwb_series_data = cfg['paths_to_pose_nwb_series_data']
+        for i, file in enumerate(filename):
             logger.info("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
             egocentric_time_series, frames = alignment(
                 path_to_file=path_to_file,
@@ -359,7 +360,7 @@ def egocentric_alignment(
                 crop_size=crop_size,
                 confidence=confidence,
                 pose_estimation_filetype=cfg['pose_estimation_filetype'],
-                path_to_pose_nwb_series_data=cfg['path_to_pose_nwb_series_data'],
+                path_to_pose_nwb_series_data=paths_to_pose_nwb_series_data if not paths_to_pose_nwb_series_data else paths_to_pose_nwb_series_data[i],
                 use_video=use_video,
                 check_video=check_video,
                 tqdm_stream=tqdm_stream
