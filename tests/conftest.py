@@ -3,6 +3,7 @@ import vame
 from vame.util.auxiliary import read_config, write_config
 from pathlib import Path
 import shutil
+from typing import List, Optional
 
 
 def init_project(
@@ -11,8 +12,16 @@ def init_project(
     poses_estimations: list,
     working_directory: str,
     egocentric_data: bool = False,
+    paths_to_pose_nwb_series_data: Optional[List[str]] = None
 ):
-    config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
+    config = vame.init_new_project(
+        project=project,
+        videos=videos,
+        poses_estimations=poses_estimations,
+        working_directory=working_directory,
+        videotype='.mp4',
+        paths_to_pose_nwb_series_data=paths_to_pose_nwb_series_data
+    )
 
     # Override config values with test values to speed up tests
     config_values = read_config(config)
@@ -70,6 +79,30 @@ def setup_project_fixed_data():
 
     # Initialize project
     config, project_data = init_project(project, videos, poses_estimations, working_directory, egocentric_data=True)
+
+    yield project_data
+
+    # Clean up
+    shutil.rmtree(Path(config).parent)
+
+
+@fixture(scope='session')
+def setup_project_nwb_data():
+    project = 'test_project_nwb'
+    videos = ['./tests/tests_project_sample_data/cropped_video.mp4']
+    poses_estimations = ['./tests/test_project_sample_nwb/cropped_video.nwb']
+    paths_to_pose_nwb_series_data = ['processing/behavior/data_interfaces/PoseEstimation/pose_estimation_series']
+    working_directory = './tests'
+
+    # Initialize project
+    config, project_data = init_project(
+        project,
+        videos,
+        poses_estimations,
+        working_directory,
+        egocentric_data=False,
+        paths_to_pose_nwb_series_data=paths_to_pose_nwb_series_data
+    )
 
     yield project_data
 
