@@ -41,6 +41,7 @@ def test_existing_project():
     shutil.rmtree(Path(config_path_creation).parent)
 
 
+
 def test_existing_project_from_folder(setup_project_from_folder):
     config = Path(setup_project_from_folder['config_path'])
     config_values = read_config(config)

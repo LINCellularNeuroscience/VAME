@@ -87,7 +87,7 @@ def setup_project_fixed_data():
 
 
 @fixture(scope='session')
-def setup_project_nwb_data():
+def setup_nwb_data_project():
     project = 'test_project_nwb'
     videos = ['./tests/tests_project_sample_data/cropped_video.mp4']
     poses_estimations = ['./tests/test_project_sample_nwb/cropped_video.nwb']
