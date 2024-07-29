@@ -3,6 +3,7 @@ import vame
 from vame.util.auxiliary import read_config, write_config
 from pathlib import Path
 import shutil
+from typing import List, Optional
 
 
 def init_project(
@@ -11,8 +12,16 @@ def init_project(
     poses_estimations: list,
     working_directory: str,
     egocentric_data: bool = False,
+    paths_to_pose_nwb_series_data: Optional[List[str]] = None
 ):
-    config = vame.init_new_project(project=project, videos=videos, poses_estimations=poses_estimations, working_directory=working_directory, videotype='.mp4')
+    config = vame.init_new_project(
+        project=project,
+        videos=videos,
+        poses_estimations=poses_estimations,
+        working_directory=working_directory,
+        videotype='.mp4',
+        paths_to_pose_nwb_series_data=paths_to_pose_nwb_series_data
+    )
 
     # Override config values with test values to speed up tests
     config_values = read_config(config)
@@ -78,9 +87,33 @@ def setup_project_fixed_data():
 
 
 @fixture(scope='session')
-def setup_project_and_convert_csv_to_numpy(setup_project_fixed_data):
+def setup_project_nwb_data():
+    project = 'test_project_nwb'
+    videos = ['./tests/tests_project_sample_data/cropped_video.mp4']
+    poses_estimations = ['./tests/test_project_sample_nwb/cropped_video.nwb']
+    paths_to_pose_nwb_series_data = ['processing/behavior/data_interfaces/PoseEstimation/pose_estimation_series']
+    working_directory = './tests'
+
+    # Initialize project
+    config, project_data = init_project(
+        project,
+        videos,
+        poses_estimations,
+        working_directory,
+        egocentric_data=False,
+        paths_to_pose_nwb_series_data=paths_to_pose_nwb_series_data
+    )
+
+    yield project_data
+
+    # Clean up
+    shutil.rmtree(Path(config).parent)
+
+
+@fixture(scope='session')
+def setup_project_and_convert_pose_to_numpy(setup_project_fixed_data):
     config_path = setup_project_fixed_data['config_path']
-    vame.csv_to_numpy(config_path, save_logs=True)
+    vame.pose_to_numpy(config_path, save_logs=True)
     return setup_project_fixed_data
 
 @fixture(scope='session')
@@ -106,16 +139,16 @@ def setup_project_and_check_param_aligned_dataset(setup_project_and_align_egocen
     return setup_project_and_align_egocentric
 
 @fixture(scope='function')
-def setup_project_and_check_param_fixed_dataset(setup_project_and_convert_csv_to_numpy):
-    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_csv_to_numpy based on value of egocentric_aligned
-    config = setup_project_and_convert_csv_to_numpy['config_path']
+def setup_project_and_check_param_fixed_dataset(setup_project_and_convert_pose_to_numpy):
+    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_pose_to_numpy based on value of egocentric_aligned
+    config = setup_project_and_convert_pose_to_numpy['config_path']
     vame.create_trainset(
         config,
         check_parameter=True,
-        pose_ref_index=setup_project_and_convert_csv_to_numpy["pose_ref_index"],
+        pose_ref_index=setup_project_and_convert_pose_to_numpy["pose_ref_index"],
         save_logs=True,
     )
-    return setup_project_and_convert_csv_to_numpy
+    return setup_project_and_convert_pose_to_numpy
 
 
 @fixture(scope='session')
@@ -131,16 +164,16 @@ def setup_project_and_create_train_aligned_dataset(setup_project_and_align_egoce
 
 
 @fixture(scope='session')
-def setup_project_and_create_train_fixed_dataset(setup_project_and_convert_csv_to_numpy):
-    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_csv_to_numpy based on value of egocentric_aligned
-    config = setup_project_and_convert_csv_to_numpy['config_path']
+def setup_project_and_create_train_fixed_dataset(setup_project_and_convert_pose_to_numpy):
+    # use setup_project_and_align_egocentric fixture or setup_project_and_convert_pose_to_numpy based on value of egocentric_aligned
+    config = setup_project_and_convert_pose_to_numpy['config_path']
     vame.create_trainset(
         config,
         check_parameter=False,
-        pose_ref_index=setup_project_and_convert_csv_to_numpy["pose_ref_index"],
+        pose_ref_index=setup_project_and_convert_pose_to_numpy["pose_ref_index"],
         save_logs=True,
     )
-    return setup_project_and_convert_csv_to_numpy
+    return setup_project_and_convert_pose_to_numpy
 
 
 @fixture(scope='session')

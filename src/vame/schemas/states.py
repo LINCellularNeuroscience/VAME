@@ -32,7 +32,7 @@ class EgocentricAlignmentFunctionSchema(BaseStateSchema):
     check_video: bool = Field(title='Check video', default=False)
 
 
-class CsvToNumpyFunctionSchema(BaseStateSchema):
+class PoseToNumpyFunctionSchema(BaseStateSchema):
     ...
 
 
@@ -79,7 +79,7 @@ class GenerativeModelFunctionSchema(BaseStateSchema):
 
 class VAMEPipelineStatesSchema(BaseModel):
     egocentric_alignment: Optional[EgocentricAlignmentFunctionSchema | Dict] = Field(title='Egocentric alignment', default={})
-    csv_to_numpy: Optional[CsvToNumpyFunctionSchema | Dict] = Field(title='CSV to numpy', default={})
+    pose_to_numpy: Optional[PoseToNumpyFunctionSchema | Dict] = Field(title='CSV to numpy', default={})
     create_trainset: Optional[CreateTrainsetFunctionSchema | Dict] = Field(title='Create trainset', default={})
     train_model: Optional[TrainModelFunctionSchema | Dict] = Field(title='Train model', default={})
     evaluate_model: Optional[EvaluateModelFunctionSchema | Dict] = Field(title='Evaluate model', default={})
