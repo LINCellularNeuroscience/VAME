@@ -23,11 +23,12 @@ from pathlib import Path
 import shutil
 from datetime import datetime as dt
 from vame.util.auxiliary import write_config
-from typing import List
-from vame.schemas.project import ProjectSchema
+from typing import List, Optional
+from vame.schemas.project import ProjectSchema, PoseEstimationFiletype
 from vame.schemas.states import VAMEPipelineStatesSchema
 import json
 from vame.logging.logger import VameLogger
+
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
@@ -39,7 +40,8 @@ def init_new_project(
     videos: List[str],
     poses_estimations: List[str],
     working_directory: str = '.',
-    videotype: str = '.mp4'
+    videotype: str = '.mp4',
+    paths_to_pose_nwb_series_data: Optional[str] = None
 ) -> str:
     """Creates a new VAME project with the given parameters.
 
@@ -100,10 +102,23 @@ def init_new_project(
     pose_estimations_paths = []
     for pose_estimation_path in poses_estimations:
         if os.path.isdir(pose_estimation_path):
-            pose_estimation_files = [os.path.join(pose_estimation_path, p) for p in os.listdir(pose_estimation_path) if '.csv' in p]
+            pose_estimation_files = [os.path.join(pose_estimation_path, p) for p in os.listdir(pose_estimation_path) if '.csv' in p or '.nwb' in p ]
             pose_estimations_paths.extend(pose_estimation_files)
         else:
             pose_estimations_paths.append(pose_estimation_path)
+
+    if not all([p.endswith('.csv') for p in pose_estimations_paths]) and not all([p.endswith('.nwb') for p in pose_estimations_paths]):
+        logger.error('All pose estimation files must be in the same format. Either .csv or .nwb')
+        shutil.rmtree(str(project_path))
+        raise ValueError('All pose estimation files must be in the same format. Either .csv or .nwb')
+
+    pose_estimation_filetype = pose_estimations_paths[0].split('.')[-1]
+
+    if pose_estimation_filetype == PoseEstimationFiletype.nwb.value and len(paths_to_pose_nwb_series_data) != len(pose_estimations_paths):
+        logger.error('If the pose estimation file is in nwb format, you must provide the path to the pose series data in nwb files')
+        shutil.rmtree(str(project_path))
+        raise ValueError('If the pose estimation file is in nwb format, you must provide the path to the pose series data for each nwb file.')
+
 
     videos = [Path(vp) for vp in videos]
     video_names = []
@@ -139,7 +154,10 @@ def init_new_project(
     new_project = ProjectSchema(
         Project=str(project),
         project_path=str(project_path),
-        video_sets=video_names
+        video_sets=video_names,
+        pose_estimation_filetype=pose_estimation_filetype,
+        paths_to_pose_nwb_series_data=paths_to_pose_nwb_series_data
+
     )
     cfg_data = new_project.model_dump()
 
@@ -159,7 +177,7 @@ def init_new_project(
           'The first step is to move your pose .csv file (e.g. DeepLabCut .csv) into the '
           '//YOUR//VAME//PROJECT//videos//pose_estimation folder. From here you can call '
           'either the function vame.egocentric_alignment() or if your data is by design egocentric '
-          'call vame.csv_to_numpy(). This will prepare the data in .csv into the right format to start '
+          'call vame.pose_to_numpy(). This will prepare the data in .csv into the right format to start '
           'working with VAME.')
 
     return projconfigfile

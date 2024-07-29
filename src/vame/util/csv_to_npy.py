@@ -15,10 +15,9 @@ import pandas as pd
 
 from pathlib import Path
 from vame.util.auxiliary import read_config
-from typing import Tuple
-from vame.schemas.states import CsvToNumpyFunctionSchema, save_state
+from vame.schemas.states import PoseToNumpyFunctionSchema, save_state
 from vame.logging.logger import VameLogger
-from vame.util.data_manipulation import interpol_first_rows_nans
+from vame.util.data_manipulation import interpol_first_rows_nans, read_pose_estimation_file
 
 
 logger_config = VameLogger(__name__)
@@ -26,8 +25,8 @@ logger = logger_config.logger
 
 
 
-@save_state(model=CsvToNumpyFunctionSchema)
-def csv_to_numpy(config: str, save_logs=False) -> None:
+@save_state(model=PoseToNumpyFunctionSchema)
+def pose_to_numpy(config: str, save_logs=False) -> None:
     """Converts a pose-estimation.csv file to a numpy array. Note that this code is only useful for data which is a priori egocentric, i.e. head-fixed
     or otherwise restrained animals.
 
@@ -39,7 +38,7 @@ def csv_to_numpy(config: str, save_logs=False) -> None:
         cfg = read_config(config_file)
 
         if save_logs:
-            log_path = Path(cfg['project_path']) / 'logs' / 'csv_to_numpy.log'
+            log_path = Path(cfg['project_path']) / 'logs' / 'pose_to_numpy.log'
             logger_config.add_file_handler(log_path)
 
 
@@ -49,11 +48,15 @@ def csv_to_numpy(config: str, save_logs=False) -> None:
         if not cfg['egocentric_data']:
             raise ValueError("The config.yaml indicates that the data is not egocentric. Please check the parameter egocentric_data")
 
-        for file in filename:
-            # Read in your .csv file, skip the first two rows and create a numpy array
-            data = pd.read_csv(os.path.join(path_to_file,"videos","pose_estimation",file+'.csv'), skiprows = 3, header=None)
-            data_mat = pd.DataFrame.to_numpy(data)
-            data_mat = data_mat[:,1:]
+        folder_path = os.path.join(path_to_file,'videos','pose_estimation')
+        paths_to_pose_nwb_series_data = cfg['paths_to_pose_nwb_series_data']
+        for i, file in enumerate(filename):
+            data, data_mat = read_pose_estimation_file(
+                folder_path=folder_path,
+                filename=file,
+                filetype=cfg['pose_estimation_filetype'],
+                path_to_pose_nwb_series_data=paths_to_pose_nwb_series_data if not paths_to_pose_nwb_series_data else paths_to_pose_nwb_series_data[i],
+            )
 
             pose_list = []
 

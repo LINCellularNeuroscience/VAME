@@ -17,11 +17,14 @@ from vame.logging.logger import VameLogger, TqdmToLogger
 from pathlib import Path
 from vame.util.auxiliary import read_config
 from vame.schemas.states import EgocentricAlignmentFunctionSchema, save_state
+from vame.schemas.project import PoseEstimationFiletype
 from vame.util.data_manipulation import (
     interpol_first_rows_nans,
     crop_and_flip,
-    background
+    background,
+    read_pose_estimation_file
 )
+
 
 
 logger_config = VameLogger(__name__)
@@ -202,6 +205,7 @@ def play_aligned_video(a: List[np.ndarray], n: List[List[np.ndarray]], frame_cou
     cv.destroyAllWindows()
 
 
+
 def alignment(
     path_to_file: str,
     filename: str,
@@ -209,9 +213,11 @@ def alignment(
     video_format: str,
     crop_size: Tuple[int, int],
     confidence: float,
+    pose_estimation_filetype: PoseEstimationFiletype,
+    path_to_pose_nwb_series_data: str = None,
     use_video: bool = False,
     check_video: bool = False,
-    tqdm_stream: TqdmToLogger = None
+    tqdm_stream: TqdmToLogger = None,
 ) -> Tuple[np.ndarray, List[np.ndarray]]:
     """
     Perform alignment of egocentric data.
@@ -231,9 +237,13 @@ def alignment(
     """
 
     #read out data
-    data = pd.read_csv(os.path.join(path_to_file,'videos','pose_estimation',filename+'.csv'), skiprows = 2)
-    data_mat = pd.DataFrame.to_numpy(data)
-    data_mat = data_mat[:,1:]
+    folder_path = os.path.join(path_to_file,'videos','pose_estimation')
+    data, data_mat = read_pose_estimation_file(
+        folder_path=folder_path,
+        filename=filename,
+        filetype=pose_estimation_filetype,
+        path_to_pose_nwb_series_data=path_to_pose_nwb_series_data
+    )
 
     # get the coordinates for alignment from data table
     pose_list = []
@@ -339,10 +349,22 @@ def egocentric_alignment(
             raise ValueError("The config.yaml indicates that the data is egocentric. Please check the parameter egocentric_data")
 
         # call function and save into your VAME data folder
-        for file in filename:
+        paths_to_pose_nwb_series_data = cfg['paths_to_pose_nwb_series_data']
+        for i, file in enumerate(filename):
             logger.info("Aligning data %s, Pose confidence value: %.2f" %(file, confidence))
-            egocentric_time_series, frames = alignment(path_to_file, file, pose_ref_index, video_format, crop_size,
-                                                    confidence, use_video=use_video, check_video=check_video, tqdm_stream=tqdm_stream)
+            egocentric_time_series, frames = alignment(
+                path_to_file=path_to_file,
+                filename=file,
+                pose_ref_index=pose_ref_index,
+                video_format=video_format,
+                crop_size=crop_size,
+                confidence=confidence,
+                pose_estimation_filetype=cfg['pose_estimation_filetype'],
+                path_to_pose_nwb_series_data=paths_to_pose_nwb_series_data if not paths_to_pose_nwb_series_data else paths_to_pose_nwb_series_data[i],
+                use_video=use_video,
+                check_video=check_video,
+                tqdm_stream=tqdm_stream
+            )
 
             # Shifiting section added 2/29/2024 PN
             egocentric_time_series_shifted = egocentric_time_series

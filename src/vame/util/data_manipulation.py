@@ -1,14 +1,84 @@
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import cv2 as cv
 import os
 from scipy.ndimage import median_filter
 import tqdm
 from vame.logging.logger import VameLogger
+from pynwb import NWBHDF5IO
+from pynwb.file import NWBFile
+from hdmf.utils import LabelledDict
+from vame.schemas.project import PoseEstimationFiletype
+import pandas as pd
+from pathlib import Path
 
 
 logger_config = VameLogger(__name__)
 logger = logger_config.logger
+
+def get_pose_data_from_nwb_file(nwbfile: NWBFile, path_to_pose_nwb_series_data: str) -> LabelledDict:
+    """
+    Get pose data from nwb file using a inside path to the nwb data.
+
+    Args:
+        nwbfile (NWBFile): NWB file object.
+        path_to_pose_nwb_series_data (str): Path to the pose data inside the nwb file.
+
+    Returns:
+        LabelledDict: Pose data.
+    """
+    if not path_to_pose_nwb_series_data:
+        raise ValueError('Path to pose nwb series data is required.')
+
+    pose_data = nwbfile
+    for key in path_to_pose_nwb_series_data.split('/'):
+        if isinstance(pose_data, dict):
+            pose_data = pose_data.get(key)
+            continue
+        pose_data = getattr(pose_data, key)
+    return pose_data
+
+def get_dataframe_from_pose_nwb_file(file_path: str, path_to_pose_nwb_series_data: str):
+
+    with NWBHDF5IO(file_path, 'r') as io:
+        nwbfile = io.read()
+        # Todo change to use variable as path to pose estimation in nwb
+        pose = get_pose_data_from_nwb_file(nwbfile, path_to_pose_nwb_series_data)
+
+        dataframes = []
+        for label, pose_series in pose.items():
+            data = pose_series.data[:]
+            confidence = pose_series.confidence[:]
+            df = pd.DataFrame(data, columns=[f'{label}_x', f'{label}_y'])
+            df[f'likelihood_{label}'] = confidence
+            dataframes.append(df)
+        final_df = pd.concat(dataframes, axis=1)
+
+    return final_df
+
+def read_pose_estimation_file(
+    folder_path: str,
+    filename: str,
+    filetype: PoseEstimationFiletype,
+    path_to_pose_nwb_series_data: Optional[str] = None
+) -> Tuple[pd.DataFrame, np.ndarray]:
+
+
+    if filetype == PoseEstimationFiletype.csv:
+        file_path = Path(folder_path) / f'{filename}.{filetype}'
+        data = pd.read_csv(file_path, skiprows=2)
+        if 'coords' in data:
+            data = data.drop(columns=['coords'], axis=1)
+        data_mat = pd.DataFrame.to_numpy(data)
+        return data, data_mat
+    elif filetype == PoseEstimationFiletype.nwb:
+        file_path = Path(folder_path) / f'{filename}.{filetype}'
+        data = get_dataframe_from_pose_nwb_file(file_path=file_path, path_to_pose_nwb_series_data=path_to_pose_nwb_series_data)
+        data_mat = pd.DataFrame.to_numpy(data)
+        return data, data_mat
+
+    raise ValueError(f'Filetype {filetype} not supported')
+
 
 def consecutive(data: np.ndarray, stepsize: int = 1) -> List[np.ndarray]:
     """Find consecutive sequences in the data array.

@@ -387,7 +387,7 @@ def create_trainset(
             logger.info("Creating trainset from the vame.egocentrical_alignment() output ")
             traindata_aligned(cfg, files, cfg['test_fraction'], cfg['savgol_filter'], check_parameter)
         else:
-            logger.info("Creating trainset from the vame.csv_to_numpy() output ")
+            logger.info("Creating trainset from the vame.pose_to_numpy() output ")
             traindata_fixed(cfg, files, cfg['test_fraction'], cfg['num_features'], cfg['savgol_filter'], check_parameter,  pose_ref_index)
 
         if not check_parameter:
