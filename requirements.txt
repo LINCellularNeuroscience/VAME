@@ -13,3 +13,4 @@ h5py>=3.11.0
 pydantic==2.7.4
 imageio==2.34.1
 imageio-ffmpeg==0.5.1
+pynwb==2.8.1
