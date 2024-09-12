@@ -9,6 +9,7 @@ https://github.com/LINCellularNeuroscience/VAME
 Licensed under GNU General Public License v3.0
 """
 import sys
+
 sys.dont_write_bytecode = True
 
 from vame.initialize_project.new import init_new_project
