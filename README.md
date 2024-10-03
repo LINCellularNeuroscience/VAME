@@ -1,6 +1,10 @@
 ![VAME](https://github.com/LINCellularNeuroscience/VAME/blob/master/Images/VAME_Logo-1.png)
 ![workflow](https://github.com/LINCellularNeuroscience/VAME/blob/master/Images/workflow.png)
 
+# New maintained VAME repository
+
+This version of VAME is deprecated and no longer maintained, and is made available here as legacy code. VAME is now being maintained at its new home at [https://github.com/EthoML/VAME](https://github.com/EthoML/VAME). There, you will find updated documentation and additional packages. Users can also access a downloadable desktop app for VAME at [https://github.com/EthoML/vame-desktop](https://github.com/EthoML/vame-desktop).
+
 # VAME in a Nutshell
 VAME is a framework to cluster behavioral signals obtained from pose-estimation tools. It is a [PyTorch](https://pytorch.org/) based deep learning framework which leverages the power of recurrent neural networks (RNN) to model sequential data. In order to learn the underlying complex data distribution we use the RNN in a variational autoencoder setting to extract the latent state of the animal in every step of the input time series.
 
