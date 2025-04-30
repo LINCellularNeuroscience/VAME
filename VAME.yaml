@@ -20,7 +20,7 @@ dependencies:
     - pathlib
     - pandas
     - ruamel.yaml
-    - sklearn
+    - scikit-learn
     - pyyaml
     - opencv-python-headless
     - h5py

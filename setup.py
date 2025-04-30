@@ -24,7 +24,7 @@ setup(
         "pathlib",
 	"pandas",
         "ruamel.yaml",
-	"sklearn",
+	"scikit-learn",
         "pyyaml",
         "opencv-python",
     ],
